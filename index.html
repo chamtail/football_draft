@@ -938,6 +938,7 @@
     shareBtn.addEventListener("click", () => generateShareImage());
     nextSeasonBtn.addEventListener("click", () => {
       saveSeasonHistory();
+      progressAllPlayers();
       openTransferWindow(true);
     });
     skipTransferBtn.addEventListener("click", () => closeTransferWindow());
@@ -1282,7 +1283,7 @@
           const pos = slots[transferPosIndex].pos;
           const currentPlayer = draftPicks[transferPosIndex];
           const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
-          currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name}${ovrText}`;
+          currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
         } else {
           candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode });
         }
@@ -1759,7 +1760,7 @@
       });
 
       const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
-      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name}${ovrText}`;
+      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
 
       // 显示刷新按钮
       refreshBtn.style.display = "";
@@ -1822,8 +1823,7 @@
       transferCandidateCache = {};
 
       if (wasSummer) {
-        // 夏季转会结束 → 球员成长 → 新赛季
-        progressAllPlayers();
+        // 夏季转会结束 → 新赛季（能力已在窗口开启前成长）
         draftLayout.classList.add("league");
         startNewSeason();
       } else {
