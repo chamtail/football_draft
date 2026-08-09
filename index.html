@@ -1320,6 +1320,10 @@
         }
         candidateList.appendChild(card);
       });
+
+      if (transferSelecting) {
+        candidateList.innerHTML += buildPlayerStatsHtml();
+      }
     }
 
     function pickCandidates(pos) {
@@ -1592,7 +1596,7 @@
       autoFillBtn.style.display = "none";
       refreshesLeft = 2;
 
-      candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>';
+      candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml();
     }
 
     function selectTransferPosition(index) {
@@ -1615,7 +1619,8 @@
         }
       });
 
-      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}`;
+      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.player.ovr})` : '';
+      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}${ovrText}`;
 
       // 显示刷新按钮
       refreshBtn.style.display = "";
@@ -1733,6 +1738,40 @@
       }
     }
 
+    function buildPlayerStatsHtml() {
+      if (userPlayerStats.length === 0) return "";
+      return `
+        <div style="margin-top:20px;">
+          <div style="margin-bottom:12px; font-weight:700; color:#34d399;">个人数据</div>
+          <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+              <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
+                <th style="text-align:left; padding:6px 4px;">位置</th>
+                <th style="text-align:left; padding:6px 4px;">球员</th>
+                ${tianyanMode ? `<th style="text-align:center; padding:6px 4px;">能力</th>` : ''}
+                <th style="text-align:center; padding:6px 4px;">上场</th>
+                <th style="text-align:center; padding:6px 4px;">进球</th>
+                <th style="text-align:center; padding:6px 4px;">助攻</th>
+                <th style="text-align:center; padding:6px 4px;">零封</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${userPlayerStats.map(s => `
+                <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
+                  <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
+                  <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${s.player.name}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${s.player.ovr}</span>` : ''}</td>
+                  ${tianyanMode ? `<td style="text-align:center; padding:6px 4px;">${s.player.ovr}</td>` : ''}
+                  <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
+                  <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
+                  <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
+                  <td style="text-align:center; padding:6px 4px;">${cleanSheetPositions.includes(s.pos) ? s.cleanSheets : '-'}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
     function renderLeague() {
       const isFinished = currentRound >= fixtures.length;
       const half = Math.floor(fixtures.length / 2);
@@ -1801,36 +1840,7 @@
           </div>`
         : "";
 
-      const statsHtml = userPlayerStats.length > 0
-        ? `
-          <div style="margin-top:20px;">
-            <div style="margin-bottom:12px; font-weight:700; color:#34d399;">个人数据</div>
-            <table style="width:100%; border-collapse:collapse; font-size:13px;">
-              <thead>
-                <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
-                  <th style="text-align:left; padding:6px 4px;">位置</th>
-                  <th style="text-align:left; padding:6px 4px;">球员</th>
-                  <th style="text-align:center; padding:6px 4px;">上场</th>
-                  <th style="text-align:center; padding:6px 4px;">进球</th>
-                  <th style="text-align:center; padding:6px 4px;">助攻</th>
-                  <th style="text-align:center; padding:6px 4px;">零封</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${userPlayerStats.map(s => `
-                  <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
-                    <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
-                    <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${s.player.name}</td>
-                    <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
-                    <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
-                    <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
-                    <td style="text-align:center; padding:6px 4px;">${cleanSheetPositions.includes(s.pos) ? s.cleanSheets : '-'}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>`
-        : "";
+      const statsHtml = buildPlayerStatsHtml();
 
       candidateList.innerHTML = `
         <div>
