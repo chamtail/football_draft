@@ -1250,7 +1250,7 @@
           const ovrText = tianyanMode ? ` (OVR ${currentPlayer.player.ovr})` : '';
           currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}${ovrText}`;
         } else {
-          candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml();
+          candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode });
         }
         return;
       }
@@ -1359,7 +1359,7 @@
       });
 
       if (transferSelecting) {
-        candidateList.insertAdjacentHTML("beforeend", buildPlayerStatsHtml());
+        candidateList.insertAdjacentHTML("beforeend", buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode }));
       }
     }
 
@@ -1545,7 +1545,7 @@
         isTransfer: false
       }));
 
-      draftStepTitle.textContent = "赛季模拟";
+      draftStepTitle.textContent = `第${currentSeason}赛季 · 赛季模拟`;
       draftLayout.classList.add("league");
       startSeasonBtn.classList.add("hidden");
       simNextBtn.classList.remove("hidden");
@@ -1674,6 +1674,9 @@
       // 隐藏模拟按钮，显示跳过窗口按钮
       simNextBtn.classList.add("hidden");
       simHalfBtn.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+      nextSeasonBtn.classList.add("hidden");
+      shareBtn.classList.add("hidden");
       skipTransferBtn.classList.remove("hidden");
 
       // 给每个 dot 加点击事件
@@ -1691,7 +1694,7 @@
       autoFillBtn.style.display = "none";
       refreshesLeft = 2;
 
-      candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml();
+      candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml(null, { hideReplaced: isSummer });
     }
 
     function selectTransferPosition(index) {
@@ -1774,6 +1777,7 @@
       refreshText.style.display = "none";
       autoFillBtn.style.display = "none";
       refreshBtn.textContent = "刷新选项";
+      skipTransferBtn.classList.add("hidden");
       transferCandidateCache = {};
 
       if (wasSummer) {
@@ -1783,10 +1787,9 @@
         startNewSeason();
       } else {
         // 冬季转会结束 → 继续当前赛季
-        draftStepTitle.textContent = "赛季模拟";
+        draftStepTitle.textContent = `第${currentSeason}赛季 · 赛季模拟`;
         simNextBtn.classList.remove("hidden");
         simHalfBtn.classList.remove("hidden");
-        skipTransferBtn.classList.add("hidden");
         draftLayout.classList.add("league");
         renderLeague();
       }
@@ -1840,13 +1843,15 @@
       }
     }
 
-    function buildPlayerStatsHtml(stats = null) {
+    function buildPlayerStatsHtml(stats = null, opts = {}) {
+      const { showAge = true, hideReplaced = false } = opts;
       const data = stats || userPlayerStats;
       if (data.length === 0) return "";
       const getName = s => s.player ? s.player.name : s.playerName;
       const getOvr = s => s.player ? s.player.ovr : s.playerOvr;
       const getAge = s => s.player ? s.player.age : s.playerAge;
-      const displayStats = data.filter(s => s.appearances > 0);
+      let displayStats = data.filter(s => s.appearances > 0);
+      if (hideReplaced) displayStats = displayStats.filter(s => !s.replaced);
       if (displayStats.length === 0) return "";
       return `
         <div style="margin-top:20px;">
@@ -1856,7 +1861,7 @@
               <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
                 <th style="text-align:left; padding:6px 4px;">位置</th>
                 <th style="text-align:left; padding:6px 4px;">球员</th>
-                <th style="text-align:center; padding:6px 4px;">年龄</th>
+                ${showAge ? `<th style="text-align:center; padding:6px 4px;">年龄</th>` : ''}
                 <th style="text-align:center; padding:6px 4px;">上场</th>
                 <th style="text-align:center; padding:6px 4px;">进球</th>
                 <th style="text-align:center; padding:6px 4px;">助攻</th>
@@ -1868,7 +1873,7 @@
                 <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
                   <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : ''}</td>
-                  <td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>
+                  ${showAge ? `<td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>` : ''}
                   <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
@@ -1978,9 +1983,9 @@
         }
 
         currentPosName.textContent = isFinished
-          ? "赛季已结束"
-          : `第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
-        progressText.textContent = `${currentRound} / ${fixtures.length} 轮已完成`;
+          ? `第${currentSeason}赛季已结束`
+          : `第${currentSeason}赛季 · 第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
+        progressText.textContent = `第${currentSeason}赛季 · ${currentRound} / ${fixtures.length} 轮已完成`;
         refreshBtn.style.display = "none";
         refreshText.style.display = "none";
 
@@ -2048,7 +2053,7 @@
           </div>
           ${buildPlayerStatsHtml()}`;
       } else if (viewSeason === "cumulative") {
-        contentHtml = `<div class="empty-state" style="text-align:left; padding:0;">累计统计涵盖所有已完成赛季的数据</div>` + buildPlayerStatsHtml(buildCumulativeStats());
+        contentHtml = `<div class="empty-state" style="text-align:left; padding:0;">累计统计涵盖所有已完成赛季的数据</div>` + buildPlayerStatsHtml(buildCumulativeStats(), { showAge: false });
       } else {
         const hist = seasonHistory.find(s => s.seasonNum == viewSeason);
         if (hist) {
