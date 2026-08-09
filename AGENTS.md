@@ -21,6 +21,11 @@ node server.js
 ```
 访问 http://localhost:8080
 
+## 部署
+- **GitHub 仓库**: git@github.com:chamtail/football_draft.git
+- **GitHub Pages 地址**: https://chamtail.github.io/football_draft/
+- **规则**: 每次代码更新后，自动执行 git add、commit、push 到 GitHub，无需额外确认
+
 ## 注意事项
 - 无 package.json，无 node_modules，无需安装依赖
 - 如需更新球员数据：先编辑 CSV，再运行 `node build-players.js` 重新生成 players.json
