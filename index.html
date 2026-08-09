@@ -1246,9 +1246,9 @@
           renderCandidates(cached);
           const slots = formations[selectedFormation];
           const pos = slots[transferPosIndex].pos;
-          const currentPlayer = userPlayerStats[transferPosIndex];
-          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.player.ovr})` : '';
-          currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}${ovrText}`;
+          const currentPlayer = draftPicks[transferPosIndex];
+          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+          currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name}${ovrText}`;
         } else {
           candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode });
         }
@@ -1705,7 +1705,7 @@
       transferSelecting = true;
       const slots = formations[selectedFormation];
       const pos = slots[index].pos;
-      const currentPlayer = userPlayerStats[index];
+      const currentPlayer = draftPicks[index];
 
       // 高亮选中的位置
       renderFormation(draftPitch, selectedFormation, index);
@@ -1717,8 +1717,8 @@
         }
       });
 
-      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.player.ovr})` : '';
-      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}${ovrText}`;
+      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name}${ovrText}`;
 
       // 显示刷新按钮
       refreshBtn.style.display = "";
