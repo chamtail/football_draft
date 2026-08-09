@@ -578,6 +578,7 @@
         <button class="primary-btn hidden" id="simNextBtn">模拟下一轮</button>
         <button class="primary-btn hidden" id="simHalfBtn">模拟至半程</button>
         <button class="primary-btn hidden" id="restartBtn">重来一局</button>
+        <button class="primary-btn hidden" id="nextSeasonBtn">进入下一赛季</button>
         <button class="primary-btn hidden" id="shareBtn">分享战绩</button>
         <button class="primary-btn hidden" id="skipTransferBtn">跳过窗口</button>
       </div>
@@ -724,6 +725,10 @@
     let transferPosIndex = -1;
     let transferSelecting = false;
     let transferCandidateCache = {};
+    let currentSeason = 1;
+    let seasonHistory = [];
+    let summerTransferMode = false;
+    let viewSeason = "current";
 
     const attackWeights = {
       ST: 10, CF: 9, LW: 7, RW: 7, CAM: 6,
@@ -751,6 +756,7 @@
     const simNextBtn = document.getElementById("simNextBtn");
     const simHalfBtn = document.getElementById("simHalfBtn");
     const restartBtn = document.getElementById("restartBtn");
+    const nextSeasonBtn = document.getElementById("nextSeasonBtn");
     const shareBtn = document.getElementById("shareBtn");
     const skipTransferBtn = document.getElementById("skipTransferBtn");
     const shareModal = document.getElementById("shareModal");
@@ -872,6 +878,18 @@
       transferPosIndex = -1;
       transferSelecting = false;
       transferCandidateCache = {};
+      currentSeason = 1;
+      seasonHistory = [];
+      summerTransferMode = false;
+      viewSeason = "current";
+
+      // 重新加载球员数据（恢复原始年龄和能力值）
+      fetch("players.json")
+        .then(r => r.json())
+        .then(data => {
+          allPlayers = data.players;
+          allTeams = data.teams;
+        });
 
       // 重置 DOM
       dreamText.classList.remove("active");
@@ -885,6 +903,7 @@
       simNextBtn.classList.add("hidden");
       simHalfBtn.classList.add("hidden");
       restartBtn.classList.add("hidden");
+      nextSeasonBtn.classList.add("hidden");
       shareBtn.classList.add("hidden");
       skipTransferBtn.classList.add("hidden");
       shareModal.style.display = "none";
@@ -908,6 +927,10 @@
     });
 
     shareBtn.addEventListener("click", () => generateShareImage());
+    nextSeasonBtn.addEventListener("click", () => {
+      saveSeasonHistory();
+      openTransferWindow(true);
+    });
     skipTransferBtn.addEventListener("click", () => closeTransferWindow());
     shareCloseBtn.addEventListener("click", () => { shareModal.style.display = "none"; });
     shareModal.addEventListener("click", (e) => {
@@ -947,7 +970,7 @@
       ctx.fillStyle = "#34d399";
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("足球经理模拟 · 赛季战报", W / 2, y + 24);
+      ctx.fillText(`足球经理模拟 · 第${currentSeason}赛季战报`, W / 2, y + 24);
       y += titleH;
 
       // 阵型
@@ -1321,7 +1344,7 @@
         card.innerHTML = `
           <div class="candidate-main">
             <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : ''}</div>
-            <div class="candidate-meta">${player.team} · ${player.league} · ${player.nation}</div>
+            <div class="candidate-meta">${player.team} · ${player.league} · ${player.nation} · ${player.age}岁</div>
           </div>
           <div class="candidate-positions">
             ${player.positions.map(p => `<span class="position-tag ${p === currentSlot.pos ? 'primary' : ''}">${p}</span>`).join('')}
@@ -1401,7 +1424,7 @@
           ${draftPicks.map((p, i) => `
             <div style="display:flex; justify-content:space-between; font-size:14px; padding:5px 0; border-bottom:1px solid #334155;">
               <span style="color:#94a3b8;">${slots[i].pos} · ${slots[i].label}</span>
-              <span style="color:#e2e8f0; font-weight:700;">${p.name}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${p.ovr}</span>` : ''}</span>
+              <span style="color:#e2e8f0; font-weight:700;">${p.name} <span style="color:#64748b; font-weight:400; font-size:12px;">${p.age}岁</span>${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${p.ovr}</span>` : ''}</span>
             </div>
           `).join("")}
           ${tianyanMode ? `<div style="margin-top:12px; font-size:13px; color:#94a3b8;">平均能力：${teamAverageOvr().toFixed(2)}</div>` : ''}
@@ -1436,6 +1459,62 @@
       ].sort(() => Math.random() - 0.5);
 
       return opponents;
+    }
+
+    function saveSeasonHistory() {
+      seasonHistory.push({
+        seasonNum: currentSeason,
+        standings: JSON.parse(JSON.stringify(standings)),
+        stats: userPlayerStats.map(s => ({
+          pos: s.pos, goals: s.goals, assists: s.assists,
+          cleanSheets: s.cleanSheets, appearances: s.appearances,
+          replaced: s.replaced, isTransfer: s.isTransfer,
+          playerId: s.player.id, playerName: s.player.name,
+          playerOvr: s.player.ovr, playerAge: s.player.age
+        })),
+        formation: selectedFormation
+      });
+    }
+
+    function progressOvr(ovr, age) {
+      const r = Math.random();
+      let change = 0;
+      if (age < 24) {
+        if (r < 0.60) change = 1 + Math.floor(Math.random() * 2);
+        else if (r < 0.90) change = 0;
+        else change = -1;
+      } else if (age < 30) {
+        if (r < 0.35) change = 1;
+        else if (r < 0.80) change = 0;
+        else change = -1;
+      } else if (age < 33) {
+        if (r < 0.15) change = 1;
+        else if (r < 0.60) change = 0;
+        else change = -1;
+      } else {
+        if (r < 0.05) change = 0;
+        else if (r < 0.30) change = -1;
+        else change = -(1 + Math.floor(Math.random() * 2));
+      }
+      return Math.max(50, Math.min(99, ovr + change));
+    }
+
+    function progressAllPlayers() {
+      for (const p of allPlayers) {
+        const oldAge = p.age;
+        p.age++;
+        p.ovr = progressOvr(p.ovr, oldAge);
+      }
+    }
+
+    function startNewSeason() {
+      currentSeason++;
+      viewSeason = "current";
+      transferDone = false;
+      currentOpponents = buildOpponents();
+      currentPhase = "league";
+      buildLeague();
+      renderLeague();
     }
 
     function buildLeague() {
@@ -1580,15 +1659,17 @@
       }
     }
 
-    function openTransferWindow() {
+    function openTransferWindow(isSummer = false) {
       transferMode = true;
+      summerTransferMode = isSummer;
       transferSelecting = false;
       transferPosIndex = -1;
       transferCandidateCache = {};
       draftLayout.classList.remove("league");
       renderFormation(draftPitch, selectedFormation);
-      draftFormationLabel.innerHTML = `冬季转会窗口 · <strong>${selectedFormation}</strong>`;
-      draftStepTitle.textContent = "冬季转会";
+      const windowName = isSummer ? "夏季转会窗口" : "冬季转会窗口";
+      draftFormationLabel.innerHTML = `${windowName} · <strong>${selectedFormation}</strong>`;
+      draftStepTitle.textContent = isSummer ? "夏季转会" : "冬季转会";
 
       // 隐藏模拟按钮，显示跳过窗口按钮
       simNextBtn.classList.add("hidden");
@@ -1603,7 +1684,7 @@
       });
 
       currentPosName.textContent = "点击阵型图选择替换位置";
-      progressText.textContent = "冬季转会";
+      progressText.textContent = isSummer ? "夏季转会" : "冬季转会";
 
       refreshBtn.style.display = "none";
       refreshText.style.display = "none";
@@ -1681,16 +1762,12 @@
     }
 
     function closeTransferWindow() {
+      const wasSummer = summerTransferMode;
       transferDone = true;
       transferMode = false;
+      summerTransferMode = false;
       transferSelecting = false;
       transferPosIndex = -1;
-
-      // 恢复标题和按钮
-      draftStepTitle.textContent = "赛季模拟";
-      simNextBtn.classList.remove("hidden");
-      simHalfBtn.classList.remove("hidden");
-      skipTransferBtn.classList.add("hidden");
 
       // 恢复按钮
       refreshBtn.style.display = "none";
@@ -1699,9 +1776,20 @@
       refreshBtn.textContent = "刷新选项";
       transferCandidateCache = {};
 
-      // 恢复联赛布局
-      draftLayout.classList.add("league");
-      renderLeague();
+      if (wasSummer) {
+        // 夏季转会结束 → 球员成长 → 新赛季
+        progressAllPlayers();
+        draftLayout.classList.add("league");
+        startNewSeason();
+      } else {
+        // 冬季转会结束 → 继续当前赛季
+        draftStepTitle.textContent = "赛季模拟";
+        simNextBtn.classList.remove("hidden");
+        simHalfBtn.classList.remove("hidden");
+        skipTransferBtn.classList.add("hidden");
+        draftLayout.classList.add("league");
+        renderLeague();
+      }
     }
 
     function simulateRound(roundIdx) {
@@ -1752,8 +1840,14 @@
       }
     }
 
-    function buildPlayerStatsHtml() {
-      if (userPlayerStats.length === 0) return "";
+    function buildPlayerStatsHtml(stats = null) {
+      const data = stats || userPlayerStats;
+      if (data.length === 0) return "";
+      const getName = s => s.player ? s.player.name : s.playerName;
+      const getOvr = s => s.player ? s.player.ovr : s.playerOvr;
+      const getAge = s => s.player ? s.player.age : s.playerAge;
+      const displayStats = data.filter(s => s.appearances > 0);
+      if (displayStats.length === 0) return "";
       return `
         <div style="margin-top:20px;">
           <div style="margin-bottom:12px; font-weight:700; color:#34d399;">个人数据</div>
@@ -1762,6 +1856,7 @@
               <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
                 <th style="text-align:left; padding:6px 4px;">位置</th>
                 <th style="text-align:left; padding:6px 4px;">球员</th>
+                <th style="text-align:center; padding:6px 4px;">年龄</th>
                 <th style="text-align:center; padding:6px 4px;">上场</th>
                 <th style="text-align:center; padding:6px 4px;">进球</th>
                 <th style="text-align:center; padding:6px 4px;">助攻</th>
@@ -1769,10 +1864,11 @@
               </tr>
             </thead>
             <tbody>
-              ${userPlayerStats.map(s => `
+              ${displayStats.map(s => `
                 <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
-                  <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${s.player.name}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${s.player.ovr}</span>` : ''}</td>
+                  <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : ''}</td>
+                  <td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
@@ -1784,121 +1880,200 @@
         </div>`;
     }
 
+    function buildCumulativeStats() {
+      const getName = s => s.player ? s.player.name : s.playerName;
+      const getOvr = s => s.player ? s.player.ovr : s.playerOvr;
+      const getAge = s => s.player ? s.player.age : s.playerAge;
+      const getId = s => s.player ? s.player.id : s.playerId;
+      const map = new Map();
+      const allStats = [...seasonHistory.map(h => h.stats), userPlayerStats];
+      for (const stats of allStats) {
+        for (const s of stats) {
+          if (s.appearances === 0) continue;
+          const id = getId(s);
+          if (!map.has(id)) {
+            map.set(id, {
+              pos: s.pos, goals: 0, assists: 0, cleanSheets: 0, appearances: 0,
+              replaced: false, isTransfer: false,
+              playerName: getName(s), playerOvr: getOvr(s), playerAge: getAge(s)
+            });
+          }
+          const e = map.get(id);
+          e.goals += s.goals; e.assists += s.assists;
+          e.cleanSheets += s.cleanSheets; e.appearances += s.appearances;
+        }
+      }
+      return Array.from(map.values());
+    }
+
+    function buildStandingsTableHtml(sorted) {
+      return `
+        <div style="margin-bottom:12px; font-weight:700; color:#34d399;">积分榜</div>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
+              <th style="text-align:left; padding:6px 4px;">排名</th>
+              <th style="text-align:left; padding:6px 4px;">球队</th>
+              <th style="text-align:center; padding:6px 4px;">赛</th>
+              <th style="text-align:center; padding:6px 4px;">胜</th>
+              <th style="text-align:center; padding:6px 4px;">平</th>
+              <th style="text-align:center; padding:6px 4px;">负</th>
+              <th style="text-align:center; padding:6px 4px;">进</th>
+              <th style="text-align:center; padding:6px 4px;">失</th>
+              <th style="text-align:center; padding:6px 4px;">净</th>
+              <th style="text-align:center; padding:6px 4px;">分</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((s, i) => `
+              <tr style="border-bottom:1px solid #334155; color:${s.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${s.isUser ? 700 : 400};">
+                <td style="padding:6px 4px;">${i + 1}</td>
+                <td style="padding:6px 4px;">${s.name}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.played}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.won}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.drawn}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.lost}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.gf}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.ga}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.gd > 0 ? '+' : ''}${s.gd}</td>
+                <td style="text-align:center; padding:6px 4px;">${s.points}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
+    }
+
     function renderLeague() {
       const isFinished = currentRound >= fixtures.length;
       const half = Math.floor(fixtures.length / 2);
+      const isCurrent = viewSeason === "current";
 
-      // 找到用户下一轮的对手
-      let nextOpponent = null;
-      let nextVenue = "";
-      if (!isFinished) {
-        const round = fixtures[currentRound];
-        for (const m of round) {
-          if (leagueTeams[m.home].isUser) {
-            nextOpponent = leagueTeams[m.away].name;
-            nextVenue = "主";
-            break;
-          } else if (leagueTeams[m.away].isUser) {
-            nextOpponent = leagueTeams[m.home].name;
-            nextVenue = "客";
-            break;
+      // 赛季选择器
+      const seasonOptions = [
+        `<option value="current" ${isCurrent ? 'selected' : ''}>第${currentSeason}赛季（当前）</option>`,
+        ...seasonHistory.map(s => `<option value="${s.seasonNum}" ${viewSeason == String(s.seasonNum) ? 'selected' : ''}>第${s.seasonNum}赛季</option>`),
+        `<option value="cumulative" ${viewSeason === 'cumulative' ? 'selected' : ''}>累计统计</option>`
+      ].join('');
+      const seasonSelector = seasonHistory.length > 0
+        ? `<div style="margin-bottom:16px;"><select id="seasonSelect" style="background:#1e293b; color:#e2e8f0; border:1px solid #475569; border-radius:6px; padding:6px 10px; font-size:14px;">${seasonOptions}</select></div>`
+        : '';
+
+      if (isCurrent) {
+        // 找到用户下一轮的对手
+        let nextOpponent = null;
+        let nextVenue = "";
+        if (!isFinished) {
+          const round = fixtures[currentRound];
+          for (const m of round) {
+            if (leagueTeams[m.home].isUser) {
+              nextOpponent = leagueTeams[m.away].name;
+              nextVenue = "主";
+              break;
+            } else if (leagueTeams[m.away].isUser) {
+              nextOpponent = leagueTeams[m.home].name;
+              nextVenue = "客";
+              break;
+            }
           }
         }
-      }
 
-      currentPosName.textContent = isFinished
-        ? "赛季已结束"
-        : `第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
-      progressText.textContent = `${currentRound} / ${fixtures.length} 轮已完成`;
-      refreshBtn.style.display = "none";
-      refreshText.style.display = "none";
+        currentPosName.textContent = isFinished
+          ? "赛季已结束"
+          : `第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
+        progressText.textContent = `${currentRound} / ${fixtures.length} 轮已完成`;
+        refreshBtn.style.display = "none";
+        refreshText.style.display = "none";
 
-      // 半程后按钮改为"模拟到结束"
-      if (currentRound >= half && !isFinished) {
-        simHalfBtn.textContent = "模拟到结束";
-      } else if (!isFinished) {
-        simHalfBtn.textContent = "模拟至半程";
-      }
+        if (currentRound >= half && !isFinished) {
+          simHalfBtn.textContent = "模拟到结束";
+        } else if (!isFinished) {
+          simHalfBtn.textContent = "模拟至半程";
+        }
 
-      if (isFinished) {
+        if (isFinished) {
+          simNextBtn.classList.add("hidden");
+          simHalfBtn.classList.add("hidden");
+          restartBtn.classList.remove("hidden");
+          nextSeasonBtn.classList.remove("hidden");
+          shareBtn.classList.remove("hidden");
+        } else if (!isSimulating) {
+          simNextBtn.classList.remove("hidden");
+          simHalfBtn.classList.remove("hidden");
+          restartBtn.classList.add("hidden");
+          nextSeasonBtn.classList.add("hidden");
+          shareBtn.classList.add("hidden");
+          simNextBtn.disabled = false;
+          simHalfBtn.disabled = false;
+        }
+      } else {
+        // 查看历史/累计时隐藏所有按钮
         simNextBtn.classList.add("hidden");
         simHalfBtn.classList.add("hidden");
-        restartBtn.classList.remove("hidden");
-        shareBtn.classList.remove("hidden");
-      } else if (!isSimulating) {
-        simNextBtn.classList.remove("hidden");
-        simHalfBtn.classList.remove("hidden");
         restartBtn.classList.add("hidden");
+        nextSeasonBtn.classList.add("hidden");
         shareBtn.classList.add("hidden");
-        simNextBtn.disabled = false;
-        simHalfBtn.disabled = false;
+        currentPosName.textContent = viewSeason === "cumulative" ? "累计统计" : `查看历史赛季`;
+        progressText.textContent = "";
+        refreshBtn.style.display = "none";
+        refreshText.style.display = "none";
       }
 
-      const sorted = [...standings].sort((a, b) =>
-        b.points - a.points || b.gd - a.gd || b.gf - a.gf
-      );
+      let contentHtml;
 
-      const resultsHtml = lastRoundResults.length > 0
-        ? `
-          <div style="margin-bottom:16px;">
-            <div style="margin-bottom:8px; font-weight:700; color:#34d399;">第 ${currentRound} 轮赛果</div>
-            ${lastRoundResults.map(r => `
-              <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">
-                <span style="text-align:right; flex:1;">${r.homeName}</span>
-                <span style="flex:0 0 auto; padding:0 10px; color:#facc15; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
-                <span style="flex:1;">${r.awayName}</span>
-              </div>
-            `).join("")}
-          </div>`
-        : "";
-
-      const statsHtml = buildPlayerStatsHtml();
-
-      candidateList.innerHTML = `
-        <div>
+      if (isCurrent) {
+        const sorted = [...standings].sort((a, b) =>
+          b.points - a.points || b.gd - a.gd || b.gf - a.gf
+        );
+        const resultsHtml = lastRoundResults.length > 0
+          ? `
+            <div style="margin-bottom:16px;">
+              <div style="margin-bottom:8px; font-weight:700; color:#34d399;">第 ${currentRound} 轮赛果</div>
+              ${lastRoundResults.map(r => `
+                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">
+                  <span style="text-align:right; flex:1;">${r.homeName}</span>
+                  <span style="flex:0 0 auto; padding:0 10px; color:#facc15; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
+                  <span style="flex:1;">${r.awayName}</span>
+                </div>
+              `).join("")}
+            </div>`
+          : "";
+        contentHtml = `
           <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
             <div style="flex:0 0 240px; margin:0 auto;">
               ${resultsHtml || '<div class="empty-state">尚无赛果</div>'}
             </div>
             <div style="flex:1; min-width:280px;">
-              <div style="margin-bottom:12px; font-weight:700; color:#34d399;">积分榜</div>
-              <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                <thead>
-                  <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
-                    <th style="text-align:left; padding:6px 4px;">排名</th>
-                    <th style="text-align:left; padding:6px 4px;">球队</th>
-                    <th style="text-align:center; padding:6px 4px;">赛</th>
-                    <th style="text-align:center; padding:6px 4px;">胜</th>
-                    <th style="text-align:center; padding:6px 4px;">平</th>
-                    <th style="text-align:center; padding:6px 4px;">负</th>
-                    <th style="text-align:center; padding:6px 4px;">进</th>
-                    <th style="text-align:center; padding:6px 4px;">失</th>
-                    <th style="text-align:center; padding:6px 4px;">净</th>
-                    <th style="text-align:center; padding:6px 4px;">分</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${sorted.map((s, i) => `
-                    <tr style="border-bottom:1px solid #334155; color:${s.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${s.isUser ? 700 : 400};">
-                      <td style="padding:6px 4px;">${i + 1}</td>
-                      <td style="padding:6px 4px;">${s.name}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.played}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.won}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.drawn}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.lost}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.gf}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.ga}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.gd > 0 ? '+' : ''}${s.gd}</td>
-                      <td style="text-align:center; padding:6px 4px;">${s.points}</td>
-                    </tr>
-                  `).join("")}
-                </tbody>
-              </table>
+              ${buildStandingsTableHtml(sorted)}
             </div>
           </div>
-          ${statsHtml}
-        </div>
-      `;
+          ${buildPlayerStatsHtml()}`;
+      } else if (viewSeason === "cumulative") {
+        contentHtml = `<div class="empty-state" style="text-align:left; padding:0;">累计统计涵盖所有已完成赛季的数据</div>` + buildPlayerStatsHtml(buildCumulativeStats());
+      } else {
+        const hist = seasonHistory.find(s => s.seasonNum == viewSeason);
+        if (hist) {
+          const sorted = [...hist.standings].sort((a, b) =>
+            b.points - a.points || b.gd - a.gd || b.gf - a.gf
+          );
+          contentHtml = `
+            <div style="flex:1; min-width:280px;">
+              ${buildStandingsTableHtml(sorted)}
+            </div>
+            ${buildPlayerStatsHtml(hist.stats)}`;
+        } else {
+          contentHtml = '<div class="empty-state">无数据</div>';
+        }
+      }
+
+      candidateList.innerHTML = `<div>${seasonSelector}${contentHtml}</div>`;
+
+      const seasonSelect = document.getElementById("seasonSelect");
+      if (seasonSelect) {
+        seasonSelect.addEventListener("change", (e) => {
+          viewSeason = e.target.value;
+          renderLeague();
+        });
+      }
     }
   </script>
 </body>

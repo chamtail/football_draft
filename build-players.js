@@ -113,6 +113,7 @@ const idx = {
   id: headers.indexOf("ID"),
   name: headers.indexOf("Name"),
   ovr: headers.indexOf("OVR"),
+  age: headers.indexOf("Age"),
   position: headers.indexOf("Position"),
   altPositions: headers.indexOf("Alternative positions"),
   nation: headers.indexOf("Nation"),
@@ -131,6 +132,7 @@ for (let i = 1; i < lines.length; i++) {
   const id = Number(row[idx.id]);
   const name = row[idx.name];
   const ovr = Number(row[idx.ovr]);
+  const age = Number(row[idx.age]);
   const primary = row[idx.position];
   const alt = row[idx.altPositions];
   const nation = row[idx.nation];
@@ -145,6 +147,7 @@ for (let i = 1; i < lines.length; i++) {
     league,
     team,
     ovr,
+    age,
     positions: parsePositions(primary, alt)
   });
 }
