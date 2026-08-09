@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>足球经理模拟</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 24px 0;
+      text-align: center;
+      background: linear-gradient(90deg, #064e3b 0%, #065f46 50%, #064e3b 100%);
+      border-bottom: 4px solid #10b981;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      margin-top: 6px;
+      color: #a7f3d0;
+      font-size: 14px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .screen {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .step-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .formation-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .formation-btn {
+      background: #1e293b;
+      border: 2px solid #334155;
+      color: #e2e8f0;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .formation-btn:hover {
+      border-color: #10b981;
+      background: #064e3b;
+    }
+
+    .formation-btn.active {
+      background: #10b981;
+      border-color: #10b981;
+      color: #064e3b;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .pitch-wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .pitch {
+      position: relative;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      aspect-ratio: 2 / 3;
+      background: linear-gradient(180deg, #15803d 0%, #166534 50%, #15803d 100%);
+      border: 4px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .pitch::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(0deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .center-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255,255,255,0.4);
+      transform: translateY(-50%);
+    }
+
+    .center-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 22%;
+      aspect-ratio: 1;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .penalty-box-top,
+    .penalty-box-bottom {
+      position: absolute;
+      left: 50%;
+      width: 44%;
+      height: 14%;
+      border: 2px solid rgba(255,255,255,0.4);
+      transform: translateX(-50%);
+    }
+
+    .penalty-box-top {
+      top: 0;
+      border-top: none;
+    }
+
+    .penalty-box-bottom {
+      bottom: 0;
+      border-bottom: none;
+    }
+
+    .position-dot {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      border: 3px solid #10b981;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .position-dot:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.6);
+    }
+
+    .position-dot.filled {
+      background: #10b981;
+      border-color: #f8fafc;
+      color: #064e3b;
+    }
+
+    .position-dot.current {
+      background: #facc15;
+      border-color: #f8fafc;
+      color: #0f172a;
+      box-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.12); }
+    }
+
+    .formation-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #94a3b8;
+      min-height: 24px;
+    }
+
+    .formation-label strong {
+      color: #34d399;
+    }
+
+    .actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn {
+      background: #10b981;
+      color: #064e3b;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      background: #34d399;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.45);
+    }
+
+    .primary-btn:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      background: transparent;
+      color: #94a3b8;
+      border: 2px solid #475569;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .secondary-btn:hover {
+      border-color: #10b981;
+      color: #34d399;
+    }
+
+    .draft-layout {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .draft-layout.league {
+      grid-template-columns: 1fr;
+    }
+
+    .draft-layout.league #formationPanel {
+      display: none;
+    }
+
+    @media (max-width: 800px) {
+      .draft-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 22px;
+      }
+
+      .share-download {
+        display: none !important;
+      }
+
+      .share-hint {
+        display: block !important;
+      }
+
+      .container {
+        padding: 16px 12px;
+        gap: 16px;
+      }
+
+      .step-title {
+        font-size: 18px;
+      }
+
+      .pitch {
+        max-width: 180px;
+      }
+
+      .position-dot {
+        width: 22px;
+        height: 22px;
+        font-size: 8px;
+        border-width: 2px;
+      }
+
+      .draft-panel {
+        padding: 12px;
+        gap: 10px;
+      }
+
+      .current-position {
+        font-size: 18px;
+      }
+
+      .candidate-card {
+        padding: 12px;
+      }
+
+      .candidate-name {
+        font-size: 14px;
+      }
+
+      .candidate-meta {
+        font-size: 12px;
+      }
+    }
+
+    .draft-panel {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .draft-panel h3 {
+      font-size: 16px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .current-position {
+      font-size: 24px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .current-position span {
+      color: #34d399;
+    }
+
+    .progress-text {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .candidate-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .refresh-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .refresh-text {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .refresh-btn {
+      background: #1e293b;
+      border: 2px solid #475569;
+      color: #e2e8f0;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .refresh-btn:hover:not(:disabled) {
+      border-color: #10b981;
+      color: #34d399;
+    }
+
+    .refresh-btn:disabled {
+      background: #334155;
+      border-color: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .candidate-card {
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .candidate-card:active {
+      border-color: #10b981;
+      background: #064e3b;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .candidate-card:hover {
+        border-color: #10b981;
+        background: #064e3b;
+      }
+    }
+
+    .candidate-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .candidate-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .candidate-meta {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .candidate-positions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .position-tag {
+      background: #334155;
+      color: #e2e8f0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .position-tag.primary {
+      background: #10b981;
+      color: #064e3b;
+    }
+
+    .empty-state {
+      color: #64748b;
+      font-size: 14px;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .loading {
+      color: #34d399;
+      font-size: 14px;
+    }
+
+    .easter-egg {
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .easter-egg.active {
+      color: #facc15;
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+    }
+
+    .ovr-badge {
+      background: #facc15;
+      color: #0f172a;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      margin-left: 8px;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 16px;
+      color: #64748b;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>足球经理模拟</h1>
+    <p>组建你的<span class="easter-egg" id="dreamText">梦幻</span>首发十一人，征战一个完整赛季</p>
+  </header>
+
+  <main class="container">
+    <!-- 阵型选择 -->
+    <section class="screen" id="formationScreen">
+      <div class="step-title">第 1 步：选择阵型</div>
+
+      <div class="formation-bar" id="formationBar">
+        <button class="formation-btn" data-formation="4-3-3">4-3-3</button>
+        <button class="formation-btn" data-formation="4-4-2">4-4-2</button>
+        <button class="formation-btn" data-formation="4-2-3-1">4-2-3-1</button>
+        <button class="formation-btn" data-formation="3-5-2">3-5-2</button>
+        <button class="formation-btn" data-formation="3-4-3">3-4-3</button>
+      </div>
+
+      <div class="pitch-wrapper">
+        <div class="pitch" id="pitch">
+          <div class="center-line"></div>
+          <div class="center-circle"></div>
+          <div class="penalty-box-top"></div>
+          <div class="penalty-box-bottom"></div>
+        </div>
+        <div class="formation-label" id="formationLabel">请选择上方阵型</div>
+      </div>
+
+      <div class="actions">
+        <button class="primary-btn" id="nextBtn">下一步：挑选球员</button>
+      </div>
+    </section>
+
+    <!-- 球员选择 -->
+    <section class="screen hidden" id="draftScreen">
+      <div class="step-title" id="draftStepTitle">第 2 步：挑选首发十一人</div>
+
+      <div class="actions">
+        <button class="primary-btn" id="startSeasonBtn" disabled>开始赛季</button>
+        <button class="primary-btn hidden" id="simNextBtn">模拟下一轮</button>
+        <button class="primary-btn hidden" id="simHalfBtn">模拟至半程</button>
+        <button class="primary-btn hidden" id="restartBtn">重来一局</button>
+        <button class="primary-btn hidden" id="shareBtn">分享战绩</button>
+        <button class="primary-btn hidden" id="skipTransferBtn">跳过窗口</button>
+      </div>
+
+      <div class="draft-layout" id="draftLayout">
+        <div class="draft-panel" id="formationPanel">
+          <h3>阵型</h3>
+          <div class="pitch" id="draftPitch">
+            <div class="center-line"></div>
+            <div class="center-circle"></div>
+            <div class="penalty-box-top"></div>
+            <div class="penalty-box-bottom"></div>
+          </div>
+          <div class="formation-label" id="draftFormationLabel"></div>
+        </div>
+
+        <div class="draft-panel">
+          <div>
+            <div class="current-position">正在选择：<span id="currentPosName">-</span></div>
+            <div class="progress-text" id="progressText">0 / 11</div>
+          </div>
+          <div class="refresh-row">
+            <span class="refresh-text" id="refreshText">剩余刷新次数：2</span>
+            <button class="refresh-btn" id="refreshBtn">刷新选项</button>
+            <button class="refresh-btn" id="autoFillBtn">自动填充</button>
+          </div>
+          <div class="candidate-list" id="candidateList">
+            <div class="loading">正在加载球员数据…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>初版 Demo · 仅支持 11 人首发选择</footer>
+
+  <div id="shareModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#1e293b; border-radius:12px; padding:20px; max-width:90vw; max-height:90vh; overflow:auto; text-align:center;">
+      <img id="shareImage" style="max-width:90vw; max-height:70vh; border-radius:8px;" />
+      <div style="margin-top:12px;">
+        <a id="shareDownload" class="share-download" download="football-manager-share.png" style="display:inline-block; padding:10px 24px; background:#10b981; color:#064e3b; text-decoration:none; border-radius:8px; font-weight:700; margin-right:8px;">保存图片</a>
+        <button id="shareCloseBtn" style="padding:10px 24px; background:#334155; color:#e2e8f0; border:none; border-radius:8px; cursor:pointer; font-weight:700;">关闭</button>
+      </div>
+      <div class="share-hint" style="margin-top:8px; font-size:12px; color:#94a3b8; display:none;">长按图片保存到相册或分享</div>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" style="position:fixed; inset:0; background:rgba(15,23,42,0.92); z-index:99999; display:flex; align-items:center; justify-content:center;">
+    <div style="text-align:center;">
+      <div style="font-size:18px; color:#34d399; font-weight:700;">数据加载中…</div>
+    </div>
+  </div>
+
+  <script>
+    const formations = {
+      "4-3-3": [
+        { pos: "GK", label: "门将", x: 50, y: 92 },
+        { pos: "RB", label: "右后卫", x: 78, y: 75 },
+        { pos: "CB", label: "中后卫", x: 60, y: 78 },
+        { pos: "CB", label: "中后卫", x: 40, y: 78 },
+        { pos: "LB", label: "左后卫", x: 22, y: 75 },
+        { pos: "CM", label: "中场", x: 65, y: 55 },
+        { pos: "CM", label: "中场", x: 50, y: 58 },
+        { pos: "CM", label: "中场", x: 35, y: 55 },
+        { pos: "RW", label: "右边锋", x: 78, y: 32 },
+        { pos: "ST", label: "中锋", x: 50, y: 25 },
+        { pos: "LW", label: "左边锋", x: 22, y: 32 }
+      ],
+      "4-4-2": [
+        { pos: "GK", label: "门将", x: 50, y: 92 },
+        { pos: "RB", label: "右后卫", x: 78, y: 75 },
+        { pos: "CB", label: "中后卫", x: 60, y: 78 },
+        { pos: "CB", label: "中后卫", x: 40, y: 78 },
+        { pos: "LB", label: "左后卫", x: 22, y: 75 },
+        { pos: "RM", label: "右前卫", x: 78, y: 50 },
+        { pos: "CM", label: "中场", x: 60, y: 52 },
+        { pos: "CM", label: "中场", x: 40, y: 52 },
+        { pos: "LM", label: "左前卫", x: 22, y: 50 },
+        { pos: "ST", label: "中锋", x: 42, y: 25 },
+        { pos: "ST", label: "中锋", x: 58, y: 25 }
+      ],
+      "3-5-2": [
+        { pos: "GK", label: "门将", x: 50, y: 92 },
+        { pos: "CB", label: "中后卫", x: 50, y: 80 },
+        { pos: "CB", label: "中后卫", x: 32, y: 78 },
+        { pos: "CB", label: "中后卫", x: 68, y: 78 },
+        { pos: "RWB", label: "右翼卫", x: 82, y: 55 },
+        { pos: "CM", label: "中场", x: 65, y: 52 },
+        { pos: "CM", label: "中场", x: 50, y: 55 },
+        { pos: "CM", label: "中场", x: 35, y: 52 },
+        { pos: "LWB", label: "左翼卫", x: 18, y: 55 },
+        { pos: "ST", label: "中锋", x: 42, y: 25 },
+        { pos: "ST", label: "中锋", x: 58, y: 25 }
+      ],
+      "4-2-3-1": [
+        { pos: "GK", label: "门将", x: 50, y: 92 },
+        { pos: "RB", label: "右后卫", x: 78, y: 75 },
+        { pos: "CB", label: "中后卫", x: 60, y: 78 },
+        { pos: "CB", label: "中后卫", x: 40, y: 78 },
+        { pos: "LB", label: "左后卫", x: 22, y: 75 },
+        { pos: "CDM", label: "后腰", x: 42, y: 62 },
+        { pos: "CDM", label: "后腰", x: 58, y: 62 },
+        { pos: "RW", label: "右边锋", x: 78, y: 40 },
+        { pos: "CAM", label: "前腰", x: 50, y: 42 },
+        { pos: "LW", label: "左边锋", x: 22, y: 40 },
+        { pos: "ST", label: "中锋", x: 50, y: 25 }
+      ],
+      "3-4-3": [
+        { pos: "GK", label: "门将", x: 50, y: 92 },
+        { pos: "CB", label: "中后卫", x: 50, y: 80 },
+        { pos: "CB", label: "中后卫", x: 30, y: 78 },
+        { pos: "CB", label: "中后卫", x: 70, y: 78 },
+        { pos: "RM", label: "右前卫", x: 82, y: 50 },
+        { pos: "CM", label: "中场", x: 62, y: 52 },
+        { pos: "CM", label: "中场", x: 38, y: 52 },
+        { pos: "LM", label: "左前卫", x: 18, y: 50 },
+        { pos: "RW", label: "右边锋", x: 70, y: 28 },
+        { pos: "ST", label: "中锋", x: 50, y: 23 },
+        { pos: "LW", label: "左边锋", x: 30, y: 28 }
+      ]
+    };
+
+    let selectedFormation = null;
+    let allPlayers = [];
+    let allTeams = [];
+    let playersLoaded = false;
+    let draftIndex = 0;
+    let draftPicks = [];
+    let refreshesLeft = 2;
+    let tianyanMode = false;
+    let dreamClicks = 0;
+    let currentCandidates = [];
+    let currentPhase = "formation";
+    let currentOpponents = [];
+    let leagueTeams = [];
+    let fixtures = [];
+    let standings = [];
+    let currentRound = 0;
+    let lastRoundResults = [];
+    let isSimulating = false;
+    let userPlayerStats = [];
+    let transferDone = false;
+    let transferMode = false;
+    let transferPosIndex = -1;
+    let transferSelecting = false;
+    let transferCandidateCache = {};
+
+    const attackWeights = {
+      ST: 10, CF: 9, LW: 7, RW: 7, CAM: 6,
+      LM: 4, RM: 4, CM: 3, CDM: 1,
+      CB: 0.3, RB: 0.5, LB: 0.5, RWB: 0.5, LWB: 0.5, GK: 0
+    };
+
+    const assistWeights = {
+      ST: 4, CF: 4, LW: 6, RW: 6, CAM: 7,
+      LM: 5, RM: 5, CM: 4, CDM: 3,
+      CB: 1, RB: 1.5, LB: 1.5, RWB: 2, LWB: 2, GK: 0
+    };
+
+    const cleanSheetPositions = ["GK", "CB", "RB", "LB", "RWB", "LWB"];
+
+    const formationScreen = document.getElementById("formationScreen");
+    const draftScreen = document.getElementById("draftScreen");
+    const formationBar = document.getElementById("formationBar");
+    const pitch = document.getElementById("pitch");
+    const draftPitch = document.getElementById("draftPitch");
+    const formationLabel = document.getElementById("formationLabel");
+    const draftFormationLabel = document.getElementById("draftFormationLabel");
+    const nextBtn = document.getElementById("nextBtn");
+    const startSeasonBtn = document.getElementById("startSeasonBtn");
+    const simNextBtn = document.getElementById("simNextBtn");
+    const simHalfBtn = document.getElementById("simHalfBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const shareBtn = document.getElementById("shareBtn");
+    const skipTransferBtn = document.getElementById("skipTransferBtn");
+    const shareModal = document.getElementById("shareModal");
+    const shareImage = document.getElementById("shareImage");
+    const shareDownload = document.getElementById("shareDownload");
+    const shareCloseBtn = document.getElementById("shareCloseBtn");
+    const currentPosName = document.getElementById("currentPosName");
+    const progressText = document.getElementById("progressText");
+    const candidateList = document.getElementById("candidateList");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const refreshText = document.getElementById("refreshText");
+    const autoFillBtn = document.getElementById("autoFillBtn");
+    const dreamText = document.getElementById("dreamText");
+    const draftLayout = document.getElementById("draftLayout");
+    const draftStepTitle = document.getElementById("draftStepTitle");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+
+    // 加载球员池
+    fetch("players.json")
+      .then(r => r.json())
+      .then(data => {
+        allPlayers = data.players;
+        allTeams = data.teams;
+        playersLoaded = true;
+        loadingOverlay.style.display = "none";
+      })
+      .catch(err => {
+        candidateList.innerHTML = `<div class="empty-state">加载球员数据失败：${err.message}</div>`;
+        loadingOverlay.style.display = "none";
+      });
+
+    formationBar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".formation-btn");
+      if (!btn) return;
+
+      document.querySelectorAll(".formation-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      selectedFormation = btn.dataset.formation;
+      renderFormation(pitch, selectedFormation);
+      formationLabel.innerHTML = `当前阵型：<strong>${selectedFormation}</strong> · 共 11 人`;
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (!selectedFormation) return;
+      startDraft();
+    });
+
+    startSeasonBtn.addEventListener("click", () => {
+      if (draftPicks.length !== 11) return;
+      currentOpponents = buildOpponents();
+      currentPhase = "league";
+      buildLeague();
+      renderLeague();
+    });
+
+    simNextBtn.addEventListener("click", () => {
+      if (currentRound >= fixtures.length || isSimulating) return;
+      simulateRound(currentRound);
+      currentRound++;
+      const half = Math.floor(fixtures.length / 2);
+      if (currentRound === half && !transferDone) {
+        openTransferWindow();
+        return;
+      }
+      renderLeague();
+    });
+
+    simHalfBtn.addEventListener("click", () => {
+      if (isSimulating) return;
+      const half = Math.floor(fixtures.length / 2);
+      const target = currentRound < half ? half : fixtures.length;
+      if (currentRound >= target) return;
+
+      isSimulating = true;
+      simNextBtn.disabled = true;
+      simHalfBtn.disabled = true;
+
+      const step = () => {
+        if (currentRound >= target) {
+          isSimulating = false;
+          simNextBtn.disabled = false;
+          simHalfBtn.disabled = false;
+          if (currentRound === half && !transferDone) {
+            openTransferWindow();
+            return;
+          }
+          renderLeague();
+          return;
+        }
+        simulateRound(currentRound);
+        currentRound++;
+        renderLeague();
+        setTimeout(step, 400);
+      };
+      step();
+    });
+
+    restartBtn.addEventListener("click", () => {
+      // 重置所有游戏状态变量
+      selectedFormation = null;
+      draftIndex = 0;
+      draftPicks = [];
+      refreshesLeft = 2;
+      tianyanMode = false;
+      dreamClicks = 0;
+      currentCandidates = [];
+      currentPhase = "formation";
+      currentOpponents = [];
+      leagueTeams = [];
+      fixtures = [];
+      standings = [];
+      currentRound = 0;
+      lastRoundResults = [];
+      isSimulating = false;
+      userPlayerStats = [];
+      transferDone = false;
+      transferMode = false;
+      transferPosIndex = -1;
+      transferSelecting = false;
+      transferCandidateCache = {};
+
+      // 重置 DOM
+      dreamText.classList.remove("active");
+      document.querySelectorAll(".formation-btn").forEach(b => b.classList.remove("active"));
+      formationLabel.textContent = "请选择上方阵型";
+      renderFormation(pitch, null);
+      renderFormation(draftPitch, null);
+
+      startSeasonBtn.classList.remove("hidden");
+      startSeasonBtn.disabled = true;
+      simNextBtn.classList.add("hidden");
+      simHalfBtn.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+      shareBtn.classList.add("hidden");
+      skipTransferBtn.classList.add("hidden");
+      shareModal.style.display = "none";
+
+      draftScreen.classList.add("hidden");
+      formationScreen.classList.remove("hidden");
+      draftLayout.classList.remove("league");
+      draftStepTitle.textContent = "第 2 步：挑选首发十一人";
+      draftFormationLabel.textContent = "";
+
+      refreshBtn.style.display = "";
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = "刷新选项";
+      refreshText.style.display = "";
+      refreshText.textContent = "剩余刷新次数：2";
+      autoFillBtn.style.display = "";
+
+      currentPosName.textContent = "-";
+      progressText.textContent = "0 / 11";
+      candidateList.innerHTML = '<div class="empty-state">请先选择阵型</div>';
+    });
+
+    shareBtn.addEventListener("click", () => generateShareImage());
+    skipTransferBtn.addEventListener("click", () => closeTransferWindow());
+    shareCloseBtn.addEventListener("click", () => { shareModal.style.display = "none"; });
+    shareModal.addEventListener("click", (e) => {
+      if (e.target === shareModal) shareModal.style.display = "none";
+    });
+
+    function generateShareImage() {
+      const W = 520;
+      const padding = 24;
+      let y = 0;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // 先计算高度
+      const sorted = [...standings].sort((a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf
+      );
+      const titleH = 60;
+      const subtitleH = 30;
+      const sectionTitleH = 32;
+      const tableHeaderH = 28;
+      const rowH = 24;
+      const standingsH = sectionTitleH + tableHeaderH + sorted.length * rowH + 16;
+      const statsH = userPlayerStats.length > 0 ? sectionTitleH + tableHeaderH + userPlayerStats.length * rowH + 16 : 0;
+      const qrH = 160;
+      const H = padding + titleH + subtitleH + standingsH + statsH + qrH + padding;
+
+      canvas.width = W;
+      canvas.height = H;
+      y = padding;
+
+      // 背景
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, W, H);
+
+      // 标题
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("足球经理模拟 · 赛季战报", W / 2, y + 24);
+      y += titleH;
+
+      // 阵型
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "14px sans-serif";
+      ctx.fillText(`阵型：${selectedFormation}`, W / 2, y + 16);
+      y += subtitleH;
+
+      // 积分榜
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 15px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("积分榜", padding, y + 16);
+      y += sectionTitleH;
+
+      const cols = [
+        { name: "排名", w: 36, align: "center" },
+        { name: "球队", w: 150, align: "left" },
+        { name: "赛", w: 28, align: "center" },
+        { name: "胜", w: 28, align: "center" },
+        { name: "平", w: 28, align: "center" },
+        { name: "负", w: 28, align: "center" },
+        { name: "进", w: 28, align: "center" },
+        { name: "失", w: 28, align: "center" },
+        { name: "净", w: 32, align: "center" },
+        { name: "分", w: 32, align: "center" }
+      ];
+      const tableW = cols.reduce((s, c) => s + c.w, 0);
+      const tableX = (W - tableW) / 2;
+
+      // 表头
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "12px sans-serif";
+      let cx = tableX;
+      for (const col of cols) {
+        ctx.textAlign = col.align;
+        const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
+        ctx.fillText(col.name, tx, y + 18);
+        cx += col.w;
+      }
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(tableX, y + tableHeaderH);
+      ctx.lineTo(tableX + tableW, y + tableHeaderH);
+      ctx.stroke();
+      y += tableHeaderH;
+
+      // 数据行
+      ctx.font = "12px sans-serif";
+      for (let i = 0; i < sorted.length; i++) {
+        const s = sorted[i];
+        cx = tableX;
+        const vals = [
+          { v: String(i + 1), col: cols[0] },
+          { v: s.name, col: cols[1] },
+          { v: String(s.played), col: cols[2] },
+          { v: String(s.won), col: cols[3] },
+          { v: String(s.drawn), col: cols[4] },
+          { v: String(s.lost), col: cols[5] },
+          { v: String(s.gf), col: cols[6] },
+          { v: String(s.ga), col: cols[7] },
+          { v: (s.gd > 0 ? "+" : "") + s.gd, col: cols[8] },
+          { v: String(s.points), col: cols[9] }
+        ];
+        ctx.fillStyle = s.isUser ? "#34d399" : "#e2e8f0";
+        if (s.isUser) {
+          ctx.font = "bold 12px sans-serif";
+        } else {
+          ctx.font = "12px sans-serif";
+        }
+        for (const { v, col } of vals) {
+          ctx.textAlign = col.align;
+          const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
+          ctx.fillText(v, tx, y + 16);
+          cx += col.w;
+        }
+        ctx.strokeStyle = "#334155";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(tableX, y + rowH);
+        ctx.lineTo(tableX + tableW, y + rowH);
+        ctx.stroke();
+        y += rowH;
+      }
+      y += 16;
+
+      // 个人数据
+      if (userPlayerStats.length > 0) {
+        ctx.fillStyle = "#34d399";
+        ctx.font = "bold 15px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("个人数据", padding, y + 16);
+        y += sectionTitleH;
+
+        const sCols = [
+          { name: "位置", w: 45, align: "left" },
+          { name: "球员", w: 155, align: "left" },
+          { name: "上场", w: 40, align: "center" },
+          { name: "进球", w: 40, align: "center" },
+          { name: "助攻", w: 40, align: "center" },
+          { name: "零封", w: 40, align: "center" }
+        ];
+        const sTableW = sCols.reduce((s, c) => s + c.w, 0);
+        const sTableX = (W - sTableW) / 2;
+
+        // 表头
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "12px sans-serif";
+        cx = sTableX;
+        for (const col of sCols) {
+          ctx.textAlign = col.align;
+          const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
+          ctx.fillText(col.name, tx, y + 18);
+          cx += col.w;
+        }
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sTableX, y + tableHeaderH);
+        ctx.lineTo(sTableX + sTableW, y + tableHeaderH);
+        ctx.stroke();
+        y += tableHeaderH;
+
+        // 数据行
+        ctx.font = "12px sans-serif";
+        for (const s of userPlayerStats) {
+          cx = sTableX;
+          const displayName = (s.isTransfer ? "[换] " : "") + s.player.name;
+          const sVals = [
+            { v: s.pos, col: sCols[0] },
+            { v: displayName, col: sCols[1] },
+            { v: String(s.appearances), col: sCols[2] },
+            { v: String(s.goals), col: sCols[3] },
+            { v: String(s.assists), col: sCols[4] },
+            { v: cleanSheetPositions.includes(s.pos) ? String(s.cleanSheets) : "-", col: sCols[5] }
+          ];
+          ctx.globalAlpha = s.replaced ? 0.5 : 1;
+          for (let si = 0; si < sVals.length; si++) {
+            const { v, col } = sVals[si];
+            if (s.replaced) {
+              ctx.fillStyle = "#64748b";
+            } else if (s.isTransfer) {
+              ctx.fillStyle = si === 1 ? "#facc15" : "#94a3b8";
+            } else {
+              ctx.fillStyle = si === 1 ? "#e2e8f0" : "#94a3b8";
+            }
+            ctx.textAlign = col.align;
+            const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
+            ctx.fillText(v, tx, y + 16);
+            cx += col.w;
+          }
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(sTableX, y + rowH);
+          ctx.lineTo(sTableX + sTableW, y + rowH);
+          ctx.stroke();
+          y += rowH;
+        }
+        y += 16;
+      }
+
+      // 二维码
+      const qrSize = 120;
+      const qrX = (W - qrSize) / 2;
+      const qrY = y;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16);
+
+      const finish = () => {
+        const dataUrl = canvas.toDataURL("image/png");
+        shareImage.src = dataUrl;
+        shareDownload.href = dataUrl;
+        shareModal.style.display = "flex";
+      };
+
+      const drawQrText = () => {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("扫码开始你的赛季", W / 2, qrY + qrSize + 24);
+      };
+
+      const qrImg = new Image();
+      qrImg.crossOrigin = "anonymous";
+      qrImg.onload = () => {
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+        drawQrText();
+        finish();
+      };
+      qrImg.onerror = () => {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("扫码开始你的赛季", W / 2, qrY + 60);
+        finish();
+      };
+      qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=0&data=" + encodeURIComponent("https://reclining-skimmer-persevere.ngrok-free.dev");
+    }
+
+    refreshBtn.addEventListener("click", () => {
+      if (transferSelecting) {
+        if (refreshesLeft <= 0) return;
+        refreshesLeft--;
+        updateRefreshState();
+        const slots = formations[selectedFormation];
+        const pos = slots[transferPosIndex].pos;
+        transferCandidateCache[transferPosIndex] = null;
+        renderCandidates(pickCandidates(pos));
+        return;
+      }
+      if (refreshesLeft <= 0) return;
+      refreshesLeft--;
+      updateRefreshState();
+      const slots = formations[selectedFormation];
+      renderCandidates(pickCandidates(slots[draftIndex].pos));
+    });
+
+    autoFillBtn.addEventListener("click", () => {
+      const slots = formations[selectedFormation];
+      while (draftIndex < 11) {
+        const candidates = pickCandidates(slots[draftIndex].pos);
+        if (candidates.length === 0) break;
+        let pick;
+        if (tianyanMode) {
+          pick = candidates.reduce((best, p) => p.ovr > best.ovr ? p : best, candidates[0]);
+        } else {
+          pick = candidates[Math.floor(Math.random() * candidates.length)];
+        }
+        draftPicks[draftIndex] = pick;
+        draftIndex++;
+      }
+
+      if (draftIndex >= 11) {
+        currentPhase = "summary";
+        renderFormation(draftPitch, selectedFormation);
+        currentPosName.textContent = "阵容已完整";
+        progressText.textContent = "11 / 11";
+        refreshBtn.style.display = "none";
+        refreshText.style.display = "none";
+        autoFillBtn.style.display = "none";
+        renderDraftSummary();
+        startSeasonBtn.disabled = false;
+      }
+    });
+
+    dreamText.addEventListener("click", () => {
+      dreamClicks++;
+
+      if (dreamClicks >= 5 && !tianyanMode) {
+        tianyanMode = true;
+        dreamText.classList.add("active");
+        alert("天眼模式已开启！能力值已显示。");
+        renderCurrentPhase();
+        return;
+      }
+
+      if (dreamClicks >= 10 && tianyanMode) {
+        tianyanMode = false;
+        dreamText.classList.remove("active");
+        dreamClicks = 0;
+        alert("已退出天眼模式。");
+        renderCurrentPhase();
+      }
+    });
+
+    function renderCurrentPhase() {
+      if (currentPhase === "draft") {
+        renderCandidates(currentCandidates);
+      } else if (currentPhase === "summary") {
+        renderDraftSummary();
+      } else if (currentPhase === "league") {
+        renderLeague();
+      }
+    }
+
+    function renderFormation(targetPitch, key, currentIndex = -1) {
+      const dots = targetPitch.querySelectorAll(".position-dot");
+      dots.forEach(d => d.remove());
+
+      if (!key) return;
+      const slots = formations[key];
+      slots.forEach((slot, index) => {
+        const dot = document.createElement("div");
+        let cls = "position-dot";
+
+        const isFilled = targetPitch === draftPitch && index < draftPicks.length && draftPicks[index];
+        const isCurrent = targetPitch === draftPitch && index === currentIndex;
+
+        if (isCurrent) {
+          cls += " current";
+        } else if (isFilled) {
+          cls += " filled";
+        }
+
+        dot.className = cls;
+        dot.textContent = slot.pos;
+        dot.style.left = slot.x + "%";
+        dot.style.top = slot.y + "%";
+        dot.title = slot.label;
+        targetPitch.appendChild(dot);
+      });
+    }
+
+    function startDraft() {
+      draftIndex = 0;
+      draftPicks = new Array(11).fill(null);
+      refreshesLeft = 2;
+      currentPhase = "draft";
+      formationScreen.classList.add("hidden");
+      draftScreen.classList.remove("hidden");
+      draftFormationLabel.innerHTML = `当前阵型：<strong>${selectedFormation}</strong>`;
+      renderDraft();
+    }
+
+    function renderDraft() {
+      renderFormation(draftPitch, selectedFormation, draftIndex);
+
+      const slots = formations[selectedFormation];
+      const currentSlot = slots[draftIndex];
+      currentPosName.textContent = `${currentSlot.pos} · ${currentSlot.label}`;
+      progressText.textContent = `${draftPicks.filter(Boolean).length} / 11`;
+
+      updateRefreshState();
+      renderCandidates();
+    }
+
+    function updateRefreshState() {
+      refreshText.textContent = `剩余刷新次数：${refreshesLeft}`;
+      refreshBtn.disabled = refreshesLeft <= 0;
+    }
+
+    function renderCandidates(candidates = null) {
+      const slots = formations[selectedFormation];
+      const slotIdx = transferSelecting ? transferPosIndex : draftIndex;
+      const currentSlot = slots[slotIdx];
+      if (!candidates) {
+        candidates = pickCandidates(currentSlot.pos);
+      }
+      currentCandidates = candidates;
+      // 转会模式下缓存候选
+      if (transferSelecting && transferPosIndex >= 0) {
+        transferCandidateCache[transferPosIndex] = candidates;
+      }
+      candidateList.innerHTML = "";
+
+      if (candidates.length === 0) {
+        candidateList.innerHTML = `<div class="empty-state">没有合适该位置的球员</div>`;
+        return;
+      }
+
+      candidates.forEach(player => {
+        const card = document.createElement("div");
+        card.className = "candidate-card";
+        card.innerHTML = `
+          <div class="candidate-main">
+            <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : ''}</div>
+            <div class="candidate-meta">${player.team} · ${player.league} · ${player.nation}</div>
+          </div>
+          <div class="candidate-positions">
+            ${player.positions.map(p => `<span class="position-tag ${p === currentSlot.pos ? 'primary' : ''}">${p}</span>`).join('')}
+          </div>
+        `;
+        if (transferSelecting) {
+          card.addEventListener("click", () => confirmTransfer(player));
+        } else {
+          card.addEventListener("click", () => selectPlayer(player));
+        }
+        candidateList.appendChild(card);
+      });
+    }
+
+    function pickCandidates(pos) {
+      const selectedIds = new Set(draftPicks.filter(Boolean).map(p => p.id));
+      const pool = allPlayers.filter(p => p.positions.includes(pos) && !selectedIds.has(p.id));
+
+      // 根据能力值加权随机：能力越高越容易出现，但保留随机性
+      const weighted = pool.map(p => ({ player: p, weight: Math.pow(p.ovr, 3) }));
+      const total = weighted.reduce((sum, w) => sum + w.weight, 0);
+      const picks = [];
+      const used = new Set();
+
+      for (let i = 0; i < 5; i++) {
+        if (used.size >= pool.length) break;
+        let r = Math.random() * total;
+        let chosen = null;
+        for (const item of weighted) {
+          if (used.has(item.player.id)) continue;
+          r -= item.weight;
+          if (r <= 0) {
+            chosen = item.player;
+            break;
+          }
+        }
+        if (!chosen) {
+          const remaining = pool.filter(p => !used.has(p.id));
+          chosen = remaining[0];
+        }
+        used.add(chosen.id);
+        picks.push(chosen);
+      }
+
+      return picks;
+    }
+
+    function selectPlayer(player) {
+      draftPicks[draftIndex] = player;
+      draftIndex++;
+
+      if (draftIndex >= 11) {
+        currentPhase = "summary";
+        renderFormation(draftPitch, selectedFormation);
+        currentPosName.textContent = "阵容已完整";
+        progressText.textContent = "11 / 11";
+        refreshBtn.style.display = "none";
+        refreshText.style.display = "none";
+        autoFillBtn.style.display = "none";
+        renderDraftSummary();
+        startSeasonBtn.disabled = false;
+      } else {
+        refreshesLeft = 2;
+        renderDraft();
+      }
+    }
+
+    function renderDraftSummary() {
+      const slots = formations[selectedFormation];
+      candidateList.innerHTML = `
+        <div class="empty-state" style="text-align:left; padding:0;">
+          <div style="margin-bottom:12px; font-weight:700; color:#34d399;">首发阵容</div>
+          ${draftPicks.map((p, i) => `
+            <div style="display:flex; justify-content:space-between; font-size:14px; padding:5px 0; border-bottom:1px solid #334155;">
+              <span style="color:#94a3b8;">${slots[i].pos} · ${slots[i].label}</span>
+              <span style="color:#e2e8f0; font-weight:700;">${p.name}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${p.ovr}</span>` : ''}</span>
+            </div>
+          `).join("")}
+          ${tianyanMode ? `<div style="margin-top:12px; font-size:13px; color:#94a3b8;">平均能力：${teamAverageOvr().toFixed(2)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function teamAverageOvr() {
+      const total = draftPicks.reduce((sum, p) => sum + (p ? p.ovr : 0), 0);
+      return total / draftPicks.length;
+    }
+
+    function buildOpponents() {
+      const sorted = [...allTeams].sort((a, b) => b.strength - a.strength);
+      const n = sorted.length;
+
+      const contenders = sorted.slice(0, Math.ceil(n * 0.15));
+      const european = sorted.slice(Math.ceil(n * 0.15), Math.ceil(n * 0.40));
+      const midtable = sorted.slice(Math.ceil(n * 0.40), Math.ceil(n * 0.75));
+      const relegation = sorted.slice(Math.ceil(n * 0.75));
+
+      const pick = (pool, count) => {
+        const shuffled = pool.sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, Math.min(count, pool.length));
+      };
+
+      const opponents = [
+        ...pick(contenders, 3),
+        ...pick(european, 5),
+        ...pick(midtable, 7),
+        ...pick(relegation, 4)
+      ].sort(() => Math.random() - 0.5);
+
+      return opponents;
+    }
+
+    function buildLeague() {
+      const userStrength = teamAverageOvr();
+      leagueTeams = [
+        { name: "我的球队", isUser: true, strength: userStrength },
+        ...currentOpponents.map(t => ({ name: t.name, isUser: false, strength: t.strength }))
+      ];
+      fixtures = generateFixtures(leagueTeams.length);
+      standings = leagueTeams.map((t, i) => ({
+        idx: i,
+        name: t.name,
+        isUser: t.isUser,
+        played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0
+      }));
+      currentRound = 0;
+      lastRoundResults = [];
+
+      const slots = formations[selectedFormation];
+      userPlayerStats = draftPicks.map((p, i) => ({
+        player: p,
+        pos: slots[i].pos,
+        goals: 0,
+        assists: 0,
+        cleanSheets: 0,
+        appearances: 0,
+        replaced: false,
+        isTransfer: false
+      }));
+
+      draftStepTitle.textContent = "赛季模拟";
+      draftLayout.classList.add("league");
+      startSeasonBtn.classList.add("hidden");
+      simNextBtn.classList.remove("hidden");
+      simHalfBtn.classList.remove("hidden");
+    }
+
+    function generateFixtures(n) {
+      const ids = Array.from({ length: n }, (_, i) => i);
+      const halfRounds = n - 1;
+      const firstHalf = [];
+
+      for (let r = 0; r < halfRounds; r++) {
+        const matches = [];
+        for (let i = 0; i < n / 2; i++) {
+          const a = ids[i];
+          const b = ids[n - 1 - i];
+          matches.push(r % 2 === 1 ? { home: a, away: b } : { home: b, away: a });
+        }
+        firstHalf.push(matches);
+        ids.splice(1, 0, ids.pop());
+      }
+
+      const secondHalf = firstHalf.map(round =>
+        round.map(m => ({ home: m.away, away: m.home }))
+      );
+
+      return [...firstHalf, ...secondHalf];
+    }
+
+    function simulateMatch(homeStr, awayStr) {
+      const homeAdv = 3;
+      const noise = () => (Math.random() * 6 - 3);
+      const homeRating = homeStr + homeAdv + noise();
+      const awayRating = awayStr + noise();
+      const diff = homeRating - awayRating;
+
+      let hg, ag;
+      if (diff > 9) {
+        hg = 2 + Math.floor(Math.random() * 3);
+        ag = Math.floor(Math.random() * 2);
+      } else if (diff > 4) {
+        hg = 1 + Math.floor(Math.random() * 2);
+        ag = Math.floor(Math.random() * 2);
+      } else if (diff > -4) {
+        hg = Math.floor(Math.random() * 3);
+        ag = Math.floor(Math.random() * 3);
+      } else if (diff > -9) {
+        hg = Math.floor(Math.random() * 2);
+        ag = 1 + Math.floor(Math.random() * 2);
+      } else {
+        hg = Math.floor(Math.random() * 2);
+        ag = 2 + Math.floor(Math.random() * 3);
+      }
+
+      return { homeGoals: hg, awayGoals: ag };
+    }
+
+    function weightedPick(entries) {
+      const total = entries.reduce((sum, e) => sum + e.weight, 0);
+      if (total <= 0) return entries[0];
+      let r = Math.random() * total;
+      for (const e of entries) {
+        r -= e.weight;
+        if (r <= 0) return e;
+      }
+      return entries[entries.length - 1];
+    }
+
+    function distributeUserMatchStats(userGoals, oppGoals) {
+      if (userPlayerStats.length === 0) return;
+
+      const cleanSheet = oppGoals === 0;
+      const activeStats = userPlayerStats.filter(s => !s.replaced);
+
+      // 上场数
+      for (const s of activeStats) {
+        s.appearances++;
+      }
+
+      // 进球分布：位置权重 × OVR^3，能力差异更显著
+      const scorerEntries = activeStats
+        .map(s => ({ ref: s, weight: (attackWeights[s.pos] || 0) * Math.pow(s.player.ovr, 3) }))
+        .filter(e => e.weight > 0);
+
+      for (let g = 0; g < userGoals; g++) {
+        if (scorerEntries.length === 0) break;
+        const pick = weightedPick(scorerEntries);
+        pick.ref.goals++;
+      }
+
+      // 助攻分布：每个进球25%概率无助攻，75%概率1人助攻
+      const assistCount = Math.min(userGoals, activeStats.length);
+      const assistEntries = activeStats
+        .map(s => ({ ref: s, weight: (assistWeights[s.pos] || 0) * Math.pow(s.player.ovr, 3) }))
+        .filter(e => e.weight > 0);
+
+      for (let a = 0; a < assistCount; a++) {
+        if (assistEntries.length === 0) break;
+        if (Math.random() < 0.25) continue;
+        const pick = weightedPick(assistEntries);
+        pick.ref.assists++;
+      }
+
+      // 零封
+      if (cleanSheet) {
+        for (const s of activeStats) {
+          if (cleanSheetPositions.includes(s.pos)) {
+            s.cleanSheets++;
+          }
+        }
+      }
+    }
+
+    function openTransferWindow() {
+      transferMode = true;
+      transferSelecting = false;
+      transferPosIndex = -1;
+      transferCandidateCache = {};
+      draftLayout.classList.remove("league");
+      renderFormation(draftPitch, selectedFormation);
+      draftFormationLabel.innerHTML = `冬季转会窗口 · <strong>${selectedFormation}</strong>`;
+      draftStepTitle.textContent = "冬季转会";
+
+      // 隐藏模拟按钮，显示跳过窗口按钮
+      simNextBtn.classList.add("hidden");
+      simHalfBtn.classList.add("hidden");
+      skipTransferBtn.classList.remove("hidden");
+
+      // 给每个 dot 加点击事件
+      const dots = draftPitch.querySelectorAll(".position-dot");
+      dots.forEach((dot, index) => {
+        dot.style.cursor = "pointer";
+        dot.addEventListener("click", () => selectTransferPosition(index));
+      });
+
+      currentPosName.textContent = "点击阵型图选择替换位置";
+      progressText.textContent = "冬季转会";
+
+      refreshBtn.style.display = "none";
+      refreshText.style.display = "none";
+      autoFillBtn.style.display = "none";
+      refreshesLeft = 2;
+
+      candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>';
+    }
+
+    function selectTransferPosition(index) {
+      // 同一位置重复点击不重新生成
+      if (transferPosIndex === index && transferSelecting) return;
+
+      transferPosIndex = index;
+      transferSelecting = true;
+      const slots = formations[selectedFormation];
+      const pos = slots[index].pos;
+      const currentPlayer = userPlayerStats[index];
+
+      // 高亮选中的位置
+      renderFormation(draftPitch, selectedFormation, index);
+      const dots = draftPitch.querySelectorAll(".position-dot");
+      dots.forEach((dot, i) => {
+        dot.style.cursor = i === index ? "default" : "pointer";
+        if (i !== index) {
+          dot.addEventListener("click", () => selectTransferPosition(i));
+        }
+      });
+
+      currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}`;
+
+      // 显示刷新按钮
+      refreshBtn.style.display = "";
+      refreshBtn.textContent = "刷新选项";
+      refreshBtn.disabled = refreshesLeft <= 0;
+      refreshText.style.display = "";
+      updateRefreshState();
+
+      // 使用缓存的候选，没有缓存才生成
+      const cached = transferCandidateCache[index];
+      if (cached) {
+        renderCandidates(cached);
+      } else {
+        renderCandidates(pickCandidates(pos));
+      }
+    }
+
+    function confirmTransfer(player) {
+      const slots = formations[selectedFormation];
+      const pos = slots[transferPosIndex].pos;
+
+      // 旧球员标记替换
+      userPlayerStats[transferPosIndex].replaced = true;
+
+      // 更新 draftPicks 用于排除已选
+      draftPicks[transferPosIndex] = player;
+
+      // 更新球队能力值
+      leagueTeams[0].strength = teamAverageOvr();
+
+      // 追加新球员
+      userPlayerStats.push({
+        player: player,
+        pos: pos,
+        goals: 0,
+        assists: 0,
+        cleanSheets: 0,
+        appearances: 0,
+        replaced: false,
+        isTransfer: true
+      });
+
+      closeTransferWindow();
+    }
+
+    function closeTransferWindow() {
+      transferDone = true;
+      transferMode = false;
+      transferSelecting = false;
+      transferPosIndex = -1;
+
+      // 恢复标题和按钮
+      draftStepTitle.textContent = "赛季模拟";
+      simNextBtn.classList.remove("hidden");
+      simHalfBtn.classList.remove("hidden");
+      skipTransferBtn.classList.add("hidden");
+
+      // 恢复按钮
+      refreshBtn.style.display = "none";
+      refreshText.style.display = "none";
+      autoFillBtn.style.display = "none";
+      refreshBtn.textContent = "刷新选项";
+      transferCandidateCache = {};
+
+      // 恢复联赛布局
+      draftLayout.classList.add("league");
+      renderLeague();
+    }
+
+    function simulateRound(roundIdx) {
+      const round = fixtures[roundIdx];
+      lastRoundResults = [];
+
+      for (const match of round) {
+        const home = leagueTeams[match.home];
+        const away = leagueTeams[match.away];
+        const result = simulateMatch(home.strength, away.strength);
+
+        lastRoundResults.push({
+          homeName: home.name,
+          awayName: away.name,
+          homeGoals: result.homeGoals,
+          awayGoals: result.awayGoals,
+          isUser: home.isUser || away.isUser
+        });
+
+        const h = standings[match.home];
+        const a = standings[match.away];
+
+        h.played++; a.played++;
+        h.gf += result.homeGoals; h.ga += result.awayGoals;
+        a.gf += result.awayGoals; a.ga += result.homeGoals;
+
+        if (result.homeGoals > result.awayGoals) {
+          h.won++; a.lost++;
+          h.points += 3;
+        } else if (result.homeGoals < result.awayGoals) {
+          h.lost++; a.won++;
+          a.points += 3;
+        } else {
+          h.drawn++; a.drawn++;
+          h.points++; a.points++;
+        }
+
+        // 用户比赛：分配个人数据
+        if (home.isUser) {
+          distributeUserMatchStats(result.homeGoals, result.awayGoals);
+        } else if (away.isUser) {
+          distributeUserMatchStats(result.awayGoals, result.homeGoals);
+        }
+      }
+
+      for (const s of standings) {
+        s.gd = s.gf - s.ga;
+      }
+    }
+
+    function renderLeague() {
+      const isFinished = currentRound >= fixtures.length;
+      const half = Math.floor(fixtures.length / 2);
+
+      // 找到用户下一轮的对手
+      let nextOpponent = null;
+      let nextVenue = "";
+      if (!isFinished) {
+        const round = fixtures[currentRound];
+        for (const m of round) {
+          if (leagueTeams[m.home].isUser) {
+            nextOpponent = leagueTeams[m.away].name;
+            nextVenue = "主";
+            break;
+          } else if (leagueTeams[m.away].isUser) {
+            nextOpponent = leagueTeams[m.home].name;
+            nextVenue = "客";
+            break;
+          }
+        }
+      }
+
+      currentPosName.textContent = isFinished
+        ? "赛季已结束"
+        : `第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
+      progressText.textContent = `${currentRound} / ${fixtures.length} 轮已完成`;
+      refreshBtn.style.display = "none";
+      refreshText.style.display = "none";
+
+      // 半程后按钮改为"模拟到结束"
+      if (currentRound >= half && !isFinished) {
+        simHalfBtn.textContent = "模拟到结束";
+      } else if (!isFinished) {
+        simHalfBtn.textContent = "模拟至半程";
+      }
+
+      if (isFinished) {
+        simNextBtn.classList.add("hidden");
+        simHalfBtn.classList.add("hidden");
+        restartBtn.classList.remove("hidden");
+        shareBtn.classList.remove("hidden");
+      } else if (!isSimulating) {
+        simNextBtn.classList.remove("hidden");
+        simHalfBtn.classList.remove("hidden");
+        restartBtn.classList.add("hidden");
+        shareBtn.classList.add("hidden");
+        simNextBtn.disabled = false;
+        simHalfBtn.disabled = false;
+      }
+
+      const sorted = [...standings].sort((a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf
+      );
+
+      const resultsHtml = lastRoundResults.length > 0
+        ? `
+          <div style="margin-bottom:16px;">
+            <div style="margin-bottom:8px; font-weight:700; color:#34d399;">第 ${currentRound} 轮赛果</div>
+            ${lastRoundResults.map(r => `
+              <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">
+                <span style="text-align:right; flex:1;">${r.homeName}</span>
+                <span style="flex:0 0 auto; padding:0 10px; color:#facc15; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
+                <span style="flex:1;">${r.awayName}</span>
+              </div>
+            `).join("")}
+          </div>`
+        : "";
+
+      const statsHtml = userPlayerStats.length > 0
+        ? `
+          <div style="margin-top:20px;">
+            <div style="margin-bottom:12px; font-weight:700; color:#34d399;">个人数据</div>
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+              <thead>
+                <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
+                  <th style="text-align:left; padding:6px 4px;">位置</th>
+                  <th style="text-align:left; padding:6px 4px;">球员</th>
+                  <th style="text-align:center; padding:6px 4px;">上场</th>
+                  <th style="text-align:center; padding:6px 4px;">进球</th>
+                  <th style="text-align:center; padding:6px 4px;">助攻</th>
+                  <th style="text-align:center; padding:6px 4px;">零封</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${userPlayerStats.map(s => `
+                  <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
+                    <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
+                    <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${s.player.name}</td>
+                    <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
+                    <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
+                    <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
+                    <td style="text-align:center; padding:6px 4px;">${cleanSheetPositions.includes(s.pos) ? s.cleanSheets : '-'}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>`
+        : "";
+
+      candidateList.innerHTML = `
+        <div>
+          <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+            <div style="flex:0 0 240px; margin:0 auto;">
+              ${resultsHtml || '<div class="empty-state">尚无赛果</div>'}
+            </div>
+            <div style="flex:1; min-width:280px;">
+              <div style="margin-bottom:12px; font-weight:700; color:#34d399;">积分榜</div>
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
+                    <th style="text-align:left; padding:6px 4px;">排名</th>
+                    <th style="text-align:left; padding:6px 4px;">球队</th>
+                    <th style="text-align:center; padding:6px 4px;">赛</th>
+                    <th style="text-align:center; padding:6px 4px;">胜</th>
+                    <th style="text-align:center; padding:6px 4px;">平</th>
+                    <th style="text-align:center; padding:6px 4px;">负</th>
+                    <th style="text-align:center; padding:6px 4px;">进</th>
+                    <th style="text-align:center; padding:6px 4px;">失</th>
+                    <th style="text-align:center; padding:6px 4px;">净</th>
+                    <th style="text-align:center; padding:6px 4px;">分</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sorted.map((s, i) => `
+                    <tr style="border-bottom:1px solid #334155; color:${s.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${s.isUser ? 700 : 400};">
+                      <td style="padding:6px 4px;">${i + 1}</td>
+                      <td style="padding:6px 4px;">${s.name}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.played}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.won}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.drawn}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.lost}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.gf}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.ga}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.gd > 0 ? '+' : ''}${s.gd}</td>
+                      <td style="text-align:center; padding:6px 4px;">${s.points}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          ${statsHtml}
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
