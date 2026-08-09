@@ -1217,6 +1217,20 @@
     });
 
     function renderCurrentPhase() {
+      if (transferMode) {
+        if (transferSelecting && transferPosIndex >= 0) {
+          const cached = transferCandidateCache[transferPosIndex];
+          renderCandidates(cached);
+          const slots = formations[selectedFormation];
+          const pos = slots[transferPosIndex].pos;
+          const currentPlayer = userPlayerStats[transferPosIndex];
+          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.player.ovr})` : '';
+          currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.player.name}${ovrText}`;
+        } else {
+          candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml();
+        }
+        return;
+      }
       if (currentPhase === "draft") {
         renderCandidates(currentCandidates);
       } else if (currentPhase === "summary") {
@@ -1322,7 +1336,7 @@
       });
 
       if (transferSelecting) {
-        candidateList.innerHTML += buildPlayerStatsHtml();
+        candidateList.insertAdjacentHTML("beforeend", buildPlayerStatsHtml());
       }
     }
 
@@ -1748,7 +1762,6 @@
               <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
                 <th style="text-align:left; padding:6px 4px;">位置</th>
                 <th style="text-align:left; padding:6px 4px;">球员</th>
-                ${tianyanMode ? `<th style="text-align:center; padding:6px 4px;">能力</th>` : ''}
                 <th style="text-align:center; padding:6px 4px;">上场</th>
                 <th style="text-align:center; padding:6px 4px;">进球</th>
                 <th style="text-align:center; padding:6px 4px;">助攻</th>
@@ -1760,7 +1773,6 @@
                 <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
                   <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${s.player.name}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${s.player.ovr}</span>` : ''}</td>
-                  ${tianyanMode ? `<td style="text-align:center; padding:6px 4px;">${s.player.ovr}</td>` : ''}
                   <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
                   <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
