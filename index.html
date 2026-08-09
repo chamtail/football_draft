@@ -613,7 +613,7 @@
     </section>
   </main>
 
-  <footer>初版 Demo · 仅支持 11 人首发选择</footer>
+  <footer id="versionFooter">v1.0.0</footer>
 
   <div id="shareModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#1e293b; border-radius:12px; padding:20px; max-width:90vw; max-height:90vh; overflow:auto; text-align:center;">
@@ -2121,6 +2121,14 @@
         });
       }
     }
+
+    // 版本号（基于页面更新时间）
+    (function() {
+      const d = new Date(document.lastModified);
+      const pad = n => String(n).padStart(2, '0');
+      const ts = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      document.getElementById('versionFooter').textContent = `版本 ${ts}`;
+    })();
   </script>
 </body>
 </html>
