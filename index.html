@@ -729,6 +729,14 @@
     let seasonHistory = [];
     let summerTransferMode = false;
     let viewSeason = "current";
+    let championshipSeasons = [];
+
+    function seasonLabel(num) {
+      const startYear = 2024 + num;
+      const s = String(startYear % 100).padStart(2, '0');
+      const e = String((startYear + 1) % 100).padStart(2, '0');
+      return `${s}/${e}赛季`;
+    }
 
     const attackWeights = {
       ST: 10, CF: 9, LW: 7, RW: 7, CAM: 6,
@@ -882,6 +890,7 @@
       seasonHistory = [];
       summerTransferMode = false;
       viewSeason = "current";
+      championshipSeasons = [];
 
       // 重新加载球员数据（恢复原始年龄和能力值）
       fetch("players.json")
@@ -956,7 +965,15 @@
       const standingsH = sectionTitleH + tableHeaderH + sorted.length * rowH + 16;
       const statsH = userPlayerStats.length > 0 ? sectionTitleH + tableHeaderH + userPlayerStats.length * rowH + 16 : 0;
       const qrH = 160;
-      const H = padding + titleH + subtitleH + standingsH + statsH + qrH + padding;
+      // 荣誉计算
+      const isFinished = currentRound >= fixtures.length;
+      const isCurrentChampion = isFinished && sorted[0].isUser;
+      const allTitles = [...championshipSeasons];
+      if (isCurrentChampion && !allTitles.includes(seasonLabel(currentSeason))) {
+        allTitles.push(seasonLabel(currentSeason));
+      }
+      const honorsH = sectionTitleH + rowH + 16;
+      const H = padding + titleH + subtitleH + honorsH + standingsH + statsH + qrH + padding;
 
       canvas.width = W;
       canvas.height = H;
@@ -970,7 +987,7 @@
       ctx.fillStyle = "#34d399";
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`足球经理模拟 · 第${currentSeason}赛季战报`, W / 2, y + 24);
+      ctx.fillText(`足球经理模拟 · ${seasonLabel(currentSeason)}战报`, W / 2, y + 24);
       y += titleH;
 
       // 阵型
@@ -978,6 +995,23 @@
       ctx.font = "14px sans-serif";
       ctx.fillText(`阵型：${selectedFormation}`, W / 2, y + 16);
       y += subtitleH;
+
+      // 荣誉
+      ctx.fillStyle = "#facc15";
+      ctx.font = "bold 15px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("荣誉", padding, y + 16);
+      y += sectionTitleH;
+
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "13px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`联赛冠军 ×${allTitles.length}`, padding, y + 16);
+      if (allTitles.length > 0) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(`夺冠赛季：${allTitles.join(" · ")}`, padding + 100, y + 16);
+      }
+      y += rowH + 16;
 
       // 积分榜
       ctx.fillStyle = "#34d399";
@@ -1462,6 +1496,13 @@
     }
 
     function saveSeasonHistory() {
+      // 检查是否获得联赛冠军
+      const sorted = [...standings].sort((a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf
+      );
+      if (sorted[0].isUser) {
+        championshipSeasons.push(seasonLabel(currentSeason));
+      }
       seasonHistory.push({
         seasonNum: currentSeason,
         standings: JSON.parse(JSON.stringify(standings)),
@@ -1545,7 +1586,7 @@
         isTransfer: false
       }));
 
-      draftStepTitle.textContent = `第${currentSeason}赛季 · 赛季模拟`;
+      draftStepTitle.textContent = `${seasonLabel(currentSeason)} · 赛季模拟`;
       draftLayout.classList.add("league");
       startSeasonBtn.classList.add("hidden");
       simNextBtn.classList.remove("hidden");
@@ -1787,7 +1828,7 @@
         startNewSeason();
       } else {
         // 冬季转会结束 → 继续当前赛季
-        draftStepTitle.textContent = `第${currentSeason}赛季 · 赛季模拟`;
+        draftStepTitle.textContent = `${seasonLabel(currentSeason)} · 赛季模拟`;
         simNextBtn.classList.remove("hidden");
         simHalfBtn.classList.remove("hidden");
         draftLayout.classList.add("league");
@@ -1955,8 +1996,8 @@
 
       // 赛季选择器
       const seasonOptions = [
-        `<option value="current" ${isCurrent ? 'selected' : ''}>第${currentSeason}赛季（当前）</option>`,
-        ...seasonHistory.map(s => `<option value="${s.seasonNum}" ${viewSeason == String(s.seasonNum) ? 'selected' : ''}>第${s.seasonNum}赛季</option>`),
+        `<option value="current" ${isCurrent ? 'selected' : ''}>${seasonLabel(currentSeason)}（当前）</option>`,
+        ...seasonHistory.map(s => `<option value="${s.seasonNum}" ${viewSeason == String(s.seasonNum) ? 'selected' : ''}>${seasonLabel(s.seasonNum)}</option>`),
         `<option value="cumulative" ${viewSeason === 'cumulative' ? 'selected' : ''}>累计统计</option>`
       ].join('');
       const seasonSelector = seasonHistory.length > 0
@@ -1983,9 +2024,9 @@
         }
 
         currentPosName.textContent = isFinished
-          ? `第${currentSeason}赛季已结束`
-          : `第${currentSeason}赛季 · 第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
-        progressText.textContent = `第${currentSeason}赛季 · ${currentRound} / ${fixtures.length} 轮已完成`;
+          ? `${seasonLabel(currentSeason)}已结束`
+          : `${seasonLabel(currentSeason)} · 第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
+        progressText.textContent = `${seasonLabel(currentSeason)} · ${currentRound} / ${fixtures.length} 轮已完成`;
         refreshBtn.style.display = "none";
         refreshText.style.display = "none";
 
