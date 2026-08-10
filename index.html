@@ -747,6 +747,7 @@
     let cupRoundPending = null;       // 待踢的杯赛轮次key
     let lastCupResults = null;        // 最近一次杯赛轮次赛果 { roundName, matches }
     let lastSimType = null;           // "league" | "cup" 标记最近模拟类型
+    let playerStatsFilter = "all";    // "all" | "league" | "cup" 个人数据筛选
     const CUP_SCHEDULE = { 21: "qualifying", 25: "roundOf16", 29: "quarterFinals", 34: "semiFinals" };
     const CUP_ROUND_NAMES = { qualifying: "预选赛", roundOf16: "16强", quarterFinals: "8强", semiFinals: "半决赛", final: "决赛" };
     const CUP_ROUND_ORDER = ["qualifying", "roundOf16", "quarterFinals", "semiFinals", "final"];
@@ -995,6 +996,7 @@
       cupRoundPending = null;
       lastCupResults = null;
       lastSimType = null;
+      playerStatsFilter = "all";
 
       // 重新加载球员数据（恢复原始年龄和能力值）
       fetch("players.json")
@@ -1718,6 +1720,10 @@
         stats: userPlayerStats.map(s => ({
           pos: s.pos, goals: s.goals, assists: s.assists,
           cleanSheets: s.cleanSheets, appearances: s.appearances,
+          leagueGoals: s.leagueGoals, leagueAssists: s.leagueAssists,
+          leagueCleanSheets: s.leagueCleanSheets, leagueAppearances: s.leagueAppearances,
+          cupGoals: s.cupGoals, cupAssists: s.cupAssists,
+          cupCleanSheets: s.cupCleanSheets, cupAppearances: s.cupAppearances,
           replaced: s.replaced, isTransfer: s.isTransfer,
           playerId: s.player.id, playerName: s.player.name,
           playerOvr: s.player.ovr, playerAge: s.player.age
@@ -1821,10 +1827,9 @@
       userPlayerStats = draftPicks.map((p, i) => ({
         player: p,
         pos: slots[i].pos,
-        goals: 0,
-        assists: 0,
-        cleanSheets: 0,
-        appearances: 0,
+        goals: 0, assists: 0, cleanSheets: 0, appearances: 0,
+        leagueGoals: 0, leagueAssists: 0, leagueCleanSheets: 0, leagueAppearances: 0,
+        cupGoals: 0, cupAssists: 0, cupCleanSheets: 0, cupAppearances: 0,
         replaced: false,
         isTransfer: false
       }));
@@ -1918,15 +1923,21 @@
       return entries[entries.length - 1];
     }
 
-    function distributeUserMatchStats(userGoals, oppGoals) {
+    function distributeUserMatchStats(userGoals, oppGoals, matchType = "league") {
       if (userPlayerStats.length === 0) return;
 
       const cleanSheet = oppGoals === 0;
       const activeStats = userPlayerStats.filter(s => !s.replaced);
+      const typeKey = matchType === "cup" ? "cup" : "league";
+      const appearancesKey = `${typeKey}Appearances`;
+      const goalsKey = `${typeKey}Goals`;
+      const assistsKey = `${typeKey}Assists`;
+      const cleanSheetsKey = `${typeKey}CleanSheets`;
 
       // 上场数
       for (const s of activeStats) {
         s.appearances++;
+        s[appearancesKey]++;
       }
 
       // 进球分布：位置权重 × OVR^3，能力差异更显著
@@ -1938,6 +1949,7 @@
         if (scorerEntries.length === 0) break;
         const pick = weightedPick(scorerEntries);
         pick.ref.goals++;
+        pick.ref[goalsKey]++;
       }
 
       // 助攻分布：每个进球25%概率无助攻，75%概率1人助攻
@@ -1951,6 +1963,7 @@
         if (Math.random() < 0.25) continue;
         const pick = weightedPick(assistEntries);
         pick.ref.assists++;
+        pick.ref[assistsKey]++;
       }
 
       // 零封
@@ -1958,6 +1971,7 @@
         for (const s of activeStats) {
           if (cleanSheetPositions.includes(s.pos)) {
             s.cleanSheets++;
+            s[cleanSheetsKey]++;
           }
         }
       }
@@ -2057,10 +2071,9 @@
       userPlayerStats.push({
         player: player,
         pos: pos,
-        goals: 0,
-        assists: 0,
-        cleanSheets: 0,
-        appearances: 0,
+        goals: 0, assists: 0, cleanSheets: 0, appearances: 0,
+        leagueGoals: 0, leagueAssists: 0, leagueCleanSheets: 0, leagueAppearances: 0,
+        cupGoals: 0, cupAssists: 0, cupCleanSheets: 0, cupAppearances: 0,
         replaced: false,
         isTransfer: true
       });
@@ -2135,9 +2148,9 @@
 
         // 用户比赛：分配个人数据
         if (home.isUser) {
-          distributeUserMatchStats(result.homeGoals, result.awayGoals);
+          distributeUserMatchStats(result.homeGoals, result.awayGoals, "league");
         } else if (away.isUser) {
-          distributeUserMatchStats(result.awayGoals, result.homeGoals);
+          distributeUserMatchStats(result.awayGoals, result.homeGoals, "league");
         }
       }
 
@@ -2194,7 +2207,7 @@
         if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
           const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
           const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
-          distributeUserMatchStats(userGoals, oppGoals);
+          distributeUserMatchStats(userGoals, oppGoals, "cup");
         }
       }
       cup.rounds.qualifying.done = true;
@@ -2275,7 +2288,7 @@
         if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
           const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
           const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
-          distributeUserMatchStats(userGoals, oppGoals);
+          distributeUserMatchStats(userGoals, oppGoals, "cup");
         }
       }
 
@@ -2296,18 +2309,40 @@
     }
 
     function buildPlayerStatsHtml(stats = null, opts = {}) {
-      const { showAge = true, hideReplaced = false } = opts;
+      const { showAge = true, hideReplaced = false, filter = playerStatsFilter, showFilter = false } = opts;
       const data = stats || userPlayerStats;
       if (data.length === 0) return "";
       const getName = s => s.player ? s.player.name : s.playerName;
       const getOvr = s => s.player ? s.player.ovr : s.playerOvr;
       const getAge = s => s.player ? s.player.age : s.playerAge;
-      let displayStats = data.filter(s => s.appearances > 0);
+
+      const filterLabels = { all: "全部", league: "联赛", cup: "足总杯" };
+      const activeFilter = filterLabels[filter] ? filter : "all";
+
+      const getStat = (s, baseKey) => {
+        if (activeFilter === "all") return s[baseKey];
+        const key = `${activeFilter}${baseKey.charAt(0).toUpperCase() + baseKey.slice(1)}`;
+        return s[key] || 0;
+      };
+
+      let displayStats = data.filter(s => getStat(s, "appearances") > 0);
       if (hideReplaced) displayStats = displayStats.filter(s => !s.replaced);
       if (displayStats.length === 0) return "";
+
+      const filterHtml = showFilter
+        ? `<div style="margin-bottom:10px;">
+            <select id="playerStatsFilterSelect" style="background:#1e293b; color:#e2e8f0; border:1px solid #475569; border-radius:6px; padding:5px 8px; font-size:13px;">
+              <option value="all" ${activeFilter === "all" ? 'selected' : ''}>全部</option>
+              <option value="league" ${activeFilter === "league" ? 'selected' : ''}>联赛</option>
+              <option value="cup" ${activeFilter === "cup" ? 'selected' : ''}>足总杯</option>
+            </select>
+          </div>`
+        : "";
+
       return `
         <div style="margin-top:20px;">
           <div style="margin-bottom:12px; font-weight:700; color:#34d399;">个人数据</div>
+          ${filterHtml}
           <table style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead>
               <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
@@ -2326,10 +2361,10 @@
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
                   <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : ''}</td>
                   ${showAge ? `<td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>` : ''}
-                  <td style="text-align:center; padding:6px 4px;">${s.appearances}</td>
-                  <td style="text-align:center; padding:6px 4px;">${s.goals}</td>
-                  <td style="text-align:center; padding:6px 4px;">${s.assists}</td>
-                  <td style="text-align:center; padding:6px 4px;">${cleanSheetPositions.includes(s.pos) ? s.cleanSheets : '-'}</td>
+                  <td style="text-align:center; padding:6px 4px;">${getStat(s, "appearances")}</td>
+                  <td style="text-align:center; padding:6px 4px;">${getStat(s, "goals")}</td>
+                  <td style="text-align:center; padding:6px 4px;">${getStat(s, "assists")}</td>
+                  <td style="text-align:center; padding:6px 4px;">${cleanSheetPositions.includes(s.pos) ? getStat(s, "cleanSheets") : '-'}</td>
                 </tr>
               `).join("")}
             </tbody>
@@ -2351,6 +2386,8 @@
           if (!map.has(id)) {
             map.set(id, {
               pos: s.pos, goals: 0, assists: 0, cleanSheets: 0, appearances: 0,
+              leagueGoals: 0, leagueAssists: 0, leagueCleanSheets: 0, leagueAppearances: 0,
+              cupGoals: 0, cupAssists: 0, cupCleanSheets: 0, cupAppearances: 0,
               replaced: false, isTransfer: false,
               playerName: getName(s), playerOvr: getOvr(s), playerAge: getAge(s)
             });
@@ -2358,6 +2395,10 @@
           const e = map.get(id);
           e.goals += s.goals; e.assists += s.assists;
           e.cleanSheets += s.cleanSheets; e.appearances += s.appearances;
+          e.leagueGoals += s.leagueGoals || 0; e.leagueAssists += s.leagueAssists || 0;
+          e.leagueCleanSheets += s.leagueCleanSheets || 0; e.leagueAppearances += s.leagueAppearances || 0;
+          e.cupGoals += s.cupGoals || 0; e.cupAssists += s.cupAssists || 0;
+          e.cupCleanSheets += s.cupCleanSheets || 0; e.cupAppearances += s.cupAppearances || 0;
         }
       }
       return Array.from(map.values());
@@ -2647,10 +2688,10 @@
               ${buildStandingsTableHtml(sorted)}
             </div>
           </div>
-          ${buildPlayerStatsHtml()}
+          ${buildPlayerStatsHtml(null, { showFilter: true })}
           ${cupHtml}`;
       } else if (viewSeason === "cumulative") {
-        contentHtml = `<div class="empty-state" style="text-align:left; padding:0;">累计统计涵盖所有已完成赛季的数据</div>` + buildPlayerStatsHtml(buildCumulativeStats(), { showAge: false });
+        contentHtml = `<div class="empty-state" style="text-align:left; padding:0;">累计统计涵盖所有已完成赛季的数据</div>` + buildPlayerStatsHtml(buildCumulativeStats(), { showAge: false, showFilter: true });
       } else {
         const hist = seasonHistory.find(s => s.seasonNum == viewSeason);
         if (hist) {
@@ -2662,7 +2703,7 @@
             <div style="flex:1; min-width:280px;">
               ${buildStandingsTableHtml(sorted)}
             </div>
-            ${buildPlayerStatsHtml(hist.stats)}
+            ${buildPlayerStatsHtml(hist.stats, { showFilter: true })}
             ${histCupHtml}`;
         } else {
           contentHtml = '<div class="empty-state">无数据</div>';
@@ -2675,6 +2716,14 @@
       if (seasonSelect) {
         seasonSelect.addEventListener("change", (e) => {
           viewSeason = e.target.value;
+          renderLeague();
+        });
+      }
+
+      const playerStatsFilterSelect = document.getElementById("playerStatsFilterSelect");
+      if (playerStatsFilterSelect) {
+        playerStatsFilterSelect.addEventListener("change", (e) => {
+          playerStatsFilter = e.target.value;
           renderLeague();
         });
       }
