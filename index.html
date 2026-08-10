@@ -2011,12 +2011,12 @@
         return `<div>${e.minute}' ${e.scorerName}${assistText}</div>`;
       };
       const renderOppEvent = (e) => {
-        return `<div>${e.minute}' ${e.scorerName}</div>`;
+        return `<div>${e.minute}'</div>`;
       };
       const leftEvents = userIsHome ? userEvents.map(renderUserEvent).join("") : oppEvents.map(renderOppEvent).join("");
       const rightEvents = userIsHome ? oppEvents.map(renderOppEvent).join("") : userEvents.map(renderUserEvent).join("");
-      const leftColor = userIsHome ? "#34d399" : "#94a3b8";
-      const rightColor = userIsHome ? "#94a3b8" : "#34d399";
+      const leftColor = userIsHome ? "#60a5fa" : "#94a3b8";
+      const rightColor = userIsHome ? "#94a3b8" : "#60a5fa";
       return `
         <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:12px; line-height:1.5;">
           <div style="flex:1; text-align:left; color:${leftColor};">${leftEvents}</div>
