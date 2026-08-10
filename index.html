@@ -991,7 +991,7 @@
         let changeDisplay;
         if (tianyanMode) {
           const sign = diff > 0 ? '+' : '';
-          changeDisplay = `<span style="color:${arrowColor}; font-weight:700;">${c.oldOvr} → ${c.newOvr} (${sign}${diff})</span>`;
+          changeDisplay = `<span style="color:${arrowColor}; font-weight:700;">${c.newOvr} (${sign}${diff})</span>`;
         } else {
           changeDisplay = `<span style="color:${arrowColor}; font-size:20px; font-weight:700;">${arrow}</span>`;
         }
