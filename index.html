@@ -626,6 +626,17 @@
     </div>
   </div>
 
+  <div id="progressionModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9998; align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:#1e293b; border-radius:12px; padding:24px; max-width:520px; width:90vw; max-height:85vh; overflow-y:auto;">
+      <h2 id="progressionTitle" style="text-align:center; color:#34d399; font-size:18px; margin:0 0 4px;">赛季结束 · 能力变化</h2>
+      <p id="progressionSubtitle" style="text-align:center; color:#94a3b8; font-size:13px; margin:0 0 16px;"></p>
+      <div id="progressionList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div style="text-align:center; margin-top:20px;">
+        <button id="progressionContinueBtn" style="padding:12px 32px; background:#10b981; color:#064e3b; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:15px;">继续</button>
+      </div>
+    </div>
+  </div>
+
   <div id="loadingOverlay" style="position:fixed; inset:0; background:rgba(15,23,42,0.92); z-index:99999; display:flex; align-items:center; justify-content:center;">
     <div style="text-align:center;">
       <div style="font-size:18px; color:#34d399; font-weight:700;">数据加载中…</div>
@@ -771,6 +782,11 @@
     const shareImage = document.getElementById("shareImage");
     const shareDownload = document.getElementById("shareDownload");
     const shareCloseBtn = document.getElementById("shareCloseBtn");
+    const progressionModal = document.getElementById("progressionModal");
+    const progressionTitle = document.getElementById("progressionTitle");
+    const progressionSubtitle = document.getElementById("progressionSubtitle");
+    const progressionList = document.getElementById("progressionList");
+    const progressionContinueBtn = document.getElementById("progressionContinueBtn");
     const currentPosName = document.getElementById("currentPosName");
     const progressText = document.getElementById("progressText");
     const candidateList = document.getElementById("candidateList");
@@ -938,7 +954,63 @@
     shareBtn.addEventListener("click", () => generateShareImage());
     nextSeasonBtn.addEventListener("click", () => {
       saveSeasonHistory();
+      // 记录成长前OVR快照
+      const beforeSnapshot = draftPicks.map(p => p ? { id: p.id, ovr: p.ovr, age: p.age } : null);
       progressAllPlayers();
+      // 构建成长变化数据
+      const slots = formations[selectedFormation];
+      const changes = draftPicks.map((p, i) => {
+        if (!p) return null;
+        const before = beforeSnapshot[i];
+        return {
+          player: p,
+          pos: slots[i] ? slots[i].label : '',
+          oldOvr: before.ovr,
+          newOvr: p.ovr,
+          oldAge: before.age,
+          newAge: p.age
+        };
+      }).filter(Boolean);
+      renderProgression(changes);
+    });
+
+    function renderProgression(changes) {
+      progressionTitle.textContent = `${seasonLabel(currentSeason)}赛季结束 · 能力变化`;
+      const avgOld = changes.reduce((s, c) => s + c.oldOvr, 0) / changes.length;
+      const avgNew = changes.reduce((s, c) => s + c.newOvr, 0) / changes.length;
+      const avgDiff = avgNew - avgOld;
+      const avgArrow = avgDiff > 0 ? '↑' : avgDiff < 0 ? '↓' : '→';
+      progressionSubtitle.textContent = tianyanMode
+        ? `平均能力 ${avgOld.toFixed(1)} → ${avgNew.toFixed(1)} (${avgDiff >= 0 ? '+' : ''}${avgDiff.toFixed(1)})`
+        : `平均能力 ${avgArrow}`;
+
+      progressionList.innerHTML = changes.map(c => {
+        const diff = c.newOvr - c.oldOvr;
+        const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+        const arrowColor = diff > 0 ? '#34d399' : diff < 0 ? '#f87171' : '#94a3b8';
+        let changeDisplay;
+        if (tianyanMode) {
+          const sign = diff > 0 ? '+' : '';
+          changeDisplay = `<span style="color:${arrowColor}; font-weight:700;">${c.oldOvr} → ${c.newOvr} (${sign}${diff})</span>`;
+        } else {
+          changeDisplay = `<span style="color:${arrowColor}; font-size:20px; font-weight:700;">${arrow}</span>`;
+        }
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border-radius:8px; padding:10px 14px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="color:#64748b; font-size:12px; min-width:42px;">${c.pos}</span>
+              <span style="color:#e2e8f0; font-weight:600; font-size:14px;">${c.player.name}</span>
+              <span style="color:#64748b; font-size:12px;">${c.newAge}岁</span>
+            </div>
+            ${changeDisplay}
+          </div>`;
+      }).join('');
+
+      progressionModal.style.display = "flex";
+    }
+
+    progressionContinueBtn.addEventListener("click", () => {
+      progressionModal.style.display = "none";
       openTransferWindow(true);
     });
     skipTransferBtn.addEventListener("click", () => closeTransferWindow());
@@ -1572,11 +1644,15 @@
     }
 
     function progressAllPlayers() {
+      const changes = [];
       for (const p of allPlayers) {
+        const oldOvr = p.ovr;
         const oldAge = p.age;
         p.age++;
         p.ovr = progressOvr(p.ovr, oldAge);
+        changes.push({ player: p, oldOvr, newOvr: p.ovr, oldAge, newAge: p.age });
       }
+      return changes;
     }
 
     function startNewSeason() {
