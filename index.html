@@ -575,7 +575,7 @@
 
       <div class="actions">
         <button class="primary-btn" id="startSeasonBtn" disabled>开始赛季</button>
-        <button class="primary-btn hidden" id="simNextBtn">模拟下一轮</button>
+        <button class="primary-btn hidden" id="simNextBtn">模拟一场</button>
         <button class="primary-btn hidden" id="simHalfBtn">模拟至半程</button>
         <button class="primary-btn hidden" id="restartBtn">重来一局</button>
         <button class="primary-btn hidden" id="nextSeasonBtn">进入下一赛季</button>
@@ -744,6 +744,9 @@
     let cupSeasons = [];
     let cup = null;
     let cupFinalPending = false;
+    let cupRoundPending = null;       // 待踢的杯赛轮次key
+    let lastCupResults = null;        // 最近一次杯赛轮次赛果 { roundName, matches }
+    let lastSimType = null;           // "league" | "cup" 标记最近模拟类型
     const CUP_SCHEDULE = { 21: "qualifying", 25: "roundOf16", 29: "quarterFinals", 34: "semiFinals" };
     const CUP_ROUND_NAMES = { qualifying: "预选赛", roundOf16: "16强", quarterFinals: "8强", semiFinals: "4强", final: "决赛" };
     const CUP_ROUND_ORDER = ["qualifying", "roundOf16", "quarterFinals", "semiFinals", "final"];
@@ -848,21 +851,35 @@
       if (cupFinalPending) {
         simulateCupRound("final");
         cupFinalPending = false;
+        lastSimType = "cup";
+        lastCupResults = { roundName: "决赛", matches: cup.rounds.final.matches };
         if (cup.champion === "我的球队") {
           cupSeasons.push(seasonLabel(currentSeason));
         }
-        simNextBtn.textContent = "模拟下一轮";
+        renderLeague();
+        return;
+      }
+      // 杯赛轮次分支（预选赛/16强/8强/4强）
+      if (cupRoundPending) {
+        if (cupRoundPending === "qualifying") {
+          drawCupQualifying();
+        } else {
+          simulateCupRound(cupRoundPending);
+        }
+        lastSimType = "cup";
+        lastCupResults = { roundName: CUP_ROUND_NAMES[cupRoundPending], matches: cup.rounds[cupRoundPending].matches };
+        cupRoundPending = null;
         renderLeague();
         return;
       }
       if (currentRound >= fixtures.length || isSimulating) return;
       simulateRound(currentRound);
       currentRound++;
-      // 检查杯赛触发
+      lastSimType = "league";
+      // 检查杯赛触发（杯赛作为单独一轮，下次点击再模拟）
       const cupKey = cup && cup.schedule[currentRound];
       if (cupKey && !cup.rounds[cupKey].done) {
-        if (cupKey === "qualifying") drawCupQualifying();
-        simulateCupRound(cupKey);
+        cupRoundPending = cupKey;
       }
       const half = Math.floor(fixtures.length / 2);
       if (currentRound === half && !transferDone) {
@@ -874,6 +891,7 @@
 
     simHalfBtn.addEventListener("click", () => {
       if (isSimulating) return;
+      if (cupRoundPending || cupFinalPending) return;
       const half = Math.floor(fixtures.length / 2);
       const target = currentRound < half ? half : fixtures.length;
       if (currentRound >= target) return;
@@ -896,13 +914,21 @@
         }
         simulateRound(currentRound);
         currentRound++;
-        // 检查杯赛触发
+        lastSimType = "league";
+        // 检查杯赛触发（杯赛作为单独一轮，停止批量模拟）
         const cupKey = cup && cup.schedule[currentRound];
         if (cupKey && !cup.rounds[cupKey].done) {
-          if (cupKey === "qualifying") drawCupQualifying();
-          simulateCupRound(cupKey);
+          cupRoundPending = cupKey;
         }
         renderLeague();
+        if (cupRoundPending) {
+          // 杯赛轮次待踢，停止批量模拟
+          isSimulating = false;
+          simNextBtn.disabled = false;
+          simHalfBtn.disabled = false;
+          renderLeague();
+          return;
+        }
         setTimeout(step, 400);
       };
       step();
@@ -939,6 +965,9 @@
       cupSeasons = [];
       cup = null;
       cupFinalPending = false;
+      cupRoundPending = null;
+      lastCupResults = null;
+      lastSimType = null;
 
       // 重新加载球员数据（恢复原始年龄和能力值）
       fetch("players.json")
@@ -1740,6 +1769,9 @@
         champion: null
       };
       cupFinalPending = false;
+      cupRoundPending = null;
+      lastCupResults = null;
+      lastSimType = null;
     }
 
     function buildLeague() {
@@ -1834,7 +1866,13 @@
       const hStr = leagueTeams[homeIdx].strength;
       const aStr = leagueTeams[awayIdx].strength;
       const total = hStr + aStr;
-      return Math.random() < (hStr / total) ? homeIdx : awayIdx;
+      const homeWins = Math.random() < (hStr / total);
+      // 生成点球比分（胜者进球更多，3-5范围内）
+      const loserScore = 2 + Math.floor(Math.random() * 3); // 2-4
+      const winnerScore = loserScore + 1 + Math.floor(Math.random() * 2); // 胜者多1-2球
+      const homePenalty = homeWins ? winnerScore : loserScore;
+      const awayPenalty = homeWins ? loserScore : winnerScore;
+      return { winnerIdx: homeWins ? homeIdx : awayIdx, homePenalty, awayPenalty };
     }
 
     function getNextCupRound(key) {
@@ -2098,16 +2136,21 @@
         const awayIdx = shuffled[i + 1];
         const result = simulateMatch(leagueTeams[homeIdx].strength, leagueTeams[awayIdx].strength);
         let winnerIdx;
+        let penaltyHome, penaltyAway;
         if (result.homeGoals !== result.awayGoals) {
           winnerIdx = result.homeGoals > result.awayGoals ? homeIdx : awayIdx;
         } else {
-          winnerIdx = penaltyShootout(homeIdx, awayIdx);
+          const penResult = penaltyShootout(homeIdx, awayIdx);
+          winnerIdx = penResult.winnerIdx;
+          penaltyHome = penResult.homePenalty;
+          penaltyAway = penResult.awayPenalty;
         }
         matches.push({
           homeIdx, awayIdx,
           homeName: leagueTeams[homeIdx].name,
           awayName: leagueTeams[awayIdx].name,
           homeGoals: result.homeGoals, awayGoals: result.awayGoals,
+          ...(penaltyHome !== undefined ? { penaltyHome, penaltyAway } : {}),
           winnerIdx,
           winnerName: leagueTeams[winnerIdx].name
         });
@@ -2139,16 +2182,21 @@
         const awayIdx = shuffled[i + 1];
         const result = simulateMatch(leagueTeams[homeIdx].strength, leagueTeams[awayIdx].strength);
         let winnerIdx;
+        let penaltyHome, penaltyAway;
         if (result.homeGoals !== result.awayGoals) {
           winnerIdx = result.homeGoals > result.awayGoals ? homeIdx : awayIdx;
         } else {
-          winnerIdx = penaltyShootout(homeIdx, awayIdx);
+          const penResult = penaltyShootout(homeIdx, awayIdx);
+          winnerIdx = penResult.winnerIdx;
+          penaltyHome = penResult.homePenalty;
+          penaltyAway = penResult.awayPenalty;
         }
         matches.push({
           homeIdx, awayIdx,
           homeName: leagueTeams[homeIdx].name,
           awayName: leagueTeams[awayIdx].name,
           homeGoals: result.homeGoals, awayGoals: result.awayGoals,
+          ...(penaltyHome !== undefined ? { penaltyHome, penaltyAway } : {}),
           winnerIdx,
           winnerName: leagueTeams[winnerIdx].name
         });
@@ -2308,9 +2356,12 @@
             const awayWon = m.winnerIdx === m.awayIdx;
             const homeColor = homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b';
             const awayColor = awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b';
+            const scoreText = m.penaltyHome !== undefined
+              ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:10px; color:#94a3b8;"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
+              : `${m.homeGoals} - ${m.awayGoals}`;
             html += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;">
               <span style="color:${homeColor}; font-weight:${homeIsUser ? 700 : 400}; flex:1; text-align:right;">${homeName}</span>
-              <span style="flex:0 0 auto; padding:0 8px; color:#facc15; font-weight:700;">${m.homeGoals} - ${m.awayGoals}</span>
+              <span style="flex:0 0 auto; padding:0 8px; color:#facc15; font-weight:700; white-space:nowrap;">${scoreText}</span>
               <span style="color:${awayColor}; font-weight:${awayIsUser ? 700 : 400}; flex:1;">${awayName}</span>
             </div>`;
           }
@@ -2377,6 +2428,8 @@
 
         if (isFinished && cupFinalPending) {
           currentPosName.textContent = `${seasonLabel(currentSeason)}联赛已结束 · 足总杯决赛待踢`;
+        } else if (cupRoundPending) {
+          currentPosName.textContent = `${seasonLabel(currentSeason)} · 第 ${currentRound} 轮已完 · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}待踢`;
         } else if (isFinished) {
           currentPosName.textContent = `${seasonLabel(currentSeason)}已结束`;
         } else {
@@ -2393,7 +2446,7 @@
         }
 
         if (isFinished && cupFinalPending) {
-          simNextBtn.textContent = "踢杯决赛";
+          simNextBtn.textContent = "模拟一场";
           simNextBtn.classList.remove("hidden");
           simNextBtn.disabled = false;
           simHalfBtn.classList.add("hidden");
@@ -2407,8 +2460,13 @@
           nextSeasonBtn.classList.remove("hidden");
           shareBtn.classList.remove("hidden");
         } else if (!isSimulating) {
+          simNextBtn.textContent = "模拟一场";
           simNextBtn.classList.remove("hidden");
-          simHalfBtn.classList.remove("hidden");
+          if (cupRoundPending) {
+            simHalfBtn.classList.add("hidden");
+          } else {
+            simHalfBtn.classList.remove("hidden");
+          }
           restartBtn.classList.add("hidden");
           nextSeasonBtn.classList.add("hidden");
           shareBtn.classList.add("hidden");
@@ -2434,8 +2492,30 @@
         const sorted = [...standings].sort((a, b) =>
           b.points - a.points || b.gd - a.gd || b.gf - a.gf
         );
-        const resultsHtml = lastRoundResults.length > 0
-          ? `
+        let resultsHtml = "";
+        if (lastSimType === "cup" && lastCupResults) {
+          // 杯赛赛果展示
+          resultsHtml = `
+            <div style="margin-bottom:16px;">
+              <div style="margin-bottom:8px; font-weight:700; color:#facc15;">足总杯 ${lastCupResults.roundName} 赛果</div>
+              ${lastCupResults.matches.map(m => {
+                const homeIsUser = m.homeName === "我的球队";
+                const awayIsUser = m.awayName === "我的球队";
+                const homeWon = m.winnerIdx === m.homeIdx;
+                const awayWon = m.winnerIdx === m.awayIdx;
+                const scoreText = m.penaltyHome !== undefined
+                  ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:11px; color:#94a3b8;"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
+                  : `${m.homeGoals} - ${m.awayGoals}`;
+                return `
+                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
+                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
+                  <span style="flex:0 0 auto; padding:0 10px; color:#facc15; font-weight:700; white-space:nowrap;">${scoreText}</span>
+                  <span style="flex:1; color:${awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                </div>`;
+              }).join("")}
+            </div>`;
+        } else if (lastSimType === "league" && lastRoundResults.length > 0) {
+          resultsHtml = `
             <div style="margin-bottom:16px;">
               <div style="margin-bottom:8px; font-weight:700; color:#34d399;">第 ${currentRound} 轮赛果</div>
               ${lastRoundResults.map(r => `
@@ -2445,8 +2525,8 @@
                   <span style="flex:1;">${r.awayName}</span>
                 </div>
               `).join("")}
-            </div>`
-          : "";
+            </div>`;
+        }
         const cupHtml = buildCupBracketHtml(cup);
         contentHtml = `
           <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
