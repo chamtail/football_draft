@@ -890,14 +890,13 @@
       if (isSimulating) return;
       if (cupFinalPending) return;
 
-      // 如果有杯赛轮次待踢，先模拟杯赛
+      // 如果有杯赛轮次待踢，先模拟杯赛，然后继续批量模拟
       if (cupRoundPending) {
         simulateCupRound(cupRoundPending);
         lastSimType = "cup";
         lastCupResults = { roundName: CUP_ROUND_NAMES[cupRoundPending], matches: cup.rounds[cupRoundPending].matches };
         cupRoundPending = null;
         renderLeague();
-        return;
       }
 
       const half = Math.floor(fixtures.length / 2);
@@ -909,6 +908,16 @@
       simHalfBtn.disabled = true;
 
       const step = () => {
+        // 批量模拟中遇到杯赛轮次，先模拟杯赛再继续
+        if (cupRoundPending) {
+          simulateCupRound(cupRoundPending);
+          lastSimType = "cup";
+          lastCupResults = { roundName: CUP_ROUND_NAMES[cupRoundPending], matches: cup.rounds[cupRoundPending].matches };
+          cupRoundPending = null;
+          renderLeague();
+          setTimeout(step, 400);
+          return;
+        }
         if (currentRound >= target) {
           isSimulating = false;
           simNextBtn.disabled = false;
@@ -923,21 +932,13 @@
         simulateRound(currentRound);
         currentRound++;
         lastSimType = "league";
-        // 检查杯赛触发（杯赛作为单独一轮，停止批量模拟，并预先抽签）
+        // 检查杯赛触发（杯赛作为单独一轮，预抽签后由批量循环统一模拟）
         const cupKey = cup && cup.schedule[currentRound];
         if (cupKey && !cup.rounds[cupKey].done) {
           cupRoundPending = cupKey;
           drawCupRoundMatches(cupKey);
         }
         renderLeague();
-        if (cupRoundPending) {
-          // 杯赛轮次待踢，停止批量模拟
-          isSimulating = false;
-          simNextBtn.disabled = false;
-          simHalfBtn.disabled = false;
-          renderLeague();
-          return;
-        }
         setTimeout(step, 400);
       };
       step();
