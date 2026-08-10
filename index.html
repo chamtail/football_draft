@@ -919,6 +919,19 @@
           return;
         }
         if (currentRound >= target) {
+          // 如果联赛已结束且杯赛决赛待踢，先模拟决赛
+          if (cupFinalPending) {
+            simulateCupRound("final");
+            cupFinalPending = false;
+            lastSimType = "cup";
+            lastCupResults = { roundName: "决赛", matches: cup.rounds.final.matches };
+            if (cup.champion === "我的球队") {
+              cupSeasons.push(seasonLabel(currentSeason));
+            }
+            renderLeague();
+            setTimeout(step, 400);
+            return;
+          }
           isSimulating = false;
           simNextBtn.disabled = false;
           simHalfBtn.disabled = false;
@@ -2265,10 +2278,11 @@
       round.matches = matches;
       round.done = true;
 
-      // 推进胜者到下一轮
+      // 推进胜者到下一轮，并立即抽签更新对阵图
       const nextKey = getNextCupRound(roundKey);
       if (nextKey) {
         cup.rounds[nextKey].teams = matches.map(m => m.winnerIdx);
+        drawCupRoundMatches(nextKey);
       }
 
       // 决赛产生冠军
