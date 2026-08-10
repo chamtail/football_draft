@@ -2739,9 +2739,9 @@
                 return `
                 <div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                    <span style="text-align:right; flex:1; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.homeName}</span>
+                    <span style="text-align:right; flex:1; color:${userIsHome ? '#34d399' : '#e2e8f0'}; font-weight:${userIsHome ? 700 : 400};">${r.homeName}</span>
                     <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
-                    <span style="flex:1; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.awayName}</span>
+                    <span style="flex:1; color:${!userIsHome ? '#34d399' : '#e2e8f0'}; font-weight:${!userIsHome ? 700 : 400};">${r.awayName}</span>
                   </div>
                   ${r.isUser ? formatMatchEvents(r.events, userIsHome) : ""}
                 </div>`;
