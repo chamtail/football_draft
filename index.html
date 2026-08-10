@@ -748,7 +748,7 @@
     let lastCupResults = null;        // 最近一次杯赛轮次赛果 { roundName, matches }
     let lastSimType = null;           // "league" | "cup" 标记最近模拟类型
     const CUP_SCHEDULE = { 21: "qualifying", 25: "roundOf16", 29: "quarterFinals", 34: "semiFinals" };
-    const CUP_ROUND_NAMES = { qualifying: "预选赛", roundOf16: "16强", quarterFinals: "8强", semiFinals: "4强", final: "决赛" };
+    const CUP_ROUND_NAMES = { qualifying: "预选赛", roundOf16: "16强", quarterFinals: "8强", semiFinals: "半决赛", final: "决赛" };
     const CUP_ROUND_ORDER = ["qualifying", "roundOf16", "quarterFinals", "semiFinals", "final"];
 
     function seasonLabel(num) {
@@ -861,11 +861,7 @@
       }
       // 杯赛轮次分支（预选赛/16强/8强/4强）
       if (cupRoundPending) {
-        if (cupRoundPending === "qualifying") {
-          drawCupQualifying();
-        } else {
-          simulateCupRound(cupRoundPending);
-        }
+        simulateCupRound(cupRoundPending);
         lastSimType = "cup";
         lastCupResults = { roundName: CUP_ROUND_NAMES[cupRoundPending], matches: cup.rounds[cupRoundPending].matches };
         cupRoundPending = null;
@@ -876,10 +872,11 @@
       simulateRound(currentRound);
       currentRound++;
       lastSimType = "league";
-      // 检查杯赛触发（杯赛作为单独一轮，下次点击再模拟）
+      // 检查杯赛触发（杯赛作为单独一轮，下次点击再模拟，并预先抽签）
       const cupKey = cup && cup.schedule[currentRound];
       if (cupKey && !cup.rounds[cupKey].done) {
         cupRoundPending = cupKey;
+        drawCupRoundMatches(cupKey);
       }
       const half = Math.floor(fixtures.length / 2);
       if (currentRound === half && !transferDone) {
@@ -891,7 +888,18 @@
 
     simHalfBtn.addEventListener("click", () => {
       if (isSimulating) return;
-      if (cupRoundPending || cupFinalPending) return;
+      if (cupFinalPending) return;
+
+      // 如果有杯赛轮次待踢，先模拟杯赛
+      if (cupRoundPending) {
+        simulateCupRound(cupRoundPending);
+        lastSimType = "cup";
+        lastCupResults = { roundName: CUP_ROUND_NAMES[cupRoundPending], matches: cup.rounds[cupRoundPending].matches };
+        cupRoundPending = null;
+        renderLeague();
+        return;
+      }
+
       const half = Math.floor(fixtures.length / 2);
       const target = currentRound < half ? half : fixtures.length;
       if (currentRound >= target) return;
@@ -915,10 +923,11 @@
         simulateRound(currentRound);
         currentRound++;
         lastSimType = "league";
-        // 检查杯赛触发（杯赛作为单独一轮，停止批量模拟）
+        // 检查杯赛触发（杯赛作为单独一轮，停止批量模拟，并预先抽签）
         const cupKey = cup && cup.schedule[currentRound];
         if (cupKey && !cup.rounds[cupKey].done) {
           cupRoundPending = cupKey;
+          drawCupRoundMatches(cupKey);
         }
         renderLeague();
         if (cupRoundPending) {
@@ -2119,7 +2128,7 @@
       }
     }
 
-    function drawCupQualifying() {
+    function drawCupQualifyingPairs() {
       const sorted = [...standings].sort((a, b) =>
         b.points - a.points || b.gd - a.gd || b.gf - a.gf
       );
@@ -2127,41 +2136,49 @@
       const top12 = sorted.slice(0, 12).map(s => s.idx);
       cup.rounds.roundOf16.teams = [...top12];
 
-      // 后8名抽签对阵
+      // 后8名抽签对阵（只抽签，不模拟比分）
       const bottom8 = sorted.slice(12, 20).map(s => s.idx);
       const shuffled = [...bottom8].sort(() => Math.random() - 0.5);
       const matches = [];
       for (let i = 0; i < shuffled.length; i += 2) {
         const homeIdx = shuffled[i];
         const awayIdx = shuffled[i + 1];
-        const result = simulateMatch(leagueTeams[homeIdx].strength, leagueTeams[awayIdx].strength);
-        let winnerIdx;
-        let penaltyHome, penaltyAway;
-        if (result.homeGoals !== result.awayGoals) {
-          winnerIdx = result.homeGoals > result.awayGoals ? homeIdx : awayIdx;
-        } else {
-          const penResult = penaltyShootout(homeIdx, awayIdx);
-          winnerIdx = penResult.winnerIdx;
-          penaltyHome = penResult.homePenalty;
-          penaltyAway = penResult.awayPenalty;
-        }
         matches.push({
           homeIdx, awayIdx,
           homeName: leagueTeams[homeIdx].name,
-          awayName: leagueTeams[awayIdx].name,
-          homeGoals: result.homeGoals, awayGoals: result.awayGoals,
-          ...(penaltyHome !== undefined ? { penaltyHome, penaltyAway } : {}),
-          winnerIdx,
-          winnerName: leagueTeams[winnerIdx].name
+          awayName: leagueTeams[awayIdx].name
         });
+      }
+      cup.rounds.qualifying.matches = matches;
+    }
+
+    function simulateCupQualifying() {
+      const matches = cup.rounds.qualifying.matches;
+      for (const m of matches) {
+        const result = simulateMatch(leagueTeams[m.homeIdx].strength, leagueTeams[m.awayIdx].strength);
+        m.homeGoals = result.homeGoals;
+        m.awayGoals = result.awayGoals;
+        let penaltyHome, penaltyAway;
+        if (result.homeGoals !== result.awayGoals) {
+          m.winnerIdx = result.homeGoals > result.awayGoals ? m.homeIdx : m.awayIdx;
+        } else {
+          const penResult = penaltyShootout(m.homeIdx, m.awayIdx);
+          m.winnerIdx = penResult.winnerIdx;
+          penaltyHome = penResult.homePenalty;
+          penaltyAway = penResult.awayPenalty;
+        }
+        if (penaltyHome !== undefined) {
+          m.penaltyHome = penaltyHome;
+          m.penaltyAway = penaltyAway;
+        }
+        m.winnerName = leagueTeams[m.winnerIdx].name;
         // 用户球队参赛时分配数据
-        if (leagueTeams[homeIdx].isUser || leagueTeams[awayIdx].isUser) {
-          const userGoals = leagueTeams[homeIdx].isUser ? result.homeGoals : result.awayGoals;
-          const oppGoals = leagueTeams[homeIdx].isUser ? result.awayGoals : result.homeGoals;
+        if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
+          const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
+          const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
           distributeUserMatchStats(userGoals, oppGoals);
         }
       }
-      cup.rounds.qualifying.matches = matches;
       cup.rounds.qualifying.done = true;
 
       // 4个胜者进入16强
@@ -2169,41 +2186,77 @@
       cup.rounds.roundOf16.teams.push(...winners);
     }
 
-    function simulateCupRound(roundKey) {
-      const round = cup.rounds[roundKey];
-      if (roundKey === "qualifying") return; // 预选赛由 drawCupQualifying 处理
+    function drawCupQualifying() {
+      drawCupQualifyingPairs();
+      simulateCupQualifying();
+    }
 
+    function drawCupRoundMatches(roundKey) {
+      const round = cup.rounds[roundKey];
+      if (roundKey === "qualifying") {
+        drawCupQualifyingPairs();
+        return;
+      }
       const teams = round.teams;
       const shuffled = [...teams].sort(() => Math.random() - 0.5);
       const matches = [];
-
       for (let i = 0; i < shuffled.length; i += 2) {
         const homeIdx = shuffled[i];
         const awayIdx = shuffled[i + 1];
-        const result = simulateMatch(leagueTeams[homeIdx].strength, leagueTeams[awayIdx].strength);
-        let winnerIdx;
-        let penaltyHome, penaltyAway;
-        if (result.homeGoals !== result.awayGoals) {
-          winnerIdx = result.homeGoals > result.awayGoals ? homeIdx : awayIdx;
-        } else {
-          const penResult = penaltyShootout(homeIdx, awayIdx);
-          winnerIdx = penResult.winnerIdx;
-          penaltyHome = penResult.homePenalty;
-          penaltyAway = penResult.awayPenalty;
-        }
         matches.push({
           homeIdx, awayIdx,
           homeName: leagueTeams[homeIdx].name,
-          awayName: leagueTeams[awayIdx].name,
-          homeGoals: result.homeGoals, awayGoals: result.awayGoals,
-          ...(penaltyHome !== undefined ? { penaltyHome, penaltyAway } : {}),
-          winnerIdx,
-          winnerName: leagueTeams[winnerIdx].name
+          awayName: leagueTeams[awayIdx].name
         });
+      }
+      round.matches = matches;
+    }
+
+    function simulateCupRound(roundKey) {
+      const round = cup.rounds[roundKey];
+      if (roundKey === "qualifying") {
+        simulateCupQualifying();
+        return;
+      }
+
+      // 使用预抽签的对阵，如果没有则当场抽签
+      let matches = round.matches && round.matches.length > 0 ? round.matches : [];
+      if (matches.length === 0) {
+        const teams = round.teams;
+        const shuffled = [...teams].sort(() => Math.random() - 0.5);
+        for (let i = 0; i < shuffled.length; i += 2) {
+          const homeIdx = shuffled[i];
+          const awayIdx = shuffled[i + 1];
+          matches.push({
+            homeIdx, awayIdx,
+            homeName: leagueTeams[homeIdx].name,
+            awayName: leagueTeams[awayIdx].name
+          });
+        }
+      }
+
+      for (const m of matches) {
+        const result = simulateMatch(leagueTeams[m.homeIdx].strength, leagueTeams[m.awayIdx].strength);
+        m.homeGoals = result.homeGoals;
+        m.awayGoals = result.awayGoals;
+        let penaltyHome, penaltyAway;
+        if (result.homeGoals !== result.awayGoals) {
+          m.winnerIdx = result.homeGoals > result.awayGoals ? m.homeIdx : m.awayIdx;
+        } else {
+          const penResult = penaltyShootout(m.homeIdx, m.awayIdx);
+          m.winnerIdx = penResult.winnerIdx;
+          penaltyHome = penResult.homePenalty;
+          penaltyAway = penResult.awayPenalty;
+        }
+        if (penaltyHome !== undefined) {
+          m.penaltyHome = penaltyHome;
+          m.penaltyAway = penaltyAway;
+        }
+        m.winnerName = leagueTeams[m.winnerIdx].name;
         // 用户球队参赛时分配数据
-        if (leagueTeams[homeIdx].isUser || leagueTeams[awayIdx].isUser) {
-          const userGoals = leagueTeams[homeIdx].isUser ? result.homeGoals : result.awayGoals;
-          const oppGoals = leagueTeams[homeIdx].isUser ? result.awayGoals : result.homeGoals;
+        if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
+          const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
+          const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
           distributeUserMatchStats(userGoals, oppGoals);
         }
       }
@@ -2344,7 +2397,7 @@
         const round = rounds[key];
         if (!round) continue;
         const name = CUP_ROUND_NAMES[key];
-        if (round.done && round.matches.length > 0) {
+        if (round.matches && round.matches.length > 0) {
           html += `<div style="background:#0f172a; border-radius:8px; padding:10px 14px; margin-bottom:8px;">
             <div style="font-weight:700; font-size:13px; color:#facc15; margin-bottom:6px;">${name}</div>`;
           for (const m of round.matches) {
@@ -2352,16 +2405,22 @@
             const awayName = m.awayName || `球队${m.awayIdx}`;
             const homeIsUser = homeName === "我的球队";
             const awayIsUser = awayName === "我的球队";
-            const homeWon = m.winnerIdx === m.homeIdx;
-            const awayWon = m.winnerIdx === m.awayIdx;
+            const isDone = m.homeGoals !== undefined;
+            const homeWon = isDone && m.winnerIdx === m.homeIdx;
+            const awayWon = isDone && m.winnerIdx === m.awayIdx;
             const homeColor = homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b';
             const awayColor = awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b';
-            const scoreText = m.penaltyHome !== undefined
-              ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:10px; color:#94a3b8;"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
-              : `${m.homeGoals} - ${m.awayGoals}`;
+            let centerText;
+            if (isDone) {
+              centerText = m.penaltyHome !== undefined
+                ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:10px; color:#94a3b8;"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
+                : `${m.homeGoals} - ${m.awayGoals}`;
+            } else {
+              centerText = `<span style="color:#64748b;">vs</span>`;
+            }
             html += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;">
               <span style="color:${homeColor}; font-weight:${homeIsUser ? 700 : 400}; flex:1; text-align:right;">${homeName}</span>
-              <span style="flex:0 0 auto; padding:0 8px; color:#facc15; font-weight:700; white-space:nowrap;">${scoreText}</span>
+              <span style="flex:0 0 auto; padding:0 8px; color:#facc15; font-weight:700; white-space:nowrap;">${centerText}</span>
               <span style="color:${awayColor}; font-weight:${awayIsUser ? 700 : 400}; flex:1;">${awayName}</span>
             </div>`;
           }
@@ -2429,7 +2488,25 @@
         if (isFinished && cupFinalPending) {
           currentPosName.textContent = `${seasonLabel(currentSeason)}联赛已结束 · 足总杯决赛待踢`;
         } else if (cupRoundPending) {
-          currentPosName.textContent = `${seasonLabel(currentSeason)} · 第 ${currentRound} 轮已完 · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}待踢`;
+          const cupMatches = cup.rounds[cupRoundPending].matches || [];
+          let cupOpponent = null;
+          let cupVenue = "";
+          for (const m of cupMatches) {
+            if (leagueTeams[m.homeIdx].isUser) {
+              cupOpponent = m.awayName;
+              cupVenue = "主";
+              break;
+            } else if (leagueTeams[m.awayIdx].isUser) {
+              cupOpponent = m.homeName;
+              cupVenue = "客";
+              break;
+            }
+          }
+          if (cupOpponent) {
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]} · 对手：${cupOpponent}（${cupVenue}）`;
+          } else {
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 第 ${currentRound} 轮已完 · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}待踢`;
+          }
         } else if (isFinished) {
           currentPosName.textContent = `${seasonLabel(currentSeason)}已结束`;
         } else {
@@ -2462,11 +2539,7 @@
         } else if (!isSimulating) {
           simNextBtn.textContent = "模拟一场";
           simNextBtn.classList.remove("hidden");
-          if (cupRoundPending) {
-            simHalfBtn.classList.add("hidden");
-          } else {
-            simHalfBtn.classList.remove("hidden");
-          }
+          simHalfBtn.classList.remove("hidden");
           restartBtn.classList.add("hidden");
           nextSeasonBtn.classList.add("hidden");
           shareBtn.classList.add("hidden");
@@ -2493,7 +2566,24 @@
           b.points - a.points || b.gd - a.gd || b.gf - a.gf
         );
         let resultsHtml = "";
-        if (lastSimType === "cup" && lastCupResults) {
+        if (cupRoundPending && cup.rounds[cupRoundPending].matches.length > 0) {
+          // 杯赛待踢时展示已抽签对阵
+          const pendingMatches = cup.rounds[cupRoundPending].matches;
+          resultsHtml = `
+            <div style="margin-bottom:16px;">
+              <div style="margin-bottom:8px; font-weight:700; color:#facc15;">足总杯 ${CUP_ROUND_NAMES[cupRoundPending]} 对阵</div>
+              ${pendingMatches.map(m => {
+                const homeIsUser = m.homeName === "我的球队";
+                const awayIsUser = m.awayName === "我的球队";
+                return `
+                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
+                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
+                  <span style="flex:0 0 auto; padding:0 10px; color:#64748b; font-weight:700; white-space:nowrap;">vs</span>
+                  <span style="flex:1; color:${awayIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                </div>`;
+              }).join("")}
+            </div>`;
+        } else if (lastSimType === "cup" && lastCupResults) {
           // 杯赛赛果展示
           resultsHtml = `
             <div style="margin-bottom:16px;">
