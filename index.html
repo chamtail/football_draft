@@ -1964,9 +1964,11 @@
       for (let i = 0; i < events.length; i++) {
         const e = events[i];
         if (e.side !== "user") continue;
-        if (assistEntries.length === 0) continue;
         if (Math.random() < 0.25) continue;
-        const pick = weightedPick(assistEntries);
+        // 助攻者不能是进球者本人
+        const eligible = assistEntries.filter(a => a.name !== e.scorerName);
+        if (eligible.length === 0) continue;
+        const pick = weightedPick(eligible);
         e.assisterName = pick.name;
         pick.ref.assists++;
         pick.ref[assistsKey]++;
