@@ -973,7 +973,28 @@
       if (isCurrentChampion && !allTitles.includes(seasonLabel(currentSeason))) {
         allTitles.push(seasonLabel(currentSeason));
       }
-      const honorsH = sectionTitleH + rowH + 16;
+      // 荣誉换行计算：先量文字宽度，决定需要几行
+      const honorsLines = [];
+      if (allTitles.length > 0) {
+        ctx.font = "13px sans-serif";
+        const labelPrefixW = padding + 100; // 左边距 + "联赛冠军 ×N" 列宽
+        const maxLineW = W - labelPrefixW - padding;
+        // 按赛季逐个累加，超过宽度则换行
+        let currentLine = "";
+        for (let i = 0; i < allTitles.length; i++) {
+          const piece = (i === 0 ? "" : " · ") + allTitles[i];
+          const testLine = currentLine + piece;
+          if (currentLine && ctx.measureText(testLine).width > maxLineW) {
+            honorsLines.push(currentLine);
+            currentLine = allTitles[i];
+          } else {
+            currentLine = testLine;
+          }
+        }
+        if (currentLine) honorsLines.push(currentLine);
+      }
+      const honorsLineH = 18;
+      const honorsH = sectionTitleH + rowH + Math.max(1, honorsLines.length) * honorsLineH + 16;
       const H = padding + titleH + subtitleH + honorsH + standingsH + statsH + qrH + padding;
 
       canvas.width = W;
@@ -1008,11 +1029,15 @@
       ctx.font = "13px sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(`联赛冠军 ×${allTitles.length}`, padding, y + 16);
-      if (allTitles.length > 0) {
+      if (honorsLines.length > 0) {
+        const startX = padding + 100;
         ctx.fillStyle = "#94a3b8";
-        ctx.fillText(`夺冠赛季：${allTitles.join(" · ")}`, padding + 100, y + 16);
+        ctx.fillText("夺冠赛季：" + honorsLines[0], startX, y + 16);
+        for (let i = 1; i < honorsLines.length; i++) {
+          ctx.fillText(honorsLines[i], startX, y + 16 + i * honorsLineH);
+        }
       }
-      y += rowH + 16;
+      y += rowH + honorsLines.length * honorsLineH + 16;
 
       // 积分榜
       ctx.fillStyle = "#34d399";
