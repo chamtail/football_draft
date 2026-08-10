@@ -1277,7 +1277,7 @@
           { v: (s.gd > 0 ? "+" : "") + s.gd, col: cols[8] },
           { v: String(s.points), col: cols[9] }
         ];
-        ctx.fillStyle = s.isUser ? "#34d399" : "#e2e8f0";
+        ctx.fillStyle = s.isUser ? "#60a5fa" : "#e2e8f0";
         if (s.isUser) {
           ctx.font = "bold 12px sans-serif";
         } else {
@@ -2002,28 +2002,31 @@
       return events.sort((a, b) => a.minute - b.minute);
     }
 
-    function formatMatchEvents(events) {
+    function formatMatchEvents(events, userIsHome) {
       if (!events || events.length === 0) return "";
       const userEvents = events.filter(e => e.side === "user");
       const oppEvents = events.filter(e => e.side === "opp");
-      const renderEvent = (e) => {
+      const renderUserEvent = (e) => {
         const assistText = e.assisterName ? ` <span style="color:#64748b;">(助：${e.assisterName})</span>` : "";
-        return `<div>${e.minute}'${assistText}</div>`;
+        return `<div>${e.minute}' ${e.scorerName}${assistText}</div>`;
       };
+      const renderOppEvent = (e) => {
+        return `<div>${e.minute}' ${e.scorerName}</div>`;
+      };
+      const leftEvents = userIsHome ? userEvents.map(renderUserEvent).join("") : oppEvents.map(renderOppEvent).join("");
+      const rightEvents = userIsHome ? oppEvents.map(renderOppEvent).join("") : userEvents.map(renderUserEvent).join("");
+      const leftColor = userIsHome ? "#34d399" : "#94a3b8";
+      const rightColor = userIsHome ? "#94a3b8" : "#34d399";
       return `
         <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:12px; line-height:1.5;">
-          <div style="flex:1; text-align:left; color:#34d399;">
-            ${userEvents.map(renderEvent).join("")}
-          </div>
-          <div style="flex:1; text-align:right; color:#94a3b8;">
-            ${oppEvents.map(renderEvent).join("")}
-          </div>
+          <div style="flex:1; text-align:left; color:${leftColor};">${leftEvents}</div>
+          <div style="flex:1; text-align:right; color:${rightColor};">${rightEvents}</div>
         </div>`;
     }
 
     function getMatchScoreColor(isUser, userResult) {
       if (!isUser) return "#facc15";
-      if (userResult === "win") return "#60a5fa";
+      if (userResult === "win") return "#34d399";
       if (userResult === "draw") return "#facc15";
       if (userResult === "loss") return "#f87171";
       return "#facc15";
@@ -2497,7 +2500,7 @@
           </thead>
           <tbody>
             ${sorted.map((s, i) => `
-              <tr style="border-bottom:1px solid #334155; color:${s.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${s.isUser ? 700 : 400};">
+              <tr style="border-bottom:1px solid #334155; color:${s.isUser ? '#60a5fa' : '#e2e8f0'}; font-weight:${s.isUser ? 700 : 400};">
                 <td style="padding:6px 4px;">${i + 1}</td>
                 <td style="padding:6px 4px;">${s.name}</td>
                 <td style="text-align:center; padding:6px 4px;">${s.played}</td>
@@ -2541,8 +2544,8 @@
             const isDone = m.homeGoals !== undefined;
             const homeWon = isDone && m.winnerIdx === m.homeIdx;
             const awayWon = isDone && m.winnerIdx === m.awayIdx;
-            const homeColor = homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b';
-            const awayColor = awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b';
+            const homeColor = homeIsUser ? '#60a5fa' : homeWon ? '#e2e8f0' : '#64748b';
+            const awayColor = awayIsUser ? '#60a5fa' : awayWon ? '#e2e8f0' : '#64748b';
             let centerText;
             if (isDone) {
               centerText = m.penaltyHome !== undefined
@@ -2716,11 +2719,11 @@
                 return `
                 <div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                    <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
+                    <span style="text-align:right; flex:1; color:${homeIsUser ? '#60a5fa' : homeWon ? '#e2e8f0' : '#64748b'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
                     <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700; white-space:nowrap;">${scoreText}</span>
-                    <span style="flex:1; color:${awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                    <span style="flex:1; color:${awayIsUser ? '#60a5fa' : awayWon ? '#e2e8f0' : '#64748b'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
                   </div>
-                  ${m.isUser ? formatMatchEvents(m.events) : ""}
+                  ${m.isUser ? formatMatchEvents(m.events, homeIsUser) : ""}
                 </div>`;
               }).join("")}
             </div>`;
@@ -2730,14 +2733,15 @@
               <div style="margin-bottom:8px; font-weight:700; color:#34d399;">第 ${currentRound} 轮赛果</div>
               ${lastRoundResults.map(r => {
                 const scoreColor = getMatchScoreColor(r.isUser, r.userResult);
+                const userIsHome = r.homeName === "我的球队";
                 return `
                 <div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                    <span style="text-align:right; flex:1; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.homeName}</span>
+                    <span style="text-align:right; flex:1; color:${r.isUser ? '#60a5fa' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.homeName}</span>
                     <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
-                    <span style="flex:1; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.awayName}</span>
+                    <span style="flex:1; color:${r.isUser ? '#60a5fa' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.awayName}</span>
                   </div>
-                  ${r.isUser ? formatMatchEvents(r.events) : ""}
+                  ${r.isUser ? formatMatchEvents(r.events, userIsHome) : ""}
                 </div>`;
               }).join("")}
             </div>`;
@@ -2753,9 +2757,9 @@
                 const awayIsUser = m.awayName === "我的球队";
                 return `
                 <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
+                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#60a5fa' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
                   <span style="flex:0 0 auto; padding:0 10px; color:#64748b; font-weight:700; white-space:nowrap;">vs</span>
-                  <span style="flex:1; color:${awayIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                  <span style="flex:1; color:${awayIsUser ? '#60a5fa' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
                 </div>`;
               }).join("")}
             </div>`;
