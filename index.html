@@ -1923,8 +1923,9 @@
       return entries[entries.length - 1];
     }
 
-    function distributeUserMatchStats(userGoals, oppGoals, matchType = "league") {
-      if (userPlayerStats.length === 0) return;
+    function generateUserMatchEvents(userGoals, oppGoals, matchType = "league") {
+      const events = [];
+      if (userPlayerStats.length === 0) return events;
 
       const cleanSheet = oppGoals === 0;
       const activeStats = userPlayerStats.filter(s => !s.replaced);
@@ -1942,26 +1943,31 @@
 
       // 进球分布：位置权重 × OVR^3，能力差异更显著
       const scorerEntries = activeStats
-        .map(s => ({ ref: s, weight: (attackWeights[s.pos] || 0) * Math.pow(s.player.ovr, 3) }))
+        .map(s => ({ ref: s, name: s.player.name, weight: (attackWeights[s.pos] || 0) * Math.pow(s.player.ovr, 3) }))
         .filter(e => e.weight > 0);
 
       for (let g = 0; g < userGoals; g++) {
-        if (scorerEntries.length === 0) break;
-        const pick = weightedPick(scorerEntries);
-        pick.ref.goals++;
-        pick.ref[goalsKey]++;
+        const minute = Math.floor(Math.random() * 90) + 1;
+        const scorer = scorerEntries.length > 0 ? weightedPick(scorerEntries) : null;
+        events.push({ minute, side: "user", scorerName: scorer ? scorer.name : "未知", assisterName: null });
+        if (scorer) {
+          scorer.ref.goals++;
+          scorer.ref[goalsKey]++;
+        }
       }
 
       // 助攻分布：每个进球25%概率无助攻，75%概率1人助攻
-      const assistCount = Math.min(userGoals, activeStats.length);
       const assistEntries = activeStats
-        .map(s => ({ ref: s, weight: (assistWeights[s.pos] || 0) * Math.pow(s.player.ovr, 3) }))
+        .map(s => ({ ref: s, name: s.player.name, weight: (assistWeights[s.pos] || 0) * Math.pow(s.player.ovr, 3) }))
         .filter(e => e.weight > 0);
 
-      for (let a = 0; a < assistCount; a++) {
-        if (assistEntries.length === 0) break;
+      for (let i = 0; i < events.length; i++) {
+        const e = events[i];
+        if (e.side !== "user") continue;
+        if (assistEntries.length === 0) continue;
         if (Math.random() < 0.25) continue;
         const pick = weightedPick(assistEntries);
+        e.assisterName = pick.name;
         pick.ref.assists++;
         pick.ref[assistsKey]++;
       }
@@ -1975,6 +1981,48 @@
           }
         }
       }
+
+      // 对方进球（仅时间）
+      for (let g = 0; g < oppGoals; g++) {
+        const minute = Math.floor(Math.random() * 90) + 1;
+        events.push({ minute, side: "opp", scorerName: "对方", assisterName: null });
+      }
+
+      return events.sort((a, b) => a.minute - b.minute);
+    }
+
+    function generateOppMatchEvents(homeGoals, awayGoals, homeName, awayName) {
+      const events = [];
+      for (let g = 0; g < homeGoals; g++) {
+        events.push({ minute: Math.floor(Math.random() * 90) + 1, side: "home", scorerName: homeName, assisterName: null });
+      }
+      for (let g = 0; g < awayGoals; g++) {
+        events.push({ minute: Math.floor(Math.random() * 90) + 1, side: "away", scorerName: awayName, assisterName: null });
+      }
+      return events.sort((a, b) => a.minute - b.minute);
+    }
+
+    function formatMatchEvents(events) {
+      if (!events || events.length === 0) return "";
+      return `
+        <div style="margin-top:6px; padding-left:8px; font-size:12px; color:#94a3b8; line-height:1.5;">
+          ${events.map(e => {
+            const assistText = e.assisterName ? `<span style="color:#64748b;"> (助：${e.assisterName})</span>` : "";
+            let scorerColor;
+            if (e.side === "user") scorerColor = "#34d399";
+            else if (e.side === "opp") scorerColor = "#64748b";
+            else scorerColor = "#e2e8f0";
+            return `<div>${e.minute}' <span style="color:${scorerColor};">${e.scorerName}</span>${assistText}</div>`;
+          }).join("")}
+        </div>`;
+    }
+
+    function getMatchScoreColor(isUser, userResult) {
+      if (!isUser) return "#facc15";
+      if (userResult === "win") return "#34d399";
+      if (userResult === "draw") return "#facc15";
+      if (userResult === "loss") return "#f87171";
+      return "#facc15";
     }
 
     function openTransferWindow(isSummer = false) {
@@ -2120,12 +2168,26 @@
         const away = leagueTeams[match.away];
         const result = simulateMatch(home.strength, away.strength);
 
+        let events = [];
+        let userResult = null;
+        if (home.isUser) {
+          events = generateUserMatchEvents(result.homeGoals, result.awayGoals, "league");
+          userResult = result.homeGoals > result.awayGoals ? "win" : result.homeGoals < result.awayGoals ? "loss" : "draw";
+        } else if (away.isUser) {
+          events = generateUserMatchEvents(result.awayGoals, result.homeGoals, "league");
+          userResult = result.awayGoals > result.homeGoals ? "win" : result.awayGoals < result.homeGoals ? "loss" : "draw";
+        } else {
+          events = generateOppMatchEvents(result.homeGoals, result.awayGoals, home.name, away.name);
+        }
+
         lastRoundResults.push({
           homeName: home.name,
           awayName: away.name,
           homeGoals: result.homeGoals,
           awayGoals: result.awayGoals,
-          isUser: home.isUser || away.isUser
+          isUser: home.isUser || away.isUser,
+          userResult,
+          events
         });
 
         const h = standings[match.home];
@@ -2144,13 +2206,6 @@
         } else {
           h.drawn++; a.drawn++;
           h.points++; a.points++;
-        }
-
-        // 用户比赛：分配个人数据
-        if (home.isUser) {
-          distributeUserMatchStats(result.homeGoals, result.awayGoals, "league");
-        } else if (away.isUser) {
-          distributeUserMatchStats(result.awayGoals, result.homeGoals, "league");
         }
       }
 
@@ -2203,11 +2258,17 @@
           m.penaltyAway = penaltyAway;
         }
         m.winnerName = leagueTeams[m.winnerIdx].name;
-        // 用户球队参赛时分配数据
+        // 用户球队参赛时分配数据并生成事件
         if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
           const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
           const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
-          distributeUserMatchStats(userGoals, oppGoals, "cup");
+          m.events = generateUserMatchEvents(userGoals, oppGoals, "cup");
+          m.isUser = true;
+          m.userResult = userGoals > oppGoals ? "win" : userGoals < oppGoals ? "loss" : "draw";
+        } else {
+          m.events = generateOppMatchEvents(result.homeGoals, result.awayGoals, m.homeName, m.awayName);
+          m.isUser = false;
+          m.userResult = null;
         }
       }
       cup.rounds.qualifying.done = true;
@@ -2284,11 +2345,17 @@
           m.penaltyAway = penaltyAway;
         }
         m.winnerName = leagueTeams[m.winnerIdx].name;
-        // 用户球队参赛时分配数据
+        // 用户球队参赛时分配数据并生成事件
         if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
           const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
           const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
-          distributeUserMatchStats(userGoals, oppGoals, "cup");
+          m.events = generateUserMatchEvents(userGoals, oppGoals, "cup");
+          m.isUser = true;
+          m.userResult = userGoals > oppGoals ? "win" : userGoals < oppGoals ? "loss" : "draw";
+        } else {
+          m.events = generateOppMatchEvents(result.homeGoals, result.awayGoals, m.homeName, m.awayName);
+          m.isUser = false;
+          m.userResult = null;
         }
       }
 
@@ -2636,14 +2703,18 @@
                 const awayIsUser = m.awayName === "我的球队";
                 const homeWon = m.winnerIdx === m.homeIdx;
                 const awayWon = m.winnerIdx === m.awayIdx;
+                const scoreColor = getMatchScoreColor(m.isUser, m.userResult);
                 const scoreText = m.penaltyHome !== undefined
                   ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:11px; color:#94a3b8;"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
                   : `${m.homeGoals} - ${m.awayGoals}`;
                 return `
-                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
-                  <span style="flex:0 0 auto; padding:0 10px; color:#facc15; font-weight:700; white-space:nowrap;">${scoreText}</span>
-                  <span style="flex:1; color:${awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                <div style="margin-bottom:10px;">
+                  <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
+                    <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : homeWon ? '#e2e8f0' : '#64748b'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
+                    <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700; white-space:nowrap;">${scoreText}</span>
+                    <span style="flex:1; color:${awayIsUser ? '#34d399' : awayWon ? '#e2e8f0' : '#64748b'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                  </div>
+                  ${formatMatchEvents(m.events)}
                 </div>`;
               }).join("")}
             </div>`;
@@ -2651,13 +2722,18 @@
           resultsHtml = `
             <div style="margin-bottom:16px;">
               <div style="margin-bottom:8px; font-weight:700; color:#34d399;">第 ${currentRound} 轮赛果</div>
-              ${lastRoundResults.map(r => `
-                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">
-                  <span style="text-align:right; flex:1;">${r.homeName}</span>
-                  <span style="flex:0 0 auto; padding:0 10px; color:#facc15; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
-                  <span style="flex:1;">${r.awayName}</span>
-                </div>
-              `).join("")}
+              ${lastRoundResults.map(r => {
+                const scoreColor = getMatchScoreColor(r.isUser, r.userResult);
+                return `
+                <div style="margin-bottom:10px;">
+                  <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
+                    <span style="text-align:right; flex:1; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.homeName}</span>
+                    <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${r.homeGoals} - ${r.awayGoals}</span>
+                    <span style="flex:1; color:${r.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${r.isUser ? 700 : 400};">${r.awayName}</span>
+                  </div>
+                  ${formatMatchEvents(r.events)}
+                </div>`;
+              }).join("")}
             </div>`;
         }
         if (cupRoundPending && cup.rounds[cupRoundPending].matches.length > 0) {
