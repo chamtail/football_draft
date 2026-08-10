@@ -872,11 +872,13 @@
       simulateRound(currentRound);
       currentRound++;
       lastSimType = "league";
-      // 检查杯赛触发（杯赛作为单独一轮，下次点击再模拟，并预先抽签）
+      // 检查杯赛触发（杯赛作为单独一轮，下次点击再模拟；若尚未抽签则预抽签）
       const cupKey = cup && cup.schedule[currentRound];
       if (cupKey && !cup.rounds[cupKey].done) {
         cupRoundPending = cupKey;
-        drawCupRoundMatches(cupKey);
+        if (!cup.rounds[cupKey].matches || cup.rounds[cupKey].matches.length === 0) {
+          drawCupRoundMatches(cupKey);
+        }
       }
       const half = Math.floor(fixtures.length / 2);
       if (currentRound === half && !transferDone) {
@@ -945,11 +947,13 @@
         simulateRound(currentRound);
         currentRound++;
         lastSimType = "league";
-        // 检查杯赛触发（杯赛作为单独一轮，预抽签后由批量循环统一模拟）
+        // 检查杯赛触发（杯赛作为单独一轮，若尚未抽签则预抽签，批量循环统一模拟）
         const cupKey = cup && cup.schedule[currentRound];
         if (cupKey && !cup.rounds[cupKey].done) {
           cupRoundPending = cupKey;
-          drawCupRoundMatches(cupKey);
+          if (!cup.rounds[cupKey].matches || cup.rounds[cupKey].matches.length === 0) {
+            drawCupRoundMatches(cupKey);
+          }
         }
         renderLeague();
         setTimeout(step, 400);
@@ -2520,7 +2524,7 @@
           if (cupOpponent) {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]} · 对手：${cupOpponent}（${cupVenue}）`;
           } else {
-            currentPosName.textContent = `${seasonLabel(currentSeason)} · 第 ${currentRound} 轮已完 · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}待踢`;
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}`;
           }
         } else if (isFinished) {
           currentPosName.textContent = `${seasonLabel(currentSeason)}已结束`;
@@ -2581,24 +2585,7 @@
           b.points - a.points || b.gd - a.gd || b.gf - a.gf
         );
         let resultsHtml = "";
-        if (cupRoundPending && cup.rounds[cupRoundPending].matches.length > 0) {
-          // 杯赛待踢时展示已抽签对阵
-          const pendingMatches = cup.rounds[cupRoundPending].matches;
-          resultsHtml = `
-            <div style="margin-bottom:16px;">
-              <div style="margin-bottom:8px; font-weight:700; color:#facc15;">足总杯 ${CUP_ROUND_NAMES[cupRoundPending]} 对阵</div>
-              ${pendingMatches.map(m => {
-                const homeIsUser = m.homeName === "我的球队";
-                const awayIsUser = m.awayName === "我的球队";
-                return `
-                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
-                  <span style="flex:0 0 auto; padding:0 10px; color:#64748b; font-weight:700; white-space:nowrap;">vs</span>
-                  <span style="flex:1; color:${awayIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
-                </div>`;
-              }).join("")}
-            </div>`;
-        } else if (lastSimType === "cup" && lastCupResults) {
+        if (lastSimType === "cup" && lastCupResults) {
           // 杯赛赛果展示
           resultsHtml = `
             <div style="margin-bottom:16px;">
@@ -2630,6 +2617,24 @@
                   <span style="flex:1;">${r.awayName}</span>
                 </div>
               `).join("")}
+            </div>`;
+        }
+        if (cupRoundPending && cup.rounds[cupRoundPending].matches.length > 0) {
+          // 同时展示下一场杯赛对阵
+          const pendingMatches = cup.rounds[cupRoundPending].matches;
+          resultsHtml += `
+            <div style="margin-bottom:16px;">
+              <div style="margin-bottom:8px; font-weight:700; color:#facc15;">足总杯 ${CUP_ROUND_NAMES[cupRoundPending]} 对阵</div>
+              ${pendingMatches.map(m => {
+                const homeIsUser = m.homeName === "我的球队";
+                const awayIsUser = m.awayName === "我的球队";
+                return `
+                <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
+                  <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${m.homeName}</span>
+                  <span style="flex:0 0 auto; padding:0 10px; color:#64748b; font-weight:700; white-space:nowrap;">vs</span>
+                  <span style="flex:1; color:${awayIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${m.awayName}</span>
+                </div>`;
+              }).join("")}
             </div>`;
         }
         const cupHtml = buildCupBracketHtml(cup);
