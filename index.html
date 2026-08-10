@@ -1065,7 +1065,7 @@
         if (currentLine) honorsLines.push(currentLine);
       }
       const honorsLineH = 18;
-      const honorsH = sectionTitleH + rowH + Math.max(1, honorsLines.length) * honorsLineH + 16;
+      const honorsH = sectionTitleH + (1 + honorsLines.length) * honorsLineH + 16;
       const H = padding + titleH + subtitleH + honorsH + standingsH + statsH + qrH + padding;
 
       canvas.width = W;
@@ -1103,10 +1103,10 @@
       if (honorsLines.length > 0) {
         ctx.fillStyle = "#94a3b8";
         honorsLines.forEach((line, i) => {
-          ctx.fillText(line, padding, y + 16 + i * honorsLineH);
+          ctx.fillText(line, padding, y + 16 + (i + 1) * honorsLineH);
         });
       }
-      y += rowH + honorsLines.length * honorsLineH + 16;
+      y += (1 + honorsLines.length) * honorsLineH + 16;
 
       // 积分榜
       ctx.fillStyle = "#34d399";
