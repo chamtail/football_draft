@@ -18,6 +18,8 @@ const TEAM_NAME_FIXES = {
   "Latium": "Lazio"
 };
 
+const TEAM_ONLY_LEAGUES = ["Eredivisie", "CSL"];
+
 function fixTeamName(name) {
   return TEAM_NAME_FIXES[name] || name;
 }
@@ -86,11 +88,11 @@ function computeTeamStrength(teamPlayers) {
 
     for (const pos of slots) {
       const candidate = teamPlayers
-        .filter(p => !used.has(p.id) && p.positions.includes(pos))
+        .filter(p => !used.has(p) && p.positions.includes(pos))
         .sort((a, b) => b.ovr - a.ovr)[0];
 
       if (candidate) {
-        used.add(candidate.id);
+        used.add(candidate);
         total += candidate.ovr;
         filled++;
       }
@@ -169,6 +171,33 @@ for (const [name, teamPlayers] of teamsMap) {
     strength: computeTeamStrength(teamPlayers)
   });
 }
+
+// 仅球队联赛：提取球队数据用于联赛构建，不含球员
+const teamOnlyMap = new Map();
+for (let i = 1; i < lines.length; i++) {
+  const row = parseCsvLine(lines[i]);
+  const league = row[idx.league];
+  if (!TEAM_ONLY_LEAGUES.includes(league)) continue;
+
+  const team = fixTeamName(row[idx.team]);
+  const ovr = Number(row[idx.ovr]);
+  const primary = row[idx.position];
+  const alt = row[idx.altPositions];
+  if (!team || !primary || Number.isNaN(ovr)) continue;
+
+  if (!teamOnlyMap.has(team)) teamOnlyMap.set(team, { league, players: [] });
+  teamOnlyMap.get(team).players.push({ ovr, positions: parsePositions(primary, alt) });
+}
+
+for (const [name, data] of teamOnlyMap) {
+  teams.push({
+    name,
+    league: data.league,
+    playerCount: 0,
+    strength: computeTeamStrength(data.players)
+  });
+}
+
 teams.sort((a, b) => b.strength - a.strength);
 
 const output = {

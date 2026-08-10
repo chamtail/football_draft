@@ -7,7 +7,7 @@
     "LALIGA EA SPORTS"
   ],
   "count": 2543,
-  "teamCount": 96,
+  "teamCount": 130,
   "teams": [
     {
       "name": "Liverpool",
@@ -244,6 +244,12 @@
       "strength": 78.18
     },
     {
+      "name": "PSV",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 78.18
+    },
+    {
       "name": "CA Osasuna",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
@@ -352,6 +358,12 @@
       "strength": 76.55
     },
     {
+      "name": "Ajax",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 76.55
+    },
+    {
       "name": "OL",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
@@ -403,6 +415,12 @@
       "name": "Paris FC",
       "league": "Ligue 1 McDonald's",
       "playerCount": 29,
+      "strength": 75.91
+    },
+    {
+      "name": "Feyenoord",
+      "league": "Eredivisie",
+      "playerCount": 0,
       "strength": 75.91
     },
     {
@@ -496,6 +514,12 @@
       "strength": 73.82
     },
     {
+      "name": "AZ",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 73.82
+    },
+    {
       "name": "Cremonese",
       "league": "Serie A Enilive",
       "playerCount": 28,
@@ -538,6 +562,12 @@
       "strength": 73
     },
     {
+      "name": "FC Utrecht",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 72.91
+    },
+    {
       "name": "FC St. Pauli",
       "league": "Bundesliga",
       "playerCount": 27,
@@ -548,6 +578,12 @@
       "league": "Ligue 1 McDonald's",
       "playerCount": 26,
       "strength": 72.73
+    },
+    {
+      "name": "FC Twente",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 72.64
     },
     {
       "name": "Havre AC",
@@ -574,6 +610,12 @@
       "strength": 71.45
     },
     {
+      "name": "N.E.C. Nijmegen",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 71.09
+    },
+    {
       "name": "FC Metz",
       "league": "Ligue 1 McDonald's",
       "playerCount": 25,
@@ -584,6 +626,168 @@
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
       "strength": 70.73
+    },
+    {
+      "name": "Go Ahead Eagles",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 70.64
+    },
+    {
+      "name": "Shanghai Port FC",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 69.45
+    },
+    {
+      "name": "Sparta Rotterdam",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 69.36
+    },
+    {
+      "name": "Fortuna Sittard",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 69.18
+    },
+    {
+      "name": "Shanghai Shenhua",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 69
+    },
+    {
+      "name": "Shandong Taishan",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 68.82
+    },
+    {
+      "name": "Beijing FC",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 68.82
+    },
+    {
+      "name": "Chengdu FC",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 68.73
+    },
+    {
+      "name": "sc Heerenveen",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 68.27
+    },
+    {
+      "name": "PEC Zwolle",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 67.82
+    },
+    {
+      "name": "FC Groningen",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 67.45
+    },
+    {
+      "name": "NAC Breda",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 67.36
+    },
+    {
+      "name": "Heracles Almelo",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 67.27
+    },
+    {
+      "name": "Excelsior",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 67.09
+    },
+    {
+      "name": "FC Volendam",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 66.09
+    },
+    {
+      "name": "Tianjin JMT FC",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 66
+    },
+    {
+      "name": "Yunnan Yukun",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 65.91
+    },
+    {
+      "name": "Wuhan Three Towns",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 65.82
+    },
+    {
+      "name": "Dalian Yingbo",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 65.64
+    },
+    {
+      "name": "Zhejiang Pro",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 65.55
+    },
+    {
+      "name": "Qingdao W. Coast",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 65.27
+    },
+    {
+      "name": "Henan FC",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 65
+    },
+    {
+      "name": "Meizhou Hakka FC",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 64.55
+    },
+    {
+      "name": "Qingdao Hainiu",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 64.09
+    },
+    {
+      "name": "Changchun Yatai",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 64.09
+    },
+    {
+      "name": "SZ Peng City",
+      "league": "CSL",
+      "playerCount": 0,
+      "strength": 63.82
+    },
+    {
+      "name": "SC Telstar",
+      "league": "Eredivisie",
+      "playerCount": 0,
+      "strength": 0
     }
   ],
   "players": [
