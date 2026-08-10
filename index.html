@@ -977,8 +977,7 @@
       const honorsLines = [];
       if (allTitles.length > 0) {
         ctx.font = "13px sans-serif";
-        const labelPrefixW = padding + 100; // 左边距 + "联赛冠军 ×N" 列宽
-        const maxLineW = W - labelPrefixW - padding;
+        const maxLineW = W - padding * 2;
         // 按赛季逐个累加，超过宽度则换行
         let currentLine = "";
         for (let i = 0; i < allTitles.length; i++) {
@@ -1030,12 +1029,10 @@
       ctx.textAlign = "left";
       ctx.fillText(`联赛冠军 ×${allTitles.length}`, padding, y + 16);
       if (honorsLines.length > 0) {
-        const startX = padding + 100;
         ctx.fillStyle = "#94a3b8";
-        ctx.fillText("夺冠赛季：" + honorsLines[0], startX, y + 16);
-        for (let i = 1; i < honorsLines.length; i++) {
-          ctx.fillText(honorsLines[i], startX, y + 16 + i * honorsLineH);
-        }
+        honorsLines.forEach((line, i) => {
+          ctx.fillText(line, padding, y + 16 + i * honorsLineH);
+        });
       }
       y += rowH + honorsLines.length * honorsLineH + 16;
 
