@@ -104,6 +104,14 @@ function computeTeamStrength(teamPlayers) {
     }
   }
 
+  // 无法凑齐11人时，用最佳可用球员+空位50分兜底
+  if (bestAvg === 0 && teamPlayers.length > 0) {
+    const sorted = [...teamPlayers].sort((a, b) => b.ovr - a.ovr);
+    const best = sorted.slice(0, Math.min(11, sorted.length));
+    const total = best.reduce((s, p) => s + p.ovr, 0) + (11 - best.length) * 50;
+    bestAvg = total / 11;
+  }
+
   return Number(bestAvg.toFixed(2));
 }
 

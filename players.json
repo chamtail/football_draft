@@ -780,16 +780,16 @@
       "strength": 64.09
     },
     {
+      "name": "SC Telstar",
+      "league": "Eredivisie",
+      "playerCount": 11,
+      "strength": 64
+    },
+    {
       "name": "SZ Peng City",
       "league": "CSL",
       "playerCount": 27,
       "strength": 63.82
-    },
-    {
-      "name": "SC Telstar",
-      "league": "Eredivisie",
-      "playerCount": 11,
-      "strength": 0
     }
   ],
   "players": [
