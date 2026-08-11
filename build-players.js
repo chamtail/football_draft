@@ -3,12 +3,14 @@ const fs = require("fs");
 const INPUT = "EAFC26-Men.csv";
 const OUTPUT = "players.json";
 
-const TOP5 = [
+const LEAGUES = [
   "Premier League",
   "Serie A Enilive",
   "Bundesliga",
   "Ligue 1 McDonald's",
-  "LALIGA EA SPORTS"
+  "LALIGA EA SPORTS",
+  "Eredivisie",
+  "CSL"
 ];
 
 const TEAM_NAME_FIXES = {
@@ -17,8 +19,6 @@ const TEAM_NAME_FIXES = {
   "Bergamo Calcio": "Atalanta BC",
   "Latium": "Lazio"
 };
-
-const TEAM_ONLY_LEAGUES = ["Eredivisie", "CSL"];
 
 function fixTeamName(name) {
   return TEAM_NAME_FIXES[name] || name;
@@ -129,7 +129,7 @@ for (let i = 1; i < lines.length; i++) {
   const row = parseCsvLine(lines[i]);
   const league = row[idx.league];
 
-  if (!TOP5.includes(league)) continue;
+  if (!LEAGUES.includes(league)) continue;
 
   const id = Number(row[idx.id]);
   const name = row[idx.name];
@@ -172,36 +172,10 @@ for (const [name, teamPlayers] of teamsMap) {
   });
 }
 
-// 仅球队联赛：提取球队数据用于联赛构建，不含球员
-const teamOnlyMap = new Map();
-for (let i = 1; i < lines.length; i++) {
-  const row = parseCsvLine(lines[i]);
-  const league = row[idx.league];
-  if (!TEAM_ONLY_LEAGUES.includes(league)) continue;
-
-  const team = fixTeamName(row[idx.team]);
-  const ovr = Number(row[idx.ovr]);
-  const primary = row[idx.position];
-  const alt = row[idx.altPositions];
-  if (!team || !primary || Number.isNaN(ovr)) continue;
-
-  if (!teamOnlyMap.has(team)) teamOnlyMap.set(team, { league, players: [] });
-  teamOnlyMap.get(team).players.push({ ovr, positions: parsePositions(primary, alt) });
-}
-
-for (const [name, data] of teamOnlyMap) {
-  teams.push({
-    name,
-    league: data.league,
-    playerCount: 0,
-    strength: computeTeamStrength(data.players)
-  });
-}
-
 teams.sort((a, b) => b.strength - a.strength);
 
 const output = {
-  leagues: TOP5,
+  leagues: LEAGUES,
   count: players.length,
   teamCount: teams.length,
   teams,

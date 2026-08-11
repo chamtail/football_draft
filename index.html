@@ -1608,7 +1608,7 @@
 
     function pickCandidates(pos) {
       const selectedIds = new Set(draftPicks.filter(Boolean).map(p => p.id));
-      const pool = allPlayers.filter(p => p.positions.includes(pos) && !selectedIds.has(p.id));
+      const pool = allPlayers.filter(p => p.positions.includes(pos) && !selectedIds.has(p.id) && p.ovr >= 70);
 
       // 根据能力值加权随机：能力越高越容易出现，但保留随机性
       const weighted = pool.map(p => ({ player: p, weight: Math.pow(p.ovr, 3) }));
@@ -1854,8 +1854,13 @@
     function buildLeague() {
       const userStrength = teamAverageOvr();
       leagueTeams = [
-        { name: "我的球队", isUser: true, strength: userStrength },
-        ...currentOpponents.map(t => ({ name: t.name, isUser: false, strength: t.strength }))
+        { name: "我的球队", isUser: true, strength: userStrength, roster: draftPicks.slice() },
+        ...currentOpponents.map(t => ({
+          name: t.name,
+          isUser: false,
+          strength: t.strength,
+          roster: allPlayers.filter(p => p.team === t.name)
+        }))
       ];
       fixtures = generateFixtures(leagueTeams.length);
       standings = leagueTeams.map((t, i) => ({
@@ -1967,7 +1972,27 @@
       return entries[entries.length - 1];
     }
 
-    function generateUserMatchEvents(userGoals, oppGoals, matchType = "league", oppName = "对方") {
+    function pickOppScorerAssister(roster, fallbackName) {
+      if (!roster || roster.length === 0) return { scorerName: fallbackName, assisterName: null };
+      const scorerEntries = roster
+        .map(p => ({ name: p.name, weight: (attackWeights[p.positions[0]] || 0) * Math.pow(p.ovr, 3) }))
+        .filter(e => e.weight > 0);
+      if (scorerEntries.length === 0) return { scorerName: fallbackName, assisterName: null };
+      const scorer = weightedPick(scorerEntries);
+      const scorerName = scorer.name;
+      let assisterName = null;
+      if (Math.random() >= 0.25) {
+        const assistEntries = roster
+          .map(p => ({ name: p.name, weight: (assistWeights[p.positions[0]] || 0) * Math.pow(p.ovr, 3) }))
+          .filter(e => e.weight > 0 && e.name !== scorerName);
+        if (assistEntries.length > 0) {
+          assisterName = weightedPick(assistEntries).name;
+        }
+      }
+      return { scorerName, assisterName };
+    }
+
+    function generateUserMatchEvents(userGoals, oppGoals, matchType = "league", oppName = "对方", oppRoster = []) {
       const events = [];
       if (userPlayerStats.length === 0) return events;
 
@@ -2028,22 +2053,27 @@
         }
       }
 
-      // 对方进球（仅时间）
+      // 对方进球：从对手阵容中选取进球者和助攻者
       for (let g = 0; g < oppGoals; g++) {
         const minute = Math.floor(Math.random() * 90) + 1;
-        events.push({ minute, side: "opp", scorerName: oppName, assisterName: null });
+        const { scorerName, assisterName } = pickOppScorerAssister(oppRoster, oppName);
+        events.push({ minute, side: "opp", scorerName, assisterName });
       }
 
       return events.sort((a, b) => a.minute - b.minute);
     }
 
-    function generateOppMatchEvents(homeGoals, awayGoals, homeName, awayName) {
+    function generateOppMatchEvents(homeGoals, awayGoals, homeName, awayName, homeRoster = [], awayRoster = []) {
       const events = [];
       for (let g = 0; g < homeGoals; g++) {
-        events.push({ minute: Math.floor(Math.random() * 90) + 1, side: "home", scorerName: homeName, assisterName: null });
+        const minute = Math.floor(Math.random() * 90) + 1;
+        const { scorerName, assisterName } = pickOppScorerAssister(homeRoster, homeName);
+        events.push({ minute, side: "home", scorerName, assisterName });
       }
       for (let g = 0; g < awayGoals; g++) {
-        events.push({ minute: Math.floor(Math.random() * 90) + 1, side: "away", scorerName: awayName, assisterName: null });
+        const minute = Math.floor(Math.random() * 90) + 1;
+        const { scorerName, assisterName } = pickOppScorerAssister(awayRoster, awayName);
+        events.push({ minute, side: "away", scorerName, assisterName });
       }
       return events.sort((a, b) => a.minute - b.minute);
     }
@@ -2057,7 +2087,8 @@
         return `<div>${e.minute}' ${e.scorerName}${assistText}</div>`;
       };
       const renderOppEvent = (e) => {
-        return `<div>${e.minute}'</div>`;
+        const assistText = e.assisterName ? ` <span style="color:#64748b;">(助：${e.assisterName})</span>` : "";
+        return `<div>${e.minute}' ${e.scorerName}${assistText}</div>`;
       };
       const leftEvents = userIsHome ? userEvents.map(renderUserEvent).join("") : oppEvents.map(renderOppEvent).join("");
       const rightEvents = userIsHome ? oppEvents.map(renderOppEvent).join("") : userEvents.map(renderUserEvent).join("");
@@ -2224,13 +2255,13 @@
         let events = [];
         let userResult = null;
         if (home.isUser) {
-          events = generateUserMatchEvents(result.homeGoals, result.awayGoals, "league", away.name);
+          events = generateUserMatchEvents(result.homeGoals, result.awayGoals, "league", away.name, away.roster);
           userResult = result.homeGoals > result.awayGoals ? "win" : result.homeGoals < result.awayGoals ? "loss" : "draw";
         } else if (away.isUser) {
-          events = generateUserMatchEvents(result.awayGoals, result.homeGoals, "league", home.name);
+          events = generateUserMatchEvents(result.awayGoals, result.homeGoals, "league", home.name, home.roster);
           userResult = result.awayGoals > result.homeGoals ? "win" : result.awayGoals < result.homeGoals ? "loss" : "draw";
         } else {
-          events = generateOppMatchEvents(result.homeGoals, result.awayGoals, home.name, away.name);
+          events = generateOppMatchEvents(result.homeGoals, result.awayGoals, home.name, away.name, home.roster, away.roster);
         }
 
         lastRoundResults.push({
@@ -2324,14 +2355,16 @@
         m.winnerName = leagueTeams[m.winnerIdx].name;
         // 用户球队参赛时分配数据并生成事件
         if (leagueTeams[m.homeIdx].isUser || leagueTeams[m.awayIdx].isUser) {
-          const userGoals = leagueTeams[m.homeIdx].isUser ? result.homeGoals : result.awayGoals;
-          const oppGoals = leagueTeams[m.homeIdx].isUser ? result.awayGoals : result.homeGoals;
-          const oppName = leagueTeams[m.homeIdx].isUser ? m.awayName : m.homeName;
-          m.events = generateUserMatchEvents(userGoals, oppGoals, "cup", oppName);
+          const userIsHome = leagueTeams[m.homeIdx].isUser;
+          const userGoals = userIsHome ? result.homeGoals : result.awayGoals;
+          const oppGoals = userIsHome ? result.awayGoals : result.homeGoals;
+          const oppName = userIsHome ? m.awayName : m.homeName;
+          const oppRoster = userIsHome ? leagueTeams[m.awayIdx].roster : leagueTeams[m.homeIdx].roster;
+          m.events = generateUserMatchEvents(userGoals, oppGoals, "cup", oppName, oppRoster);
           m.isUser = true;
           m.userResult = userGoals > oppGoals ? "win" : userGoals < oppGoals ? "loss" : "draw";
         } else {
-          m.events = generateOppMatchEvents(result.homeGoals, result.awayGoals, m.homeName, m.awayName);
+          m.events = generateOppMatchEvents(result.homeGoals, result.awayGoals, m.homeName, m.awayName, leagueTeams[m.homeIdx].roster, leagueTeams[m.awayIdx].roster);
           m.isUser = false;
           m.userResult = null;
         }
