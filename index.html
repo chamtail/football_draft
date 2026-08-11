@@ -2766,6 +2766,7 @@
 
     function buildUclBracketHtml(uclData) {
       if (!uclData) return "";
+      if (uclData.active && !uclData.leaguePhaseDone) return "";
       const kd = uclData.knockout || (uclData.active ? uclData.knockout : null);
       if (!kd) return "";
 
