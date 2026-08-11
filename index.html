@@ -3922,9 +3922,14 @@
                 const awayName = ucl.teams[leg.awayIdx].name;
                 const homeIsUser = ucl.teams[leg.homeIdx].isUser;
                 const awayIsUser = ucl.teams[leg.awayIdx].isUser;
-                const scoreColor = getMatchScoreColor(leg.isUser, leg.userResult);
                 // Leg2决定后：败者灰色，用户球队始终绿色
                 const decided = lastUclResults.legNum === 2 && tie.winnerIdx !== null;
+                let scoreColor = getMatchScoreColor(leg.isUser, leg.userResult);
+                // Leg2用户比赛：比分颜色根据是否晋级决定，而非单场胜负
+                if (lastUclResults.legNum === 2 && leg.isUser && decided) {
+                  const userAdvances = (homeIsUser && tie.winnerIdx === tie.teamAIdx) || (awayIsUser && tie.winnerIdx === tie.teamBIdx);
+                  scoreColor = userAdvances ? '#34d399' : '#f87171';
+                }
                 const homeWon = decided && tie.winnerIdx === tie.teamAIdx;
                 const awayWon = decided && tie.winnerIdx === tie.teamBIdx;
                 const homeColor = homeIsUser ? '#34d399' : decided ? (homeWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
