@@ -3628,9 +3628,12 @@
             </tr>
           </thead>
           <tbody>
-            ${sorted.map((s, i) => `
+            ${sorted.map((s, i) => {
+              const rank = i + 1;
+              const rankColor = rank <= 4 ? '#60a5fa' : (s.isUser ? '#34d399' : '#e2e8f0');
+              return `
               <tr style="border-bottom:1px solid #334155; color:${s.isUser ? '#34d399' : '#e2e8f0'}; font-weight:${s.isUser ? 700 : 400};">
-                <td style="padding:6px 4px;">${i + 1}</td>
+                <td style="padding:6px 4px; color:${rankColor}; font-weight:700;">${rank}</td>
                 <td style="padding:6px 4px;">${s.name}</td>
                 <td style="text-align:center; padding:6px 4px;">${s.played}</td>
                 <td style="text-align:center; padding:6px 4px;">${s.won}</td>
@@ -3640,10 +3643,13 @@
                 <td style="text-align:center; padding:6px 4px;">${s.ga}</td>
                 <td style="text-align:center; padding:6px 4px;">${s.gd > 0 ? '+' : ''}${s.gd}</td>
                 <td style="text-align:center; padding:6px 4px;">${s.points}</td>
-              </tr>
-            `).join("")}
+              </tr>`;
+            }).join("")}
           </tbody>
-        </table>`;
+        </table>
+        <div style="font-size:11px; color:#94a3b8; margin-top:4px;">
+          <span style="color:#60a5fa;">■</span> 1-4 欧冠资格
+        </div>`;
     }
 
     function buildCupBracketHtml(cupData) {
