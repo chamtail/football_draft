@@ -49,7 +49,13 @@ node server.js
 - `cupFinalPending` (bool) - 联赛结束后是否等待踢杯赛决赛
 - `cupRoundPending` (string|null) - 待踢的杯赛轮次key（"qualifying"|"roundOf16"|"quarterFinals"|"semiFinals"），杯赛作为独立一轮模拟
 - `lastCupResults` (object|null) - 最近一次杯赛轮次赛果 `{ roundName, matches }`
-- `lastSimType` (string|null) - "league"|"cup"，标记最近模拟的类型，控制赛果面板显示联赛还是杯赛赛果
+- `lastSimType` (string|null) - "league"|"cup"|"ucl"，标记最近模拟的类型，控制赛果面板显示联赛/杯赛/欧冠赛果
+- `ucl` (object|null) - 当前赛季欧冠状态，含 `active`, `teams[]`, `leagueStandings[]`, `leagueFixtures[]`, `knockout{playoff,r16,qf,sf,final}`, `champion`
+- `uclSeasons[]` - 用户欧冠夺冠的赛季标签字符串数组
+- `uclRoundPending` (string|null) - 待踢的欧冠轮次key（如"md1"|"playoffLeg1"|"r16Leg2"等）
+- `uclSfPending` (bool) - 联赛结束后是否等待踢欧冠半决赛
+- `uclFinalPending` (bool) - 是否等待踢欧冠决赛
+- `lastUclResults` (object|null) - 最近一次欧冠赛果 `{ roundName, matches|ties|match, isLeaguePhase?, legNum? }`
 
 ### 关键函数
 - `buildPlayerStatsHtml(stats)` - 生成个人数据表格HTML，接受可选的历史数据参数；使用 getName/getOvr/getAge helper 兼容实时和历史数据；只显示出场过的球员
@@ -125,6 +131,43 @@ node server.js
   - `saveSeasonHistory()` 中 cup 对象深拷贝保存: `{ rounds, champion }`
   - 查看历史赛季时 `buildCupBracketHtml(hist.cup)` 渲染历史杯赛对阵图
 - **重置**: "重来一局"重置 cup=null, cupSeasons=[], cupFinalPending=false, cupRoundPending=null, lastCupResults=null, lastSimType=null
+
+### 欧冠系统
+- **常量定义**:
+  - `UCL_SCHEDULE = { 4:"md1", 6:"md2", 10:"md3", 12:"md4", 16:"md5", 18:"md6", 22:"md7", 24:"md8", 28:"playoffLeg1", 29:"playoffLeg2", 31:"r16Leg1", 33:"r16Leg2", 36:"qfLeg1", 38:"qfLeg2" }` — 联赛第N轮后触发对应欧冠轮次
+  - `UCL_ROUND_NAMES` — 各轮次中文名（联赛第N轮 / 附加赛首回合 / 附加赛次回合 / 16强首回合 ...）
+  - `UCL_MATCHDAY_KEYS = ["md1"~"md8"]` — 联赛阶段8轮
+- **欧冠数据结构** (`ucl` 对象):
+  - `active` (bool) - 用户是否参加欧冠（联赛积分榜排名决定）
+  - `teams[]` - 20支球队，每支含 `{ name, strength, isUser, roster[] }`
+  - `leagueStandings[]` - 联赛阶段积分榜，每项含 `{ idx, played, won, drawn, lost, gf, ga, gd, points }`
+  - `leagueFixtures[]` - 8轮联赛赛程，每轮10场比赛
+  - `knockout` - 淘汰赛对象: `{ playoff, r16, qf, sf, final }`
+    - playoff/r16/qf/sf 各含 `{ ties[], done }`，每个tie含 `{ teamAIdx, teamBIdx, teamAName, teamBName, leg1, leg2, aggA, aggB, winnerIdx, penaltyHome?, penaltyAway? }`
+    - final 含 `{ match, done }`
+  - `champion` - 决赛后设为冠军队名
+  - `leaguePhaseDone` (bool) - MD8完成后标记
+- **联赛阶段** (8轮小组赛):
+  - MD1-MD8 穿插在联赛第4/6/10/12/16/18/22/24轮后
+  - `simulateUclMatchday(mdIdx)` 模拟一轮联赛，更新积分榜，MD8完成后 `drawUclTies("playoff")`
+- **淘汰赛** (全部主客场两回合制):
+  - **附加赛** (playoffLeg1/Leg2, 联赛第28/29轮后): 积分榜9-24名共16队抽签8组对阵，两回合制，总比分平则走点球
+  - **16强** (r16Leg1/Leg2, 联赛第31/33轮后): 积分榜前8 + 附加赛8胜者共16队抽签，两回合制
+  - **8强** (qfLeg1/Leg2, 联赛第36/38轮后): 16强胜者8队抽签，两回合制
+  - **半决赛** (sfLeg1/Leg2, 联赛结束后): 8强胜者4队抽签，两回合制，由 `uclSfPending` 触发
+  - **决赛** (final, 半决赛后): 中立场地单场，由 `uclFinalPending` 触发
+  - `simulateUclLeg(roundKey, legNum)` 通用模拟函数，Leg2计算总比分、客场进球、点球
+  - `drawUclTies(roundKey)` 抽签对阵: playoff=9-24名, r16=前8+playoff胜者, qf=r16胜者, sf=qf胜者
+  - `handleUclPending()` 处理待模拟的欧冠轮次，Leg2完成后自动抽签下一轮
+- **赛果展示**:
+  - 联赛阶段: `lastUclResults.isLeaguePhase=true`，显示全部比赛，用户比赛置顶
+  - 淘汰赛: `lastUclResults.ties`，显示全部对阵，Leg2显示总比分和晋级队，用户比赛置顶
+  - 决赛: `lastUclResults.match`，显示单场赛果
+- **对阵图** (`buildUclBracketHtml`):
+  - 展示附加赛/16强/8强/半决赛/决赛各轮对阵和比分
+  - 两回合显示总比分，点球显示 `(点X-Y)`
+  - 用户球队绿色高亮，被淘汰队灰色
+- **重置**: "重来一局"重置 ucl=null, uclSeasons=[], uclRoundPending=null, uclSfPending=false, uclFinalPending=false, lastUclResults=null
 
 ### 天眼模式
 - 点击"梦幻阵容"文字5次开启，再点5次关闭
