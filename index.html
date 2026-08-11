@@ -533,6 +533,65 @@
       font-size: 12px;
       text-align: center;
     }
+
+    @media (max-width: 800px) {
+      .draft-layout.transfer-mobile #formationPanel {
+        display: none;
+      }
+
+      .player-stats-table.transfer-clickable tbody tr {
+        cursor: pointer;
+      }
+      .player-stats-table.transfer-clickable tbody tr:active {
+        background: #064e3b;
+      }
+
+      .transfer-empty-slot {
+        color: #64748b;
+        text-align: center;
+        padding: 8px 4px;
+      }
+
+      .transfer-modal-content {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        width: 92vw;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .transfer-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 16px;
+        border-bottom: 1px solid #334155;
+      }
+      .transfer-modal-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #f8fafc;
+      }
+      .transfer-modal-subtitle {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 4px;
+      }
+      .transfer-modal-close {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .transfer-modal-body {
+        padding: 12px 16px 16px;
+        overflow-y: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -633,6 +692,25 @@
       <div id="progressionList" style="display:flex; flex-direction:column; gap:8px;"></div>
       <div style="text-align:center; margin-top:20px;">
         <button id="progressionContinueBtn" style="padding:12px 32px; background:#10b981; color:#064e3b; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:15px;">继续</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="transferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+    <div class="transfer-modal-content">
+      <div class="transfer-modal-header">
+        <div>
+          <div class="transfer-modal-title" id="transferModalTitle">选择替换球员</div>
+          <div class="transfer-modal-subtitle" id="transferModalSubtitle"></div>
+        </div>
+        <button class="transfer-modal-close" id="transferModalClose" aria-label="关闭">×</button>
+      </div>
+      <div class="transfer-modal-body">
+        <div class="refresh-row" style="margin-bottom:10px;">
+          <span id="modalRefreshText">剩余刷新次数：2</span>
+          <button id="modalRefreshBtn">刷新选项</button>
+        </div>
+        <div class="candidate-list" id="modalCandidateList"></div>
       </div>
     </div>
   </div>
@@ -740,6 +818,7 @@
     let currentSeason = 1;
     let seasonHistory = [];
     let summerTransferMode = false;
+    let mobileTransferMode = false;
     let viewSeason = "current";
     let championshipSeasons = [];
     let cupSeasons = [];
@@ -809,6 +888,13 @@
     const draftLayout = document.getElementById("draftLayout");
     const draftStepTitle = document.getElementById("draftStepTitle");
     const loadingOverlay = document.getElementById("loadingOverlay");
+    const transferModal = document.getElementById("transferModal");
+    const transferModalTitle = document.getElementById("transferModalTitle");
+    const transferModalSubtitle = document.getElementById("transferModalSubtitle");
+    const modalCandidateList = document.getElementById("modalCandidateList");
+    const modalRefreshBtn = document.getElementById("modalRefreshBtn");
+    const modalRefreshText = document.getElementById("modalRefreshText");
+    const transferModalClose = document.getElementById("transferModalClose");
 
     // 加载球员池
     fetch("players.json")
@@ -987,6 +1073,7 @@
       transferPosIndex = -1;
       transferSelecting = false;
       transferCandidateCache = {};
+      mobileTransferMode = false;
       currentSeason = 1;
       seasonHistory = [];
       summerTransferMode = false;
@@ -1028,6 +1115,7 @@
       draftScreen.classList.add("hidden");
       formationScreen.classList.remove("hidden");
       draftLayout.classList.remove("league");
+      draftLayout.classList.remove("transfer-mobile");
       draftStepTitle.textContent = "第 2 步：挑选首发十一人";
       draftFormationLabel.textContent = "";
 
@@ -1106,6 +1194,16 @@
       openTransferWindow(true);
     });
     skipTransferBtn.addEventListener("click", () => closeTransferWindow());
+    transferModalClose.addEventListener("click", closeTransferModal);
+    transferModal.addEventListener("click", (e) => {
+      if (e.target === transferModal) closeTransferModal();
+    });
+    modalRefreshBtn.addEventListener("click", () => {
+      if (refreshesLeft <= 0) return;
+      refreshesLeft--;
+      transferCandidateCache[transferPosIndex] = null;
+      renderCandidatesToModal(transferPosIndex);
+    });
     shareCloseBtn.addEventListener("click", () => { shareModal.style.display = "none"; });
     shareModal.addEventListener("click", (e) => {
       if (e.target === shareModal) shareModal.style.display = "none";
@@ -1484,7 +1582,15 @@
 
     function renderCurrentPhase() {
       if (transferMode) {
-        if (transferSelecting && transferPosIndex >= 0) {
+        if (mobileTransferMode && transferModal.style.display === "flex" && transferPosIndex >= 0) {
+          renderCandidatesToModal(transferPosIndex);
+          const slots = formations[selectedFormation];
+          const pos = slots[transferPosIndex].pos;
+          const currentPlayer = draftPicks[transferPosIndex];
+          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+          transferModalTitle.textContent = `替换 ${pos}`;
+          transferModalSubtitle.textContent = `当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
+        } else if (transferSelecting && transferPosIndex >= 0) {
           const cached = transferCandidateCache[transferPosIndex];
           renderCandidates(cached);
           const slots = formations[selectedFormation];
@@ -1493,7 +1599,11 @@
           const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
           currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
         } else {
-          candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode });
+          candidateList.innerHTML = '<div class="empty-state">'
+            + (mobileTransferMode ? '点击个人数据表中的球员进行替换，或跳过窗口' : '点击阵型图中的位置选择要替换的球员，或跳过窗口')
+            + '</div>'
+            + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode, clickable: mobileTransferMode });
+          if (mobileTransferMode) attachTransferRowClickHandlers();
         }
         return;
       }
@@ -2116,6 +2226,71 @@
       return "#e2e8f0";
     }
 
+    function openTransferModal(index) {
+      if (!mobileTransferMode) return;
+      const slots = formations[selectedFormation];
+      const pos = slots[index].pos;
+      const currentPlayer = draftPicks[index];
+      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+
+      transferModalTitle.textContent = `替换 ${pos}`;
+      transferModalSubtitle.textContent = `当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
+      renderCandidatesToModal(index);
+      transferModal.style.display = "flex";
+    }
+
+    function closeTransferModal() {
+      transferModal.style.display = "none";
+      transferPosIndex = -1;
+      transferSelecting = false;
+    }
+
+    function renderCandidatesToModal(index) {
+      const slots = formations[selectedFormation];
+      const currentSlot = slots[index];
+      const cached = transferCandidateCache[index];
+      const candidates = cached || pickCandidates(currentSlot.pos);
+      if (!cached) transferCandidateCache[index] = candidates;
+      currentCandidates = candidates;
+
+      modalCandidateList.innerHTML = "";
+      if (candidates.length === 0) {
+        modalCandidateList.innerHTML = `<div class="empty-state">没有合适该位置的球员</div>`;
+        return;
+      }
+
+      candidates.forEach(player => {
+        const card = document.createElement("div");
+        card.className = "candidate-card";
+        card.innerHTML = `
+          <div class="candidate-main">
+            <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : ''}</div>
+            <div class="candidate-meta">${player.team} · ${player.league} · ${player.nation} · ${player.age}岁</div>
+          </div>
+          <div class="candidate-positions">
+            ${player.positions.map(p => `<span class="position-tag ${p === currentSlot.pos ? 'primary' : ''}">${p}</span>`).join('')}
+          </div>
+        `;
+        card.addEventListener("click", () => confirmTransfer(player));
+        modalCandidateList.appendChild(card);
+      });
+
+      modalRefreshText.textContent = `剩余刷新次数：${refreshesLeft}`;
+      modalRefreshBtn.disabled = refreshesLeft <= 0;
+    }
+
+    function attachTransferRowClickHandlers() {
+      candidateList.querySelectorAll(".player-stats-table.transfer-clickable tbody tr[data-index]").forEach(row => {
+        row.addEventListener("click", () => {
+          const index = Number(row.dataset.index);
+          // 移动端不走桌面端的 renderCandidates，直接打开弹窗
+          transferPosIndex = index;
+          transferSelecting = true;
+          openTransferModal(index);
+        });
+      });
+    }
+
     function openTransferWindow(isSummer = false) {
       transferMode = true;
       summerTransferMode = isSummer;
@@ -2123,6 +2298,14 @@
       transferPosIndex = -1;
       transferCandidateCache = {};
       draftLayout.classList.remove("league");
+
+      mobileTransferMode = window.innerWidth <= 800;
+      if (mobileTransferMode) {
+        draftLayout.classList.add("transfer-mobile");
+      } else {
+        draftLayout.classList.remove("transfer-mobile");
+      }
+
       renderFormation(draftPitch, selectedFormation);
       const windowName = isSummer ? "夏季转会窗口" : "冬季转会窗口";
       draftFormationLabel.innerHTML = `${windowName} · <strong>${selectedFormation}</strong>`;
@@ -2136,14 +2319,16 @@
       shareBtn.classList.add("hidden");
       skipTransferBtn.classList.remove("hidden");
 
-      // 给每个 dot 加点击事件
+      // 给每个 dot 加点击事件（桌面端用）
       const dots = draftPitch.querySelectorAll(".position-dot");
       dots.forEach((dot, index) => {
         dot.style.cursor = "pointer";
         dot.addEventListener("click", () => selectTransferPosition(index));
       });
 
-      currentPosName.textContent = "点击阵型图选择替换位置";
+      currentPosName.textContent = mobileTransferMode
+        ? "点击个人数据表中的球员进行替换"
+        : "点击阵型图选择替换位置";
       progressText.textContent = isSummer ? "夏季转会" : "冬季转会";
 
       refreshBtn.style.display = "none";
@@ -2151,7 +2336,14 @@
       autoFillBtn.style.display = "none";
       refreshesLeft = 2;
 
-      candidateList.innerHTML = '<div class="empty-state">点击阵型图中的位置选择要替换的球员，或跳过窗口</div>' + buildPlayerStatsHtml(null, { hideReplaced: isSummer });
+      candidateList.innerHTML = '<div class="empty-state">'
+        + (mobileTransferMode ? '点击个人数据表中的球员进行替换，或跳过窗口' : '点击阵型图中的位置选择要替换的球员，或跳过窗口')
+        + '</div>'
+        + buildPlayerStatsHtml(null, { hideReplaced: isSummer, clickable: mobileTransferMode });
+
+      if (mobileTransferMode) {
+        attachTransferRowClickHandlers();
+      }
     }
 
     function selectTransferPosition(index) {
@@ -2223,7 +2415,14 @@
         isTransfer: true
       });
 
-      closeTransferWindow();
+      if (mobileTransferMode) {
+        closeTransferModal();
+        candidateList.innerHTML = '<div class="empty-state">点击个人数据表中的球员进行替换，或跳过窗口</div>'
+          + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode, clickable: true });
+        attachTransferRowClickHandlers();
+      } else {
+        closeTransferWindow();
+      }
     }
 
     function closeTransferWindow() {
@@ -2233,6 +2432,8 @@
       summerTransferMode = false;
       transferSelecting = false;
       transferPosIndex = -1;
+      mobileTransferMode = false;
+      draftLayout.classList.remove("transfer-mobile");
 
       // 恢复按钮
       refreshBtn.style.display = "none";
@@ -2400,9 +2601,9 @@
     }
 
     function buildPlayerStatsHtml(stats = null, opts = {}) {
-      const { showAge = true, hideReplaced = false, filter = playerStatsFilter, showFilter = false } = opts;
+      const { showAge = true, hideReplaced = false, filter = playerStatsFilter, showFilter = false, clickable = false } = opts;
       const data = stats || userPlayerStats;
-      if (data.length === 0) return "";
+      if (data.length === 0 && !clickable) return "";
       const getName = s => s.player ? s.player.name : s.playerName;
       const getOvr = s => s.player ? s.player.ovr : s.playerOvr;
       const getAge = s => s.player ? s.player.age : s.playerAge;
@@ -2418,6 +2619,35 @@
 
       let displayStats = data.filter(s => getStat(s, "appearances") > 0);
       if (hideReplaced) displayStats = displayStats.filter(s => !s.replaced);
+
+      // 移动端转会模式：补齐 11 个位置行，并附加位置索引用于弹窗选人
+      if (clickable && selectedFormation) {
+        const slots = formations[selectedFormation];
+        const covered = new Set();
+        displayStats = displayStats.map(s => {
+          const idx = data.indexOf(s);
+          let posIndex = -1;
+          if (idx >= 0 && idx < 11) posIndex = idx;
+          else if (s.player) posIndex = draftPicks.findIndex(p => p && p.id === s.player.id);
+          if (posIndex >= 0) covered.add(posIndex);
+          return { ...s, _posIndex: posIndex };
+        });
+        for (let i = 0; i < slots.length; i++) {
+          if (!covered.has(i)) {
+            displayStats.push({
+              _isEmptySlot: true,
+              _posIndex: i,
+              pos: slots[i].pos,
+              player: null,
+              appearances: 0, goals: 0, assists: 0, cleanSheets: 0,
+              leagueAppearances: 0, leagueGoals: 0, leagueAssists: 0, leagueCleanSheets: 0,
+              cupAppearances: 0, cupGoals: 0, cupAssists: 0, cupCleanSheets: 0
+            });
+          }
+        }
+        displayStats.sort((a, b) => (a._posIndex - b._posIndex));
+      }
+
       if (displayStats.length === 0) return "";
 
       const filterHtml = showFilter
@@ -2430,11 +2660,13 @@
           </div>`
         : "";
 
+      const colCount = showAge ? 7 : 6;
+
       return `
         <div style="margin-top:20px;">
           <div style="margin-bottom:12px; font-weight:700; color:#34d399;">个人数据</div>
           ${filterHtml}
-          <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <table class="player-stats-table ${clickable ? 'transfer-clickable' : ''}" style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead>
               <tr style="color:#94a3b8; border-bottom:2px solid #475569;">
                 <th style="text-align:left; padding:6px 4px;">位置</th>
@@ -2447,8 +2679,16 @@
               </tr>
             </thead>
             <tbody>
-              ${displayStats.map(s => `
-                <tr style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
+              ${displayStats.map(s => {
+                const idx = s._posIndex;
+                const isEmpty = s._isEmptySlot;
+                const dataAttr = clickable && idx !== undefined && idx >= 0 ? `data-index="${idx}"` : '';
+                if (isEmpty) {
+                  return `<tr ${dataAttr} style="border-bottom:1px solid #334155;">
+                    <td colspan="${colCount}" class="transfer-empty-slot">[已离队] 点击选择新球员</td>
+                  </tr>`;
+                }
+                return `<tr ${dataAttr} style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
                   <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : ''}</td>
                   ${showAge ? `<td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>` : ''}
@@ -2456,8 +2696,8 @@
                   <td style="text-align:center; padding:6px 4px;">${getStat(s, "goals")}</td>
                   <td style="text-align:center; padding:6px 4px;">${getStat(s, "assists")}</td>
                   <td style="text-align:center; padding:6px 4px;">${cleanSheetPositions.includes(s.pos) ? getStat(s, "cleanSheets") : '-'}</td>
-                </tr>
-              `).join("")}
+                </tr>`;
+              }).join("")}
             </tbody>
           </table>
         </div>`;
