@@ -3786,30 +3786,41 @@
         } else if (uclRoundPending) {
           const uclKey = uclRoundPending;
           let uclOpponent = null;
+          let uclVenue = "";
           if (uclKey.startsWith("md")) {
             const mdIdx = parseInt(uclKey.substring(2)) - 1;
             const matchday = ucl.leagueFixtures[mdIdx];
             if (matchday) {
               for (const m of matchday) {
-                if (ucl.teams[m.homeIdx].isUser) { uclOpponent = ucl.teams[m.awayIdx].name; break; }
-                if (ucl.teams[m.awayIdx].isUser) { uclOpponent = ucl.teams[m.homeIdx].name; break; }
+                if (ucl.teams[m.homeIdx].isUser) { uclOpponent = ucl.teams[m.awayIdx].name; uclVenue = "主"; break; }
+                if (ucl.teams[m.awayIdx].isUser) { uclOpponent = ucl.teams[m.homeIdx].name; uclVenue = "客"; break; }
               }
             }
           } else {
-            // knockout: playoff, r16Leg1, r16Leg2, qfLeg1, qfLeg2
+            // knockout: playoffLeg1, r16Leg2, qfLeg1, sfLeg2 etc.
             let baseKey = uclKey;
-            if (uclKey.endsWith("Leg1")) baseKey = uclKey.replace("Leg1", "");
-            else if (uclKey.endsWith("Leg2")) baseKey = uclKey.replace("Leg2", "");
+            const isLeg1 = uclKey.endsWith("Leg1");
+            const isLeg2 = uclKey.endsWith("Leg2");
+            if (isLeg1) baseKey = uclKey.replace("Leg1", "");
+            else if (isLeg2) baseKey = uclKey.replace("Leg2", "");
             const round = ucl.knockout[baseKey];
             if (round && round.ties) {
               for (const tie of round.ties) {
-                if (ucl.teams[tie.teamAIdx].isUser) { uclOpponent = ucl.teams[tie.teamBIdx].name; break; }
-                if (ucl.teams[tie.teamBIdx].isUser) { uclOpponent = ucl.teams[tie.teamAIdx].name; break; }
+                if (ucl.teams[tie.teamAIdx].isUser) {
+                  uclOpponent = ucl.teams[tie.teamBIdx].name;
+                  uclVenue = isLeg1 ? "主" : "客";
+                  break;
+                }
+                if (ucl.teams[tie.teamBIdx].isUser) {
+                  uclOpponent = ucl.teams[tie.teamAIdx].name;
+                  uclVenue = isLeg1 ? "客" : "主";
+                  break;
+                }
               }
             }
           }
           if (uclOpponent) {
-            currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠${UCL_ROUND_NAMES[uclRoundPending]} · 对手：${uclOpponent}`;
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠${UCL_ROUND_NAMES[uclRoundPending]} · 对手：${uclOpponent}（${uclVenue}）`;
           } else {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠${UCL_ROUND_NAMES[uclRoundPending]}`;
           }
@@ -3911,6 +3922,7 @@
                 const homeName = ucl.teams[leg.homeIdx].name;
                 const awayName = ucl.teams[leg.awayIdx].name;
                 const homeIsUser = ucl.teams[leg.homeIdx].isUser;
+                const awayIsUser = ucl.teams[leg.awayIdx].isUser;
                 const scoreColor = getMatchScoreColor(leg.isUser, leg.userResult);
                 let aggText = "";
                 if (lastUclResults.legNum === 2 && tie.aggA !== null) {
@@ -3920,7 +3932,7 @@
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
                     <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${homeName}</span>
                     <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${leg.homeGoals} - ${leg.awayGoals}</span>
-                    <span style="flex:1; color:${!homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${!homeIsUser ? 700 : 400};">${awayName}</span>
+                    <span style="flex:1; color:${awayIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${awayName}</span>
                   </div>
                   ${leg.isUser ? formatMatchEvents(leg.events, homeIsUser) : ""}
                   ${aggText}
