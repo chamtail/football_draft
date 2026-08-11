@@ -2745,17 +2745,16 @@
           const aWon = tie.winnerIdx === tie.teamAIdx;
           const bWon = tie.winnerIdx === tie.teamBIdx;
           const decided = tie.winnerIdx !== null;
-          // 球队名颜色: 用户球队绿色, 被淘汰的灰色, 其余白色
-          const aColor = aIsUser ? '#34d399' : (decided && !aWon) ? '#64748b' : '#e2e8f0';
-          const bColor = bIsUser ? '#34d399' : (decided && !bWon) ? '#64748b' : '#e2e8f0';
+          // 球队名颜色: 用户球队始终绿色, 被淘汰的非用户球队灰色, 其余白色
+          const aColor = aIsUser ? '#34d399' : decided ? (aWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
+          const bColor = bIsUser ? '#34d399' : decided ? (bWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
 
-          // 比分颜色: 用户比赛的总比分用绿色(晋级)/红色(淘汰)
+          // 比分颜色: 默认蓝色, 用户比赛决定后用绿色(晋级)/红色(淘汰)
           const userInTie = aIsUser || bIsUser;
           const userWon = (aIsUser && aWon) || (bIsUser && bWon);
-          const userLost = (aIsUser && bWon) || (bIsUser && aWon);
 
           let scoreText = "vs";
-          let scoreColor = '#94a3b8';
+          let scoreColor = '#60a5fa';
           if (tie.leg1 && tie.leg2) {
             scoreText = `${tie.aggA} - ${tie.aggB}`;
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
