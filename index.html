@@ -2676,7 +2676,7 @@
           resultsHtml = `
             <div style="margin-bottom:16px;">
               <div style="margin-bottom:8px; font-weight:700; color:#facc15;">足总杯 ${lastCupResults.roundName} 赛果</div>
-              ${lastCupResults.matches.map(m => {
+              ${[...lastCupResults.matches].sort((a, b) => (b.isUser ? 1 : 0) - (a.isUser ? 1 : 0)).map(m => {
                 const homeIsUser = m.homeName === "我的球队";
                 const awayIsUser = m.awayName === "我的球队";
                 const homeWon = m.winnerIdx === m.homeIdx;
