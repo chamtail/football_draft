@@ -2420,61 +2420,66 @@
 
     function generateUclFixtures(teams, pots) {
       const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-      const pairPots = (potA, potB, homeFirst) => {
+      // 生成两回合对阵，确保同一对手不会重复
+      const pairPotsBoth = (potA, potB) => {
         const sA = shuffle(potA), sB = shuffle(potB);
-        return sA.map((a, i) => homeFirst
-          ? { homeIdx: a, awayIdx: sB[i] }
-          : { homeIdx: sB[i], awayIdx: a });
+        // MD_A: potA主场，sA[i] vs sB[i]
+        const mdA = sA.map((a, i) => ({ homeIdx: a, awayIdx: sB[i] }));
+        // MD_B: potB主场，旋转sB一位避免重复对手
+        const sBrot = [...sB.slice(1), sB[0]];
+        const mdB = sA.map((a, i) => ({ homeIdx: sBrot[i], awayIdx: a }));
+        return [mdA, mdB];
       };
-      const pairIntra = (pot) => {
+      // 档内对抗：9队，每轮4场+1轮空，两轮共覆盖所有队
+      const pairIntraBoth = (pot) => {
         const s = shuffle(pot);
-        const matches = [];
-        // 9队: 4场 + 1轮空, 两场合并处理
-        // MD_A: s[0]主场vs s[1], s[2]主场vs s[3], s[4]主场vs s[5], s[6]主场vs s[7], s[8]轮空
-        // MD_B: s[1]主场vs s[2], s[3]主场vs s[4], s[5]主场vs s[6], s[7]主场vs s[8], s[0]轮空
         const mdA = [], mdB = [];
+        // MD_A: s[0]-s[1], s[2]-s[3], s[4]-s[5], s[6]-s[7], s[8]轮空
         for (let i = 0; i < 8; i += 2) {
           mdA.push({ homeIdx: s[i], awayIdx: s[i + 1] });
         }
-        for (let i = 1; i < 8; i += 2) {
+        // MD_B: s[1]-s[2], s[3]-s[4], s[5]-s[6], s[7]-s[8], s[0]轮空
+        for (let i = 1; i < 9; i += 2) {
           mdB.push({ homeIdx: s[i], awayIdx: s[i + 1] });
         }
-        mdB.push({ homeIdx: s[8], awayIdx: s[0] });
-        return [mdA, mdB];
+        return [mdA, mdB, s[8] /* byeA */, s[0] /* byeB */];
       };
 
       const fixtures = [];
+
       // MD1-2: Pot0↔Pot1, Pot2↔Pot3
-      const p01a = pairPots(pots[0], pots[1], true);
-      const p23a = pairPots(pots[2], pots[3], true);
-      fixtures.push([...p01a, ...p23a]); // 18 matches
-      const p01b = pairPots(pots[0], pots[1], false);
-      const p23b = pairPots(pots[2], pots[3], false);
-      fixtures.push([...p01b, ...p23b]);
+      const [p01a, p01b] = pairPotsBoth(pots[0], pots[1]);
+      const [p23a, p23b] = pairPotsBoth(pots[2], pots[3]);
+      fixtures.push([...p01a, ...p23a]); // MD1: 18 matches
+      fixtures.push([...p01b, ...p23b]); // MD2: 18 matches
 
       // MD3-4: Pot0↔Pot2, Pot1↔Pot3
-      const p02a = pairPots(pots[0], pots[2], true);
-      const p13a = pairPots(pots[1], pots[3], true);
-      fixtures.push([...p02a, ...p13a]);
-      const p02b = pairPots(pots[0], pots[2], false);
-      const p13b = pairPots(pots[1], pots[3], false);
-      fixtures.push([...p02b, ...p13b]);
+      const [p02a, p02b] = pairPotsBoth(pots[0], pots[2]);
+      const [p13a, p13b] = pairPotsBoth(pots[1], pots[3]);
+      fixtures.push([...p02a, ...p13a]); // MD3
+      fixtures.push([...p02b, ...p13b]); // MD4
 
       // MD5-6: Pot0↔Pot3, Pot1↔Pot2
-      const p03a = pairPots(pots[0], pots[3], true);
-      const p12a = pairPots(pots[1], pots[2], true);
-      fixtures.push([...p03a, ...p12a]);
-      const p03b = pairPots(pots[0], pots[3], false);
-      const p12b = pairPots(pots[1], pots[2], false);
-      fixtures.push([...p03b, ...p12b]);
+      const [p03a, p03b] = pairPotsBoth(pots[0], pots[3]);
+      const [p12a, p12b] = pairPotsBoth(pots[1], pots[2]);
+      fixtures.push([...p03a, ...p12a]); // MD5
+      fixtures.push([...p03b, ...p12b]); // MD6
 
-      // MD7-8: 档内对抗
-      const [in0a, in0b] = pairIntra(pots[0]);
-      const [in1a, in1b] = pairIntra(pots[1]);
-      const [in2a, in2b] = pairIntra(pots[2]);
-      const [in3a, in3b] = pairIntra(pots[3]);
-      fixtures.push([...in0a, ...in1a, ...in2a, ...in3a]); // 16 matches (4 per pot, 4 pots)
-      fixtures.push([...in0b, ...in1b, ...in2b, ...in3b]);
+      // MD7-8: 档内对抗 + 跨档轮空队补赛
+      const [in0a, in0b, bye0a, bye0b] = pairIntraBoth(pots[0]);
+      const [in1a, in1b, bye1a, bye1b] = pairIntraBoth(pots[1]);
+      const [in2a, in2b, bye2a, bye2b] = pairIntraBoth(pots[2]);
+      const [in3a, in3b, bye3a, bye3b] = pairIntraBoth(pots[3]);
+      // MD7: 16场档内 + 2场跨档轮空队 = 18场
+      fixtures.push([...in0a, ...in1a, ...in2a, ...in3a,
+        { homeIdx: bye0a, awayIdx: bye1a },
+        { homeIdx: bye2a, awayIdx: bye3a }
+      ]);
+      // MD8: 16场档内 + 2场跨档轮空队 = 18场
+      fixtures.push([...in0b, ...in1b, ...in2b, ...in3b,
+        { homeIdx: bye0b, awayIdx: bye1b },
+        { homeIdx: bye2b, awayIdx: bye3b }
+      ]);
 
       return fixtures;
     }
