@@ -2415,14 +2415,7 @@
         isTransfer: true
       });
 
-      if (mobileTransferMode) {
-        closeTransferModal();
-        candidateList.innerHTML = '<div class="empty-state">点击个人数据表中的球员进行替换，或跳过窗口</div>'
-          + buildPlayerStatsHtml(null, { hideReplaced: summerTransferMode, clickable: true });
-        attachTransferRowClickHandlers();
-      } else {
-        closeTransferWindow();
-      }
+      closeTransferWindow();
     }
 
     function closeTransferWindow() {
