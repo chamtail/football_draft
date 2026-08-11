@@ -2597,11 +2597,11 @@
           for (const m of cupMatches) {
             if (leagueTeams[m.homeIdx].isUser) {
               cupOpponent = m.awayName;
-              cupVenue = "中立";
+              cupVenue = "中";
               break;
             } else if (leagueTeams[m.awayIdx].isUser) {
               cupOpponent = m.homeName;
-              cupVenue = "中立";
+              cupVenue = "中";
               break;
             }
           }
@@ -2618,11 +2618,11 @@
           for (const m of cupMatches) {
             if (leagueTeams[m.homeIdx].isUser) {
               cupOpponent = m.awayName;
-              cupVenue = neutralRound ? "中立" : "主";
+              cupVenue = neutralRound ? "中" : "主";
               break;
             } else if (leagueTeams[m.awayIdx].isUser) {
               cupOpponent = m.homeName;
-              cupVenue = neutralRound ? "中立" : "客";
+              cupVenue = neutralRound ? "中" : "客";
               break;
             }
           }
