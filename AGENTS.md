@@ -33,6 +33,10 @@ node server.js
 ## index.html 架构概览
 单文件前端（约2080行），所有 HTML/CSS/JS 在一个文件中。
 
+### UI 术语定义（重要）
+- **赛果**（resultsHtml / results panel）— 页面**顶部左侧**，显示**最近一轮**模拟的比赛结果。由 `lastRoundResults`（联赛）、`lastCupResults`（杯赛）、`lastUclResults`（欧冠）驱动。对应代码中 `resultsHtml` 变量的渲染。
+- **对阵图**（bracket）— 页面**底部**，展示**所有已完成轮次**的完整对阵和比分。杯赛用 `buildCupBracketHtml`，欧冠用 `buildUclBracketHtml`。
+
 ### 核心数据结构
 - `allPlayers` - 从 players.json 加载的球员数组，每球员含: `{ id, name, nation, league, team, ovr, age, positions[] }`
 - `draftPicks[]` - 用户选中的11名首发球员（引用 allPlayers 中的对象，OVR/age 变动会同步）
