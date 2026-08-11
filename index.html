@@ -2719,7 +2719,7 @@
     }
 
     function buildUclStandingsHtml() {
-      if (!ucl || !ucl.active || !ucl.leaguePhaseDone) return "";
+      if (!ucl || !ucl.active || ucl.leagueStandings.every(s => s.played === 0)) return "";
       const sorted = [...ucl.leagueStandings].sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
 
       let html = `<div style="margin-top:20px;">
