@@ -3923,15 +3923,21 @@
                 const homeIsUser = ucl.teams[leg.homeIdx].isUser;
                 const awayIsUser = ucl.teams[leg.awayIdx].isUser;
                 const scoreColor = getMatchScoreColor(leg.isUser, leg.userResult);
+                // Leg2决定后：败者灰色，用户球队始终绿色
+                const decided = lastUclResults.legNum === 2 && tie.winnerIdx !== null;
+                const homeWon = decided && tie.winnerIdx === tie.teamAIdx;
+                const awayWon = decided && tie.winnerIdx === tie.teamBIdx;
+                const homeColor = homeIsUser ? '#34d399' : decided ? (homeWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
+                const awayColor = awayIsUser ? '#34d399' : decided ? (awayWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
                 let aggText = "";
                 if (lastUclResults.legNum === 2 && tie.aggA !== null) {
                   aggText = `<div style="font-size:11px; color:#94a3b8; text-align:center;">总比分 ${tie.aggA}-${tie.aggB}${tie.penaltyHome !== undefined ? ` (点${tie.penaltyHome}-${tie.penaltyAway})` : ''} ${tie.winnerIdx === tie.teamAIdx ? tie.teamAName : tie.teamBName}晋级</div>`;
                 }
                 return `<div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
-                    <span style="text-align:right; flex:1; color:${homeIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${homeIsUser ? 700 : 400};">${homeName}</span>
+                    <span style="text-align:right; flex:1; color:${homeColor}; font-weight:${homeIsUser ? 700 : 400};">${homeName}</span>
                     <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${leg.homeGoals} - ${leg.awayGoals}</span>
-                    <span style="flex:1; color:${awayIsUser ? '#34d399' : '#e2e8f0'}; font-weight:${awayIsUser ? 700 : 400};">${awayName}</span>
+                    <span style="flex:1; color:${awayColor}; font-weight:${awayIsUser ? 700 : 400};">${awayName}</span>
                   </div>
                   ${leg.isUser ? formatMatchEvents(leg.events, homeIsUser) : ""}
                   ${aggText}
