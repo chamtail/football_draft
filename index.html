@@ -1285,6 +1285,7 @@
       refreshText.textContent = "剩余刷新次数：2";
       autoFillBtn.style.display = "";
 
+      currentPosName.style.color = '';
       currentPosName.textContent = "-";
       progressText.textContent = "0 / 11";
       candidateList.innerHTML = '<div class="empty-state">请先选择阵型</div>';
@@ -1874,6 +1875,7 @@
       if (draftIndex >= 11) {
         currentPhase = "summary";
         renderFormation(draftPitch, selectedFormation);
+        currentPosName.style.color = '';
         currentPosName.textContent = "阵容已完整";
         progressText.textContent = "11 / 11";
         refreshBtn.style.display = "none";
@@ -1921,6 +1923,7 @@
           const pos = slots[transferPosIndex].pos;
           const currentPlayer = draftPicks[transferPosIndex];
           const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+          currentPosName.style.color = '';
           currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
         } else {
           candidateList.innerHTML = '<div class="empty-state">'
@@ -1984,6 +1987,7 @@
 
       const slots = formations[selectedFormation];
       const currentSlot = slots[draftIndex];
+      currentPosName.style.color = '';
       currentPosName.textContent = `${currentSlot.pos} · ${currentSlot.label}`;
       progressText.textContent = `${draftPicks.filter(Boolean).length} / 11`;
 
@@ -2080,6 +2084,7 @@
       if (draftIndex >= 11) {
         currentPhase = "summary";
         renderFormation(draftPitch, selectedFormation);
+        currentPosName.style.color = '';
         currentPosName.textContent = "阵容已完整";
         progressText.textContent = "11 / 11";
         refreshBtn.style.display = "none";
@@ -3205,6 +3210,7 @@
         dot.addEventListener("click", () => selectTransferPosition(index));
       });
 
+      currentPosName.style.color = '';
       currentPosName.textContent = mobileTransferMode
         ? "点击个人数据表中的球员进行替换"
         : "点击阵型图选择替换位置";
@@ -3246,6 +3252,7 @@
       });
 
       const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+      currentPosName.style.color = '';
       currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
 
       // 显示刷新按钮
@@ -3764,6 +3771,7 @@
         const hasAnyPending = cupFinalPending || uclSfPending || uclFinalPending || uclRoundPending || cupRoundPending;
 
         if (uclFinalPending) {
+          currentPosName.style.color = '#60a5fa';
           currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠决赛`;
         } else if (isFinished && cupFinalPending) {
           const cupMatches = cup.rounds.final.matches || [];
@@ -3780,6 +3788,7 @@
               break;
             }
           }
+          currentPosName.style.color = '#facc15';
           if (cupOpponent) {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯决赛 · 对手：${cupOpponent}（${cupVenue}）`;
           } else {
@@ -3795,6 +3804,7 @@
             if (ucl.teams[tie.teamAIdx].isUser) { sfOpponent = ucl.teams[tie.teamBIdx].name; break; }
             if (ucl.teams[tie.teamBIdx].isUser) { sfOpponent = ucl.teams[tie.teamAIdx].name; break; }
           }
+          currentPosName.style.color = '#60a5fa';
           if (sfOpponent) {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠半决赛${legText} · 对手：${sfOpponent}`;
           } else {
@@ -3836,6 +3846,7 @@
               }
             }
           }
+          currentPosName.style.color = '#60a5fa';
           if (uclOpponent) {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠${UCL_ROUND_NAMES[uclRoundPending]} · 对手：${uclOpponent}（${uclVenue}）`;
           } else {
@@ -3857,14 +3868,17 @@
               break;
             }
           }
+          currentPosName.style.color = '#facc15';
           if (cupOpponent) {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]} · 对手：${cupOpponent}（${cupVenue}）`;
           } else {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}`;
           }
         } else if (isFinished) {
+          currentPosName.style.color = '';
           currentPosName.textContent = `${seasonLabel(currentSeason)}已结束`;
         } else {
+          currentPosName.style.color = '';
           currentPosName.textContent = `${seasonLabel(currentSeason)} · 第 ${currentRound + 1} 轮 · 对手：${nextOpponent}（${nextVenue}）`;
         }
         progressText.textContent = `${seasonLabel(currentSeason)} · ${currentRound} / ${fixtures.length} 轮已完成`;
@@ -3910,6 +3924,7 @@
         restartBtn.classList.add("hidden");
         nextSeasonBtn.classList.add("hidden");
         shareBtn.classList.add("hidden");
+        currentPosName.style.color = '';
         currentPosName.textContent = viewSeason === "cumulative" ? "累计统计" : `查看历史赛季`;
         progressText.textContent = "";
         refreshBtn.style.display = "none";
