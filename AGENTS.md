@@ -90,9 +90,9 @@ node server.js
 
 ### 足总杯系统
 - **常量定义**:
-  - `CUP_SCHEDULE = { 21: "qualifying", 25: "roundOf16", 29: "quarterFinals", 34: "semiFinals" }` — 联赛第N轮后触发对应杯赛轮次
-  - `CUP_ROUND_NAMES = { qualifying: "预选赛", roundOf16: "16强", quarterFinals: "8强", semiFinals: "4强", final: "决赛" }`
-  - `CUP_ROUND_ORDER = ["qualifying", "roundOf16", "quarterFinals", "semiFinals", "final"]`
+  - `CUP_SCHEDULE = { 8: "roundOf64", 14: "roundOf32", 20: "roundOf16", 25: "quarterFinals", 31: "semiFinals", 38: "final" }` — 联赛第N轮后触发对应杯赛轮次
+  - `CUP_ROUND_NAMES = { qualifying: "预选赛", roundOf64: "64强", roundOf32: "32强", roundOf16: "16强", quarterFinals: "8强", semiFinals: "半决赛", final: "决赛" }`
+  - `CUP_ROUND_ORDER = ["roundOf64", "roundOf32", "roundOf16", "quarterFinals", "semiFinals", "final"]`
 - **杯赛数据结构** (`cup` 对象):
   - `schedule` - 引用 CUP_SCHEDULE
   - `rounds` - 5个轮次对象，每个含 `{ teams[], matches[], done }`
@@ -106,23 +106,22 @@ node server.js
   4. 杯赛模拟完成后设置 `lastSimType = "cup"`，赛果面板显示杯赛赛果
   5. 再下次点击继续模拟联赛下一轮
   - 批量模拟（模拟至半程/到结束）遇到杯赛轮次会暂停，需手动模拟杯赛后继续
-- **预选赛特殊逻辑** (`drawCupQualifying`):
-  - 积分榜前12名直接晋级16强
-  - 后8名（第13-20名）抽签4组对阵，单场淘汰
-  - 平局走点球大战
-  - 4个胜者补入16强队伍列表
-- **常规轮次** (`simulateCupRound`):
-  - 16强(16队8场) → 8强(8队4场) → 4强(4队2场) → 决赛(2队1场)
-  - 每轮随机抽签对阵，单场淘汰，平局走点球
-  - 决赛胜者设为 `cup.champion`
+  - 足总杯决赛(R38)通过正常杯赛流程处理，夺冠后自动记录到 cupSeasons
+- **64强** (roundOf64, R8): 初始抽签，所有参赛队
+- **32强** (roundOf32, R14): 64强胜者
+- **16强** (roundOf16, R20): 32强胜者
+- **8强** (quarterFinals, R25): 16强胜者
+- **4强** (semiFinals, R31): 8强胜者，胜者进入决赛（决赛对阵在4强后立即抽签）
+- **决赛** (final, R38): 4强胜者，中立场地，产生冠军
 - **点球大战** (`penaltyShootout`):
   - 按双方球队实力加权随机选胜者
   - 返回 `{ winnerIdx, homePenalty, awayPenalty }`，点球比分在3-5范围内，胜者多进1-2球
   - 比赛数据中存 `penaltyHome/penaltyAway` 字段，对阵图和赛果面板显示 `(点X-Y)`
 - **决赛触发**:
-  - 联赛全部38轮结束后，检查 `cup.rounds.final` 是否未完成
-  - 设置 `cupFinalPending = true`，按钮显示"模拟一场"，状态栏显示"联赛已结束 · 足总杯决赛待踢"
-  - 点击"模拟一场"模拟决赛，记录冠军，若用户夺冠则 `cupSeasons.push(seasonLabel)`
+  - 足总杯决赛在联赛第38轮后通过 `CUP_SCHEDULE[38]="final"` 正常触发
+  - 4强(R31)完成后，`simulateCupRound` 自动推进胜者到决赛并抽签对阵
+  - 决赛模拟后设置 `cup.champion`，若用户夺冠则 `cupSeasons.push(seasonLabel)`
+  - 欧冠决赛在足总杯决赛之后：联赛结束后 renderLeague 检测 cup final done + SF done → 设置 `uclFinalPending = true`
 - **杯赛赛果展示**:
   - 赛果面板根据 `lastSimType` 决定显示联赛还是杯赛赛果
   - 杯赛赛果显示轮次名称（如"足总杯 16强 赛果"）和所有比赛比分（含点球）
@@ -134,7 +133,7 @@ node server.js
 
 ### 欧冠系统
 - **常量定义**:
-  - `UCL_SCHEDULE = { 4:"md1", 6:"md2", 10:"md3", 12:"md4", 16:"md5", 18:"md6", 22:"md7", 24:"md8", 28:"playoffLeg1", 29:"playoffLeg2", 31:"r16Leg1", 33:"r16Leg2", 36:"qfLeg1", 38:"qfLeg2" }` — 联赛第N轮后触发对应欧冠轮次
+  - `UCL_SCHEDULE = { 2:"md1", 4:"md2", 7:"md3", 9:"md4", 12:"md5", 14:"md6", 17:"md7", 19:"md8", 22:"playoffLeg1", 24:"playoffLeg2", 26:"r16Leg1", 28:"r16Leg2", 30:"qfLeg1", 33:"qfLeg2", 34:"sfLeg1", 36:"sfLeg2" }` — 联赛第N轮后触发对应欧冠轮次
   - `UCL_ROUND_NAMES` — 各轮次中文名（联赛第N轮 / 附加赛首回合 / 附加赛次回合 / 16强首回合 ...）
   - `UCL_MATCHDAY_KEYS = ["md1"~"md8"]` — 联赛阶段8轮
 - **欧冠数据结构** (`ucl` 对象):
@@ -148,14 +147,14 @@ node server.js
   - `champion` - 决赛后设为冠军队名
   - `leaguePhaseDone` (bool) - MD8完成后标记
 - **联赛阶段** (8轮小组赛):
-  - MD1-MD8 穿插在联赛第4/6/10/12/16/18/22/24轮后
+  - MD1-MD8 穿插在联赛第2/4/7/9/12/14/17/19轮后（半程前全部完成）
   - `simulateUclMatchday(mdIdx)` 模拟一轮联赛，更新积分榜，MD8完成后 `drawUclTies("playoff")`
-- **淘汰赛** (全部主客场两回合制):
-  - **附加赛** (playoffLeg1/Leg2, 联赛第28/29轮后): 积分榜9-24名共16队抽签8组对阵，两回合制，总比分平则走点球
-  - **16强** (r16Leg1/Leg2, 联赛第31/33轮后): 积分榜前8 + 附加赛8胜者共16队抽签，两回合制
-  - **8强** (qfLeg1/Leg2, 联赛第36/38轮后): 16强胜者8队抽签，两回合制
-  - **半决赛** (sfLeg1/Leg2, 联赛结束后): 8强胜者4队抽签，两回合制，由 `uclSfPending` 触发
-  - **决赛** (final, 半决赛后): 中立场地单场，由 `uclFinalPending` 触发
+- **淘汰赛** (全部主客场两回合制，与足总杯交替穿插在联赛中):
+  - **附加赛** (playoffLeg1/Leg2, 联赛第22/24轮后): 积分榜9-24名共16队抽签8组对阵，两回合制，总比分平则走点球
+  - **16强** (r16Leg1/Leg2, 联赛第26/28轮后): 积分榜前8 + 附加赛8胜者共16队抽签，两回合制
+  - **8强** (qfLeg1/Leg2, 联赛第30/33轮后): 16强胜者8队抽签，两回合制
+  - **半决赛** (sfLeg1/Leg2, 联赛第34/36轮后): 8强胜者4队抽签，两回合制
+  - **决赛** (final, 联赛结束后): 中立场地单场，由 `uclFinalPending` 触发（排在足总杯决赛之后）
   - `simulateUclLeg(roundKey, legNum)` 通用模拟函数，Leg2计算总比分、客场进球、点球
   - `drawUclTies(roundKey)` 抽签对阵: playoff=9-24名, r16=前8+playoff胜者, qf=r16胜者, sf=qf胜者
   - `handleUclPending()` 处理待模拟的欧冠轮次，Leg2完成后自动抽签下一轮
@@ -180,9 +179,11 @@ node server.js
 - `attackWeights / assistWeights` 按位置分配进球/助攻权重
 
 ### 多赛季流程
-选秀(11人) → 开始赛季 → 模拟每轮 → 半程冬季转会 → 继续模拟 → 赛季结束 → 足总杯决赛 → 分享/进入下一赛季 → 夏季转会(换1人) → 球员能力成长 → 新赛季(S2) → ...
-- 联赛第21/25/29/34轮后穿插足总杯预选赛/16强/8强/4强，杯赛作为独立一轮单独模拟
-- 联赛全部38轮结束后踢足总杯决赛
+选秀(11人) → 开始赛季 → 模拟每轮 → 半程冬季转会 → 继续模拟 → 赛季结束 → 欧冠决赛 → 分享/进入下一赛季 → 夏季转会(换1人) → 球员能力成长 → 新赛季(S2) → ...
+- 足总杯6轮（64强/32强/16强/8强/4强/决赛）穿插在联赛第8/14/20/25/31/38轮
+- 欧冠联赛阶段（MD1-8）在联赛第2/4/7/9/12/14/17/19轮，半程前完成
+- 欧冠淘汰赛（附加赛/16强/8强/4强）穿插在联赛第22-36轮，与足总杯交替进行
+- 欧冠决赛是唯一的赛后事件，在足总杯决赛(R38)之后触发
 - "重来一局"重置一切：currentSeason=1, seasonHistory=[], cup=null, 重新fetch players.json恢复原始数据
 - 赛季选择器可在联赛视图中切换：当前赛季 / 历史赛季 / 累计统计
 
