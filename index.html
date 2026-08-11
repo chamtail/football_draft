@@ -1824,8 +1824,14 @@
 
       // 追加杯赛球队到 leagueTeams（index 20..63），先截断确保幂等
       leagueTeams.length = 20;
+      const draftedIds = new Set(draftPicks.filter(Boolean).map(p => p.id));
       for (const t of cupFillers) {
-        leagueTeams.push({ name: t.name, isUser: false, strength: t.strength });
+        leagueTeams.push({
+          name: t.name,
+          isUser: false,
+          strength: t.strength,
+          roster: allPlayers.filter(p => p.team === t.name && !draftedIds.has(p.id))
+        });
       }
 
       const all64 = Array.from({ length: leagueTeams.length }, (_, i) => i);
