@@ -2744,13 +2744,22 @@
           const bIsUser = tie.teamBName === "我的球队";
           const aWon = tie.winnerIdx === tie.teamAIdx;
           const bWon = tie.winnerIdx === tie.teamBIdx;
-          const aColor = aIsUser ? '#34d399' : bWon ? '#64748b' : '#e2e8f0';
-          const bColor = bIsUser ? '#34d399' : aWon ? '#64748b' : '#e2e8f0';
+          const decided = tie.winnerIdx !== null;
+          // 球队名颜色: 用户球队绿色, 被淘汰的灰色, 其余白色
+          const aColor = aIsUser ? '#34d399' : (decided && !aWon) ? '#64748b' : '#e2e8f0';
+          const bColor = bIsUser ? '#34d399' : (decided && !bWon) ? '#64748b' : '#e2e8f0';
+
+          // 比分颜色: 用户比赛的总比分用绿色(晋级)/红色(淘汰)
+          const userInTie = aIsUser || bIsUser;
+          const userWon = (aIsUser && aWon) || (bIsUser && bWon);
+          const userLost = (aIsUser && bWon) || (bIsUser && aWon);
 
           let scoreText = "vs";
+          let scoreColor = '#94a3b8';
           if (tie.leg1 && tie.leg2) {
             scoreText = `${tie.aggA} - ${tie.aggB}`;
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
+            if (userInTie && decided) scoreColor = userWon ? '#34d399' : '#f87171';
           } else if (tie.leg1) {
             const l1 = tie.leg1;
             scoreText = `${l1.homeGoals} - ${l1.awayGoals}`;
@@ -2759,7 +2768,7 @@
 
           html += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;">
             <span style="color:${aColor}; font-weight:${aIsUser ? 700 : 400}; flex:1; text-align:right;">${tie.teamAName}</span>
-            <span style="flex:0 0 auto; padding:0 8px; color:#94a3b8; font-weight:700; white-space:nowrap;">${scoreText}</span>
+            <span style="flex:0 0 auto; padding:0 8px; color:${scoreColor}; font-weight:700; white-space:nowrap;">${scoreText}</span>
             <span style="color:${bColor}; font-weight:${bIsUser ? 700 : 400}; flex:1;">${tie.teamBName}</span>
           </div>`;
         }
