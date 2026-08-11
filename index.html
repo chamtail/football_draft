@@ -893,7 +893,6 @@
 
     simHalfBtn.addEventListener("click", () => {
       if (isSimulating) return;
-      if (cupFinalPending) return;
 
       // 如果有杯赛轮次待踢，先模拟杯赛，然后继续批量模拟
       if (cupRoundPending) {
@@ -906,7 +905,7 @@
 
       const half = Math.floor(fixtures.length / 2);
       const target = currentRound < half ? half : fixtures.length;
-      if (currentRound >= target) return;
+      if (currentRound >= target && !cupFinalPending) return;
 
       isSimulating = true;
       simNextBtn.disabled = true;
@@ -2591,7 +2590,25 @@
         }
 
         if (isFinished && cupFinalPending) {
-          currentPosName.textContent = `${seasonLabel(currentSeason)}联赛已结束 · 足总杯决赛待踢`;
+          const cupMatches = cup.rounds.final.matches || [];
+          let cupOpponent = null;
+          let cupVenue = "";
+          for (const m of cupMatches) {
+            if (leagueTeams[m.homeIdx].isUser) {
+              cupOpponent = m.awayName;
+              cupVenue = "主";
+              break;
+            } else if (leagueTeams[m.awayIdx].isUser) {
+              cupOpponent = m.homeName;
+              cupVenue = "客";
+              break;
+            }
+          }
+          if (cupOpponent) {
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯决赛 · 对手：${cupOpponent}（${cupVenue}）`;
+          } else {
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯决赛待踢`;
+          }
         } else if (cupRoundPending) {
           const cupMatches = cup.rounds[cupRoundPending].matches || [];
           let cupOpponent = null;
@@ -2631,7 +2648,9 @@
           simNextBtn.textContent = "模拟一场";
           simNextBtn.classList.remove("hidden");
           simNextBtn.disabled = false;
-          simHalfBtn.classList.add("hidden");
+          simHalfBtn.textContent = "模拟到结束";
+          simHalfBtn.classList.remove("hidden");
+          simHalfBtn.disabled = false;
           restartBtn.classList.add("hidden");
           nextSeasonBtn.classList.add("hidden");
           shareBtn.classList.add("hidden");
