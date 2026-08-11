@@ -3746,27 +3746,6 @@
           } else {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯决赛`;
           }
-        } else if (cupRoundPending) {
-          const cupMatches = cup.rounds[cupRoundPending].matches || [];
-          const neutralRound = cupRoundPending === "semiFinals" || cupRoundPending === "final";
-          let cupOpponent = null;
-          let cupVenue = "";
-          for (const m of cupMatches) {
-            if (leagueTeams[m.homeIdx].isUser) {
-              cupOpponent = m.awayName;
-              cupVenue = neutralRound ? "中" : "主";
-              break;
-            } else if (leagueTeams[m.awayIdx].isUser) {
-              cupOpponent = m.homeName;
-              cupVenue = neutralRound ? "中" : "客";
-              break;
-            }
-          }
-          if (cupOpponent) {
-            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]} · 对手：${cupOpponent}（${cupVenue}）`;
-          } else {
-            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}`;
-          }
         } else if (uclSfPending) {
           const sfRound = ucl.knockout.sf;
           const hasLeg1 = sfRound.ties.length > 0 && sfRound.ties[0].leg1;
@@ -3822,6 +3801,27 @@
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠${UCL_ROUND_NAMES[uclRoundPending]} · 对手：${uclOpponent}（${uclVenue}）`;
           } else {
             currentPosName.textContent = `${seasonLabel(currentSeason)} · 欧冠${UCL_ROUND_NAMES[uclRoundPending]}`;
+          }
+        } else if (cupRoundPending) {
+          const cupMatches = cup.rounds[cupRoundPending].matches || [];
+          const neutralRound = cupRoundPending === "semiFinals" || cupRoundPending === "final";
+          let cupOpponent = null;
+          let cupVenue = "";
+          for (const m of cupMatches) {
+            if (leagueTeams[m.homeIdx].isUser) {
+              cupOpponent = m.awayName;
+              cupVenue = neutralRound ? "中" : "主";
+              break;
+            } else if (leagueTeams[m.awayIdx].isUser) {
+              cupOpponent = m.homeName;
+              cupVenue = neutralRound ? "中" : "客";
+              break;
+            }
+          }
+          if (cupOpponent) {
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]} · 对手：${cupOpponent}（${cupVenue}）`;
+          } else {
+            currentPosName.textContent = `${seasonLabel(currentSeason)} · 足总杯${CUP_ROUND_NAMES[cupRoundPending]}`;
           }
         } else if (isFinished) {
           currentPosName.textContent = `${seasonLabel(currentSeason)}已结束`;
