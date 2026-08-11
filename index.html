@@ -1776,7 +1776,7 @@
           const resultText = isWin ? "胜" : m.userResult === "draw" ? "平" : "负";
           const resultColor = isWin ? "#34d399" : m.userResult === "draw" ? "#facc15" : "#f87171";
 
-          let scoreText = `${userGoals}-${oppGoals}`;
+          let scoreText = `${userGoals}-${oppGoals}${m.et ? ' (加)' : ''}`;
 
           const line = `${roundName}  vs ${oppName}  ${scoreText}`;
           ctx.fillStyle = "#e2e8f0";
@@ -2565,25 +2565,40 @@
         const awayIdx = legNum === 1 ? tie.teamBIdx : tie.teamAIdx;
         const home = ucl.teams[homeIdx];
         const away = ucl.teams[awayIdx];
-        const result = simulateMatch(home.strength, away.strength);
+        const result90 = simulateMatch(home.strength, away.strength);
+        let homeGoals = result90.homeGoals;
+        let awayGoals = result90.awayGoals;
+        let et = false;
+
+        // 次回合：两回合总比分打平则进入加时
+        if (legNum === 2) {
+          const aggA90 = tie.leg1.homeGoals + awayGoals; // teamA: leg1主场 + leg2客场(90分钟)
+          const aggB90 = tie.leg1.awayGoals + homeGoals; // teamB: leg1客场 + leg2主场(90分钟)
+          if (aggA90 === aggB90) {
+            const etResult = simulateExtraTime(home.strength, away.strength);
+            homeGoals += etResult.homeGoals;
+            awayGoals += etResult.awayGoals;
+            et = true;
+          }
+        }
 
         const legData = {
           homeIdx, awayIdx,
-          homeGoals: result.homeGoals, awayGoals: result.awayGoals
+          homeGoals, awayGoals, et
         };
 
         const homeIsUser = home.isUser;
         const awayIsUser = away.isUser;
         if (homeIsUser) {
-          legData.events = generateUserMatchEvents(result.homeGoals, result.awayGoals, "ucl", away.name, away.roster);
+          legData.events = generateUserMatchEvents(homeGoals, awayGoals, "ucl", away.name, away.roster);
           legData.isUser = true;
-          legData.userResult = result.homeGoals > result.awayGoals ? "win" : result.homeGoals < result.awayGoals ? "loss" : "draw";
+          legData.userResult = homeGoals > awayGoals ? "win" : homeGoals < awayGoals ? "loss" : "draw";
         } else if (awayIsUser) {
-          legData.events = generateUserMatchEvents(result.awayGoals, result.homeGoals, "ucl", home.name, home.roster);
+          legData.events = generateUserMatchEvents(awayGoals, homeGoals, "ucl", home.name, home.roster);
           legData.isUser = true;
-          legData.userResult = result.awayGoals > result.homeGoals ? "win" : result.awayGoals < result.homeGoals ? "loss" : "draw";
+          legData.userResult = awayGoals > homeGoals ? "win" : awayGoals < homeGoals ? "loss" : "draw";
         } else {
-          legData.events = generateOppMatchEvents(result.homeGoals, result.awayGoals, home.name, away.name, home.roster, away.roster);
+          legData.events = generateOppMatchEvents(homeGoals, awayGoals, home.name, away.name, home.roster, away.roster);
           legData.isUser = false;
           legData.userResult = null;
         }
@@ -2592,23 +2607,17 @@
           tie.leg1 = legData;
         } else {
           tie.leg2 = legData;
-          // 计算总比分
+          // 计算总比分（已含加时进球）
           tie.aggA = tie.leg1.homeGoals + tie.leg2.awayGoals; // teamA: leg1主场 + leg2客场
           tie.aggB = tie.leg1.awayGoals + tie.leg2.homeGoals; // teamB: leg1客场 + leg2主场
           if (tie.aggA !== tie.aggB) {
             tie.winnerIdx = tie.aggA > tie.aggB ? tie.teamAIdx : tie.teamBIdx;
           } else {
-            // 客场进球: teamA客场进球=leg2.awayGoals, teamB客场进球=leg1.awayGoals
-            const awayA = tie.leg2.awayGoals;
-            const awayB = tie.leg1.awayGoals;
-            if (awayA !== awayB) {
-              tie.winnerIdx = awayA > awayB ? tie.teamAIdx : tie.teamBIdx;
-            } else {
-              const penResult = penaltyShootout(tie.teamAIdx, tie.teamBIdx);
-              tie.winnerIdx = penResult.winnerIdx;
-              tie.penaltyHome = penResult.homePenalty;
-              tie.penaltyAway = penResult.awayPenalty;
-            }
+            // 取消客场进球，直接点球
+            const penResult = penaltyShootout(tie.teamAIdx, tie.teamBIdx, ucl.teams[tie.teamAIdx].strength, ucl.teams[tie.teamBIdx].strength);
+            tie.winnerIdx = penResult.winnerIdx;
+            tie.penaltyHome = penResult.homePenalty;
+            tie.penaltyAway = penResult.awayPenalty;
           }
         }
       }
@@ -2621,33 +2630,44 @@
       const sfWinners = ucl.knockout.sf.ties.map(t => t.winnerIdx);
       const home = ucl.teams[sfWinners[0]];
       const away = ucl.teams[sfWinners[1]];
-      const result = simulateMatch(home.strength, away.strength, true); // 中立场地
+      const result90 = simulateMatch(home.strength, away.strength, true); // 中立场地
+      let homeGoals = result90.homeGoals;
+      let awayGoals = result90.awayGoals;
+      let et = false;
+
+      // 90 分钟平局进入加时
+      if (homeGoals === awayGoals) {
+        const etResult = simulateExtraTime(home.strength, away.strength, true);
+        homeGoals += etResult.homeGoals;
+        awayGoals += etResult.awayGoals;
+        et = true;
+      }
 
       final.match = {
         homeIdx: sfWinners[0], awayIdx: sfWinners[1],
         homeName: home.name, awayName: away.name,
-        homeGoals: result.homeGoals, awayGoals: result.awayGoals
+        homeGoals, awayGoals, et
       };
 
       const homeIsUser = home.isUser;
       const awayIsUser = away.isUser;
       if (homeIsUser) {
-        final.match.events = generateUserMatchEvents(result.homeGoals, result.awayGoals, "ucl", away.name, away.roster);
+        final.match.events = generateUserMatchEvents(homeGoals, awayGoals, "ucl", away.name, away.roster);
         final.match.isUser = true;
-        final.match.userResult = result.homeGoals > result.awayGoals ? "win" : result.homeGoals < result.awayGoals ? "loss" : "draw";
+        final.match.userResult = homeGoals > awayGoals ? "win" : homeGoals < awayGoals ? "loss" : "draw";
       } else if (awayIsUser) {
-        final.match.events = generateUserMatchEvents(result.awayGoals, result.homeGoals, "ucl", home.name, home.roster);
+        final.match.events = generateUserMatchEvents(awayGoals, homeGoals, "ucl", home.name, home.roster);
         final.match.isUser = true;
-        final.match.userResult = result.awayGoals > result.homeGoals ? "win" : result.awayGoals < result.homeGoals ? "loss" : "draw";
+        final.match.userResult = awayGoals > homeGoals ? "win" : awayGoals < homeGoals ? "loss" : "draw";
       } else {
-        final.match.events = generateOppMatchEvents(result.homeGoals, result.awayGoals, home.name, away.name, home.roster, away.roster);
+        final.match.events = generateOppMatchEvents(homeGoals, awayGoals, home.name, away.name, home.roster, away.roster);
         final.match.isUser = false;
       }
 
-      if (result.homeGoals !== result.awayGoals) {
-        final.match.winnerIdx = result.homeGoals > result.awayGoals ? sfWinners[0] : sfWinners[1];
+      if (homeGoals !== awayGoals) {
+        final.match.winnerIdx = homeGoals > awayGoals ? sfWinners[0] : sfWinners[1];
       } else {
-        const penResult = penaltyShootout(sfWinners[0], sfWinners[1]);
+        const penResult = penaltyShootout(sfWinners[0], sfWinners[1], home.strength, away.strength);
         final.match.winnerIdx = penResult.winnerIdx;
         final.match.penaltyHome = penResult.homePenalty;
         final.match.penaltyAway = penResult.awayPenalty;
@@ -2757,6 +2777,7 @@
           let scoreColor = '#60a5fa';
           if (tie.leg1 && tie.leg2) {
             scoreText = `${tie.aggA} - ${tie.aggB}`;
+            if (tie.leg2.et) scoreText += ' (加时)';
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
             if (userInTie && decided) scoreColor = userWon ? '#34d399' : '#f87171';
           } else if (tie.leg1) {
@@ -2782,6 +2803,7 @@
         const hWon = fm.winnerIdx === fm.homeIdx;
         const aWon = fm.winnerIdx === fm.awayIdx;
         let sc = `${fm.homeGoals} - ${fm.awayGoals}`;
+        if (fm.et) sc += ' (加时)';
         if (fm.penaltyHome !== undefined) sc += ` (点${fm.penaltyHome}-${fm.penaltyAway})`;
 
         html += `<div style="background:#0f172a; border-radius:8px; padding:10px 14px; margin-bottom:8px;">
@@ -2900,9 +2922,26 @@
       return { homeGoals: hg, awayGoals: ag };
     }
 
-    function penaltyShootout(homeIdx, awayIdx) {
-      const hStr = leagueTeams[homeIdx].strength;
-      const aStr = leagueTeams[awayIdx].strength;
+    function simulateExtraTime(homeStr, awayStr, neutral = false) {
+      // 30 分钟加时，进球概率低于常规 90 分钟
+      const homeAdv = neutral ? 0 : 1.5;
+      const noise = () => (Math.random() * 4 - 2);
+      const homeRating = homeStr + homeAdv + noise();
+      const awayRating = awayStr + noise();
+      const diff = homeRating - awayRating;
+
+      let hg = 0, ag = 0;
+      const homeProb = diff > 6 ? 0.55 : diff > 2 ? 0.45 : diff > -2 ? 0.35 : diff > -6 ? 0.25 : 0.20;
+      const awayProb = diff > 6 ? 0.20 : diff > 2 ? 0.25 : diff > -2 ? 0.35 : diff > -6 ? 0.45 : 0.55;
+      if (Math.random() < homeProb) hg = 1;
+      if (Math.random() < awayProb) ag = 1;
+
+      return { homeGoals: hg, awayGoals: ag };
+    }
+
+    function penaltyShootout(homeIdx, awayIdx, homeStr, awayStr) {
+      const hStr = homeStr !== undefined ? homeStr : leagueTeams[homeIdx].strength;
+      const aStr = awayStr !== undefined ? awayStr : leagueTeams[awayIdx].strength;
       const total = hStr + aStr;
       const homeWins = Math.random() < (hStr / total);
       // 生成点球比分（胜者进球更多，3-5范围内）
@@ -3936,12 +3975,12 @@
                 const awayColor = awayIsUser ? '#34d399' : decided ? (awayWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
                 let aggText = "";
                 if (lastUclResults.legNum === 2 && tie.aggA !== null) {
-                  aggText = `<div style="font-size:11px; color:#94a3b8; text-align:center;">总比分 ${tie.aggA}-${tie.aggB}${tie.penaltyHome !== undefined ? ` (点${tie.penaltyHome}-${tie.penaltyAway})` : ''} ${tie.winnerIdx === tie.teamAIdx ? tie.teamAName : tie.teamBName}晋级</div>`;
+                  aggText = `<div style="font-size:11px; color:#94a3b8; text-align:center;">总比分 ${tie.aggA}-${tie.aggB}${tie.leg2 && tie.leg2.et ? ' (加时)' : ''}${tie.penaltyHome !== undefined ? ` (点${tie.penaltyHome}-${tie.penaltyAway})` : ''} ${tie.winnerIdx === tie.teamAIdx ? tie.teamAName : tie.teamBName}晋级</div>`;
                 }
                 return `<div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
                     <span style="text-align:right; flex:1; color:${homeColor}; font-weight:${homeIsUser ? 700 : 400};">${homeName}</span>
-                    <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${leg.homeGoals} - ${leg.awayGoals}</span>
+                    <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${leg.homeGoals} - ${leg.awayGoals}${leg.et ? '<span style="font-size:11px;"> (加时)</span>' : ''}</span>
                     <span style="flex:1; color:${awayColor}; font-weight:${awayIsUser ? 700 : 400};">${awayName}</span>
                   </div>
                   ${leg.isUser ? formatMatchEvents(leg.events, homeIsUser) : ""}
@@ -3956,6 +3995,7 @@
             const awayIsUser = ucl.teams[fm.awayIdx].isUser;
             const scoreColor = fm.isUser ? (fm.userResult === "win" ? "#34d399" : "#f87171") : "#e2e8f0";
             let sc = `${fm.homeGoals} - ${fm.awayGoals}`;
+            if (fm.et) sc += ' (加时)';
             if (fm.penaltyHome !== undefined) sc += ` (点${fm.penaltyHome}-${fm.penaltyAway})`;
             resultsHtml = `<div style="margin-bottom:16px;">
               <div style="margin-bottom:8px; font-weight:700; color:#60a5fa;">欧冠决赛 赛果</div>
