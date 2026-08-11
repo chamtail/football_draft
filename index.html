@@ -1853,13 +1853,14 @@
 
     function buildLeague() {
       const userStrength = teamAverageOvr();
+      const draftedIds = new Set(draftPicks.filter(Boolean).map(p => p.id));
       leagueTeams = [
         { name: "我的球队", isUser: true, strength: userStrength, roster: draftPicks.slice() },
         ...currentOpponents.map(t => ({
           name: t.name,
           isUser: false,
           strength: t.strength,
-          roster: allPlayers.filter(p => p.team === t.name)
+          roster: allPlayers.filter(p => p.team === t.name && !draftedIds.has(p.id))
         }))
       ];
       fixtures = generateFixtures(leagueTeams.length);
@@ -2198,6 +2199,12 @@
 
       // 更新球队能力值
       leagueTeams[0].strength = teamAverageOvr();
+
+      // 更新对手阵容：排除已选球员，防止己方球员出现在对方进球人中
+      const draftedIds = new Set(draftPicks.filter(Boolean).map(p => p.id));
+      for (let i = 1; i < leagueTeams.length; i++) {
+        leagueTeams[i].roster = allPlayers.filter(p => p.team === leagueTeams[i].name && !draftedIds.has(p.id));
+      }
 
       // 追加新球员
       userPlayerStats.push({
