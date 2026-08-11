@@ -3918,7 +3918,7 @@
             // 联赛阶段赛果 - 显示全部比赛
             resultsHtml = `<div style="margin-bottom:16px;">
               <div style="margin-bottom:8px; font-weight:700; color:#60a5fa;">欧冠 ${lastUclResults.roundName} 赛果</div>
-              ${lastUclResults.matches.map(m => {
+              ${[...lastUclResults.matches].sort((a, b) => (b.isUser ? 1 : 0) - (a.isUser ? 1 : 0)).map(m => {
                 const homeIsUser = ucl.teams[m.homeIdx].isUser;
                 const awayIsUser = ucl.teams[m.awayIdx].isUser;
                 const homeName = ucl.teams[m.homeIdx].name;
