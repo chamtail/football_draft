@@ -1910,8 +1910,8 @@
       return [...firstHalf, ...secondHalf];
     }
 
-    function simulateMatch(homeStr, awayStr) {
-      const homeAdv = 3;
+    function simulateMatch(homeStr, awayStr, neutral = false) {
+      const homeAdv = neutral ? 0 : 3;
       const noise = () => (Math.random() * 6 - 3);
       const homeRating = homeStr + homeAdv + noise();
       const awayRating = awayStr + noise();
@@ -2303,8 +2303,9 @@
         }
       }
 
+      const neutralVenue = roundKey === "semiFinals" || roundKey === "final";
       for (const m of matches) {
-        const result = simulateMatch(leagueTeams[m.homeIdx].strength, leagueTeams[m.awayIdx].strength);
+        const result = simulateMatch(leagueTeams[m.homeIdx].strength, leagueTeams[m.awayIdx].strength, neutralVenue);
         m.homeGoals = result.homeGoals;
         m.awayGoals = result.awayGoals;
         let penaltyHome, penaltyAway;
