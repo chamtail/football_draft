@@ -3510,7 +3510,8 @@
               player: null,
               appearances: 0, goals: 0, assists: 0, cleanSheets: 0,
               leagueAppearances: 0, leagueGoals: 0, leagueAssists: 0, leagueCleanSheets: 0,
-              cupAppearances: 0, cupGoals: 0, cupAssists: 0, cupCleanSheets: 0
+              cupAppearances: 0, cupGoals: 0, cupAssists: 0, cupCleanSheets: 0,
+              uclAppearances: 0, uclGoals: 0, uclAssists: 0, uclCleanSheets: 0
             });
           }
         }
@@ -3525,6 +3526,7 @@
               <option value="all" ${activeFilter === "all" ? 'selected' : ''}>全部</option>
               <option value="league" ${activeFilter === "league" ? 'selected' : ''}>联赛</option>
               <option value="cup" ${activeFilter === "cup" ? 'selected' : ''}>足总杯</option>
+              <option value="ucl" ${activeFilter === "ucl" ? 'selected' : ''}>欧冠</option>
             </select>
           </div>`
         : "";
