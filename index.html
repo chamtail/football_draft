@@ -2682,8 +2682,9 @@
                 const homeWon = m.winnerIdx === m.homeIdx;
                 const awayWon = m.winnerIdx === m.awayIdx;
                 const scoreColor = getMatchScoreColor(m.isUser, m.userResult);
+                const penaltyColor = !m.isUser ? "#94a3b8" : m.userResult === "win" ? "#34d399" : "#f87171";
                 const scoreText = m.penaltyHome !== undefined
-                  ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:11px; color:#94a3b8;"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
+                  ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:11px; color:${penaltyColor};"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
                   : `${m.homeGoals} - ${m.awayGoals}`;
                 return `
                 <div style="margin-bottom:10px;">
