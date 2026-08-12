@@ -1467,10 +1467,74 @@
         allUclTitles.push(seasonLabel(currentSeason));
       }
       const uclHonorsLines = wrapHonorsLines(allUclTitles);
+
+      // 最好成绩计算辅助函数
+      function getCupResult(cupData) {
+        if (!cupData) return null;
+        if (cupData.champion === "我的球队") return "冠军";
+        const finalRound = cupData.rounds && cupData.rounds.final;
+        if (finalRound && finalRound.done) {
+          const userInFinal = finalRound.matches && finalRound.matches.find(m => m.isUser);
+          if (userInFinal) return "亚军";
+        }
+        const roundOrder = ["semiFinals", "quarterFinals", "roundOf16", "roundOf32", "roundOf64"];
+        const roundNames = { semiFinals: "4强", quarterFinals: "8强", roundOf16: "16强", roundOf32: "32强", roundOf64: "64强" };
+        for (const key of roundOrder) {
+          const round = cupData.rounds && cupData.rounds[key];
+          if (!round || !round.done) continue;
+          const userMatch = round.matches && round.matches.find(m => m.isUser);
+          if (userMatch) return roundNames[key];
+        }
+        return null;
+      }
+      function getUclResult(uclData) {
+        if (!uclData) return null;
+        if (uclData.champion === "我的球队") return "冠军";
+        const finalMatch = uclData.knockout && uclData.knockout.final && uclData.knockout.final.match;
+        if (finalMatch && finalMatch.winnerIdx !== undefined) {
+          const userInFinal = finalMatch.homeName === "我的球队" || finalMatch.awayName === "我的球队";
+          if (userInFinal) return "亚军";
+        }
+        const kd = uclData.knockout;
+        if (!kd) return null;
+        const rounds = [["sf", "4强"], ["qf", "8强"], ["r16", "16强"], ["playoff", "附加赛"]];
+        for (const [key, name] of rounds) {
+          const round = kd[key];
+          if (!round || !round.done) continue;
+          const userTie = round.ties.find(t => t.teamAName === "我的球队" || t.teamBName === "我的球队");
+          if (userTie) return name;
+        }
+        return null;
+      }
+      function getLeaguePosition(standingsData) {
+        const s = [...standingsData].sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
+        return s.findIndex(t => t.isUser) + 1;
+      }
+      // 联赛最好成绩
+      let leagueBestPos = isFinished ? getLeaguePosition(standings) : null;
+      for (const hist of seasonHistory) {
+        const pos = getLeaguePosition(hist.standings);
+        if (leagueBestPos === null || pos < leagueBestPos) leagueBestPos = pos;
+      }
+      // 足总杯最好成绩
+      let cupBestResult = getCupResult(cup);
+      const cupRank = { "冠军": 1, "亚军": 2, "4强": 3, "8强": 4, "16强": 5, "32强": 6, "64强": 7 };
+      for (const hist of seasonHistory) {
+        const r = getCupResult(hist.cup);
+        if (r && (!cupBestResult || (cupRank[r] || 99) < (cupRank[cupBestResult] || 99))) cupBestResult = r;
+      }
+      // 欧冠最好成绩
+      let uclBestResult = getUclResult(ucl);
+      const uclRank = { "冠军": 1, "亚军": 2, "4强": 3, "8强": 4, "16强": 5, "附加赛": 6 };
+      for (const hist of seasonHistory) {
+        const r = getUclResult(hist.ucl);
+        if (r && (!uclBestResult || (uclRank[r] || 99) < (uclRank[uclBestResult] || 99))) uclBestResult = r;
+      }
+
       const honorsLineH = 18;
-      const leagueHonorsRows = 1 + honorsLines.length;
-      const cupHonorsRows = allCupTitles.length > 0 ? 1 + cupHonorsLines.length : 0;
-      const uclHonorsRows = allUclTitles.length > 0 ? 1 + uclHonorsLines.length : 0;
+      const leagueHonorsRows = allTitles.length > 0 ? 1 + honorsLines.length : (leagueBestPos ? 1 : 0);
+      const cupHonorsRows = allCupTitles.length > 0 ? 1 + cupHonorsLines.length : (cupBestResult && cupBestResult !== "冠军" ? 1 : 0);
+      const uclHonorsRows = allUclTitles.length > 0 ? 1 + uclHonorsLines.length : (uclBestResult && uclBestResult !== "冠军" ? 1 : 0);
       const honorsH = sectionTitleH + (leagueHonorsRows + cupHonorsRows + uclHonorsRows) * honorsLineH + 16;
 
       // 欧冠进程
@@ -1535,18 +1599,23 @@
       ctx.fillText("荣誉", padding, y + 16);
       y += sectionTitleH;
 
+      // 联赛
       ctx.fillStyle = "#e2e8f0";
       ctx.font = "13px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(`联赛冠军 ×${allTitles.length}`, padding, y + 16);
-      if (honorsLines.length > 0) {
-        ctx.fillStyle = "#94a3b8";
-        honorsLines.forEach((line, i) => {
-          ctx.fillText(line, padding, y + 16 + (i + 1) * honorsLineH);
-        });
+      if (allTitles.length > 0) {
+        ctx.fillText(`联赛冠军 ×${allTitles.length}`, padding, y + 16);
+        if (honorsLines.length > 0) {
+          ctx.fillStyle = "#94a3b8";
+          honorsLines.forEach((line, i) => {
+            ctx.fillText(line, padding, y + 16 + (i + 1) * honorsLineH);
+          });
+        }
+      } else if (leagueBestPos) {
+        ctx.fillText(`联赛最好成绩：第${leagueBestPos}名`, padding, y + 16);
       }
       y += leagueHonorsRows * honorsLineH;
-      // 足总杯冠军
+      // 足总杯
       if (allCupTitles.length > 0) {
         ctx.fillStyle = "#e2e8f0";
         ctx.font = "13px sans-serif";
@@ -1556,9 +1625,14 @@
         cupHonorsLines.forEach((line, i) => {
           ctx.fillText(line, padding, y + 16 + (i + 1) * honorsLineH);
         });
-        y += cupHonorsRows * honorsLineH;
+      } else if (cupBestResult && cupBestResult !== "冠军") {
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "13px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(`足总杯最好成绩：${cupBestResult}`, padding, y + 16);
       }
-      // 欧冠冠军
+      y += cupHonorsRows * honorsLineH;
+      // 欧冠
       if (allUclTitles.length > 0) {
         ctx.fillStyle = "#e2e8f0";
         ctx.font = "13px sans-serif";
@@ -1568,8 +1642,13 @@
         uclHonorsLines.forEach((line, i) => {
           ctx.fillText(line, padding, y + 16 + (i + 1) * honorsLineH);
         });
-        y += uclHonorsRows * honorsLineH;
+      } else if (uclBestResult && uclBestResult !== "冠军") {
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "13px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(`欧冠最好成绩：${uclBestResult}`, padding, y + 16);
       }
+      y += uclHonorsRows * honorsLineH;
       y += 16;
 
       // 积分榜
