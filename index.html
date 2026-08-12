@@ -3985,12 +3985,13 @@
                 const decided = lastUclResults.legNum === 2 && tie.winnerIdx !== null;
                 let scoreColor = getMatchScoreColor(leg.isUser, leg.userResult);
                 // Leg2用户比赛：比分颜色根据是否晋级决定，而非单场胜负
+                // 注意Leg2中home=teamB, away=teamA，用leg.homeIdx/leg.awayIdx判断
                 if (lastUclResults.legNum === 2 && leg.isUser && decided) {
-                  const userAdvances = (homeIsUser && tie.winnerIdx === tie.teamAIdx) || (awayIsUser && tie.winnerIdx === tie.teamBIdx);
+                  const userAdvances = (homeIsUser && tie.winnerIdx === leg.homeIdx) || (awayIsUser && tie.winnerIdx === leg.awayIdx);
                   scoreColor = userAdvances ? '#34d399' : '#f87171';
                 }
-                const homeWon = decided && tie.winnerIdx === tie.teamAIdx;
-                const awayWon = decided && tie.winnerIdx === tie.teamBIdx;
+                const homeWon = decided && tie.winnerIdx === leg.homeIdx;
+                const awayWon = decided && tie.winnerIdx === leg.awayIdx;
                 const homeColor = homeIsUser ? '#34d399' : decided ? (homeWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
                 const awayColor = awayIsUser ? '#34d399' : decided ? (awayWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
                 let aggText = "";
