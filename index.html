@@ -2960,20 +2960,25 @@
 
           let scoreText = "vs";
           let scoreColor = '#60a5fa';
+          let legDetail = "";
           if (tie.leg1 && tie.leg2) {
             scoreText = `${tie.aggA} - ${tie.aggB}`;
             if (tie.leg2.et) scoreText += ' (加时)';
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
+            legDetail = `首回合 ${tie.leg1.homeGoals}-${tie.leg1.awayGoals} / 次回合 ${tie.leg2.homeGoals}-${tie.leg2.awayGoals}`;
           } else if (tie.leg1) {
             const l1 = tie.leg1;
             scoreText = `${l1.homeGoals} - ${l1.awayGoals}`;
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
           }
 
-          html += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;">
-            <span style="color:${aColor}; font-weight:${aIsUser ? 700 : 400}; flex:1; text-align:right;">${tie.teamAName}</span>
-            <span style="flex:0 0 auto; padding:0 8px; color:${scoreColor}; font-weight:700; white-space:nowrap;">${scoreText}</span>
-            <span style="color:${bColor}; font-weight:${bIsUser ? 700 : 400}; flex:1;">${tie.teamBName}</span>
+          html += `<div style="padding:3px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:12px;">
+              <span style="color:${aColor}; font-weight:${aIsUser ? 700 : 400}; flex:1; text-align:right;">${tie.teamAName}</span>
+              <span style="flex:0 0 auto; padding:0 8px; color:${scoreColor}; font-weight:700; white-space:nowrap;">${scoreText}</span>
+              <span style="color:${bColor}; font-weight:${bIsUser ? 700 : 400}; flex:1;">${tie.teamBName}</span>
+            </div>
+            ${legDetail ? `<div style="text-align:center; font-size:11px; color:#64748b; margin-top:1px;">${legDetail}</div>` : ""}
           </div>`;
         }
         html += `</div>`;
