@@ -4065,7 +4065,12 @@
                 const awayColor = awayIsUser ? '#34d399' : decided ? (awayWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
                 let aggText = "";
                 if (lastUclResults.legNum === 2 && tie.aggA !== null) {
-                  aggText = `<div style="font-size:11px; color:#94a3b8; text-align:center;">总比分 ${tie.aggA}-${tie.aggB}${tie.leg2 && tie.leg2.et ? ' (加时)' : ''}${tie.penaltyHome !== undefined ? ` (点${tie.penaltyHome}-${tie.penaltyAway})` : ''} ${tie.winnerIdx === tie.teamAIdx ? tie.teamAName : tie.teamBName}晋级</div>`;
+                  // 次回合主场=teamB在左，客场=teamA在右，总比分跟随此顺序
+                  const aggLeft = tie.aggB;
+                  const aggRight = tie.aggA;
+                  const penLeft = tie.penaltyAway;
+                  const penRight = tie.penaltyHome;
+                  aggText = `<div style="font-size:11px; color:#94a3b8; text-align:center;">总比分 ${aggLeft}-${aggRight}${tie.leg2 && tie.leg2.et ? ' (加时)' : ''}${penLeft !== undefined ? ` (点${penLeft}-${penRight})` : ''} ${tie.winnerIdx === tie.teamAIdx ? tie.teamAName : tie.teamBName}晋级</div>`;
                 }
                 return `<div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
