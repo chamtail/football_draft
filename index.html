@@ -525,6 +525,13 @@
       font-weight: 800;
       margin-left: 8px;
     }
+    .star-badge {
+      color: #facc15;
+      font-size: 13px;
+      font-weight: 700;
+      margin-left: 8px;
+      letter-spacing: 1px;
+    }
 
     footer {
       margin-top: auto;
@@ -798,6 +805,16 @@
     let draftPicks = [];
     let refreshesLeft = 2;
     let tianyanMode = false;
+    function getStars(ovr) {
+      if (ovr >= 90) return '★★★';
+      if (ovr >= 80) return '★★';
+      if (ovr >= 70) return '★';
+      return '';
+    }
+    function getStarBadge(ovr) {
+      const stars = getStars(ovr);
+      return stars ? `<span class="star-badge">${stars}</span>` : '';
+    }
     let dreamClicks = 0;
     let currentCandidates = [];
     let currentPhase = "formation";
@@ -1344,9 +1361,15 @@
       const avgNew = changes.reduce((s, c) => s + c.newOvr, 0) / changes.length;
       const avgDiff = avgNew - avgOld;
       const avgArrow = avgDiff > 0 ? '↑' : avgDiff < 0 ? '↓' : '→';
-      progressionSubtitle.textContent = tianyanMode
-        ? `平均能力 ${avgOld.toFixed(1)} → ${avgNew.toFixed(1)} (${avgDiff >= 0 ? '+' : ''}${avgDiff.toFixed(1)})`
-        : `平均能力 ${avgArrow}`;
+      if (tianyanMode) {
+        progressionSubtitle.textContent = `平均能力 ${avgOld.toFixed(1)} → ${avgNew.toFixed(1)} (${avgDiff >= 0 ? '+' : ''}${avgDiff.toFixed(1)})`;
+      } else {
+        const avgOldStars = getStars(Math.round(avgOld));
+        const avgNewStars = getStars(Math.round(avgNew));
+        progressionSubtitle.textContent = avgOldStars !== avgNewStars
+          ? `平均能力 ${avgOldStars || '—'} → ${avgNewStars || '—'}`
+          : `平均能力 ${avgArrow}`;
+      }
 
       progressionList.innerHTML = changes.map(c => {
         const diff = c.newOvr - c.oldOvr;
@@ -1357,7 +1380,14 @@
           const sign = diff > 0 ? '+' : '';
           changeDisplay = `<span style="color:${arrowColor}; font-weight:700;">${c.newOvr} (${sign}${diff})</span>`;
         } else {
-          changeDisplay = `<span style="color:${arrowColor}; font-size:20px; font-weight:700;">${arrow}</span>`;
+          const oldStars = getStars(c.oldOvr);
+          const newStars = getStars(c.newOvr);
+          if (oldStars !== newStars) {
+            const starColor = newStars.length > oldStars.length ? '#34d399' : '#f87171';
+            changeDisplay = `<span style="color:${starColor}; font-weight:700; letter-spacing:1px;">${oldStars || '—'} → ${newStars || '—'}</span>`;
+          } else {
+            changeDisplay = `<span style="color:${arrowColor}; font-size:20px; font-weight:700;">${arrow}</span>`;
+          }
         }
         return `
           <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border-radius:8px; padding:10px 14px;">
@@ -2016,7 +2046,7 @@
           const slots = formations[selectedFormation];
           const pos = slots[transferPosIndex].pos;
           const currentPlayer = draftPicks[transferPosIndex];
-          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : (getStars(currentPlayer.ovr) ? ` (${getStars(currentPlayer.ovr)})` : '');
           transferModalTitle.textContent = `替换 ${pos}`;
           transferModalSubtitle.textContent = `当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
         } else if (transferSelecting && transferPosIndex >= 0) {
@@ -2025,7 +2055,7 @@
           const slots = formations[selectedFormation];
           const pos = slots[transferPosIndex].pos;
           const currentPlayer = draftPicks[transferPosIndex];
-          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+          const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : (getStars(currentPlayer.ovr) ? ` (${getStars(currentPlayer.ovr)})` : '');
           currentPosName.style.color = '';
           currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
         } else {
@@ -2127,7 +2157,7 @@
         card.className = "candidate-card";
         card.innerHTML = `
           <div class="candidate-main">
-            <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : ''}</div>
+            <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : getStarBadge(player.ovr)}</div>
             <div class="candidate-meta">${player.team} · ${player.league} · ${player.nation} · ${player.age}岁</div>
           </div>
           <div class="candidate-positions">
@@ -2209,7 +2239,7 @@
           ${draftPicks.map((p, i) => `
             <div style="display:flex; justify-content:space-between; font-size:14px; padding:5px 0; border-bottom:1px solid #334155;">
               <span style="color:#94a3b8;">${slots[i].pos} · ${slots[i].label}</span>
-              <span style="color:#e2e8f0; font-weight:700;">${p.name} <span style="color:#64748b; font-weight:400; font-size:12px;">${p.age}岁</span>${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${p.ovr}</span>` : ''}</span>
+              <span style="color:#e2e8f0; font-weight:700;">${p.name} <span style="color:#64748b; font-weight:400; font-size:12px;">${p.age}岁</span>${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${p.ovr}</span>` : getStarBadge(p.ovr)}</span>
             </div>
           `).join("")}
           ${tianyanMode ? `<div style="margin-top:12px; font-size:13px; color:#94a3b8;">平均能力：${teamAverageOvr().toFixed(2)}</div>` : ''}
@@ -3261,7 +3291,7 @@
       const slots = formations[selectedFormation];
       const pos = slots[index].pos;
       const currentPlayer = draftPicks[index];
-      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : (getStars(currentPlayer.ovr) ? ` (${getStars(currentPlayer.ovr)})` : '');
 
       transferModalTitle.textContent = `替换 ${pos}`;
       transferModalSubtitle.textContent = `当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
@@ -3294,7 +3324,7 @@
         card.className = "candidate-card";
         card.innerHTML = `
           <div class="candidate-main">
-            <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : ''}</div>
+            <div class="candidate-name">${player.name}${tianyanMode ? `<span class="ovr-badge">${player.ovr}</span>` : getStarBadge(player.ovr)}</div>
             <div class="candidate-meta">${player.team} · ${player.league} · ${player.nation} · ${player.age}岁</div>
           </div>
           <div class="candidate-positions">
@@ -3397,7 +3427,7 @@
         }
       });
 
-      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : '';
+      const ovrText = tianyanMode ? ` (OVR ${currentPlayer.ovr})` : (getStars(currentPlayer.ovr) ? ` (${getStars(currentPlayer.ovr)})` : '');
       currentPosName.style.color = '';
       currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
 
@@ -3719,7 +3749,7 @@
                 }
                 return `<tr ${dataAttr} style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
-                  <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : ''}</td>
+                  <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : getStarBadge(getOvr(s))}</td>
                   ${showAge ? `<td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>` : ''}
                   <td style="text-align:center; padding:6px 4px;">${getStat(s, "appearances")}</td>
                   <td style="text-align:center; padding:6px 4px;">${getStat(s, "goals")}</td>
