@@ -2965,7 +2965,7 @@
             scoreText = `${tie.aggA} - ${tie.aggB}`;
             if (tie.leg2.et) scoreText += ' (加时)';
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
-            legDetail = `首回合 ${tie.leg1.homeGoals}-${tie.leg1.awayGoals} / 次回合 ${tie.leg2.homeGoals}-${tie.leg2.awayGoals}`;
+            legDetail = `首回合 ${tie.leg1.homeGoals}-${tie.leg1.awayGoals} / 次回合 ${tie.leg2.awayGoals}-${tie.leg2.homeGoals}`;
           } else if (tie.leg1) {
             const l1 = tie.leg1;
             scoreText = `${l1.homeGoals} - ${l1.awayGoals}`;
