@@ -1440,7 +1440,8 @@
       const tableHeaderH = 28;
       const rowH = 24;
       const standingsH = sectionTitleH + tableHeaderH + sorted.length * rowH + 16;
-      const statsH = userPlayerStats.length > 0 ? sectionTitleH + tableHeaderH + userPlayerStats.length * rowH + 16 : 0;
+      const shareStats = buildCumulativeStats();
+      const statsH = shareStats.length > 0 ? sectionTitleH + tableHeaderH + shareStats.length * rowH + 16 : 0;
       // 足总杯进程
       const cupMatches = [];
       if (cup) {
@@ -1606,28 +1607,31 @@
           uclLines.push({ text: `${name}  vs ${oppName}  ${scoreStr}`, result: userWon ? "胜" : "负", resultColor: userWon ? "#34d399" : "#f87171" });
           if (!userWon) break;
         }
-        // 决赛
+        // 决赛（仅当用户参赛时显示）
         const fm = ucl.knockout.final && ucl.knockout.final.match;
         if (fm && ucl.knockout.final.done) {
           const homeIsUser = ucl.teams[fm.homeIdx].isUser;
-          const oppName = homeIsUser ? ucl.teams[fm.awayIdx].name : ucl.teams[fm.homeIdx].name;
-          const userGoals = homeIsUser ? fm.homeGoals : fm.awayGoals;
-          const oppGoals = homeIsUser ? fm.awayGoals : fm.homeGoals;
-          let scoreStr = `${userGoals}-${oppGoals}`;
-          if (fm.et) scoreStr += '(加)';
-          if (fm.penaltyHome !== undefined) {
-            const userPen = homeIsUser ? fm.penaltyHome : fm.penaltyAway;
-            const oppPen = homeIsUser ? fm.penaltyAway : fm.penaltyHome;
-            scoreStr += `(点${userPen}-${oppPen})`;
+          const awayIsUser = ucl.teams[fm.awayIdx].isUser;
+          if (homeIsUser || awayIsUser) {
+            const oppName = homeIsUser ? ucl.teams[fm.awayIdx].name : ucl.teams[fm.homeIdx].name;
+            const userGoals = homeIsUser ? fm.homeGoals : fm.awayGoals;
+            const oppGoals = homeIsUser ? fm.awayGoals : fm.homeGoals;
+            let scoreStr = `${userGoals}-${oppGoals}`;
+            if (fm.et) scoreStr += '(加)';
+            if (fm.penaltyHome !== undefined) {
+              const userPen = homeIsUser ? fm.penaltyHome : fm.penaltyAway;
+              const oppPen = homeIsUser ? fm.penaltyAway : fm.penaltyHome;
+              scoreStr += `(点${userPen}-${oppPen})`;
+            }
+            const userWon = fm.winnerIdx === (homeIsUser ? fm.homeIdx : fm.awayIdx);
+            const isDraw = userGoals === oppGoals && fm.penaltyHome === undefined;
+            uclLines.push({ text: `决赛  vs ${oppName}  ${scoreStr}`, result: userWon ? "胜" : isDraw ? "平" : "负", resultColor: userWon ? "#34d399" : isDraw ? "#facc15" : "#f87171" });
           }
-          const userWon = fm.winnerIdx === (homeIsUser ? fm.homeIdx : fm.awayIdx);
-          const isDraw = userGoals === oppGoals && fm.penaltyHome === undefined;
-          uclLines.push({ text: `决赛  vs ${oppName}  ${scoreStr}`, result: userWon ? "胜" : isDraw ? "平" : "负", resultColor: userWon ? "#34d399" : isDraw ? "#facc15" : "#f87171" });
         }
       }
       const uclSectionH = uclLines.length > 0 ? sectionTitleH + uclLines.length * rowH + 16 : 0;
 
-      const H = padding + titleH + subtitleH + honorsH + standingsH + statsH + cupSectionH + uclSectionH + qrH + padding;
+      const H = padding + titleH + subtitleH + honorsH + standingsH + cupSectionH + uclSectionH + statsH + qrH + padding;
 
       canvas.width = W;
       canvas.height = H;
@@ -1788,83 +1792,6 @@
       }
       y += 16;
 
-      // 个人数据
-      if (userPlayerStats.length > 0) {
-        ctx.fillStyle = "#34d399";
-        ctx.font = "bold 15px sans-serif";
-        ctx.textAlign = "left";
-        ctx.fillText("个人数据", padding, y + 16);
-        y += sectionTitleH;
-
-        const sCols = [
-          { name: "位置", w: 45, align: "left" },
-          { name: "球员", w: 155, align: "left" },
-          { name: "上场", w: 40, align: "center" },
-          { name: "进球", w: 40, align: "center" },
-          { name: "助攻", w: 40, align: "center" },
-          { name: "零封", w: 40, align: "center" }
-        ];
-        const sTableW = sCols.reduce((s, c) => s + c.w, 0);
-        const sTableX = (W - sTableW) / 2;
-
-        // 表头
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "12px sans-serif";
-        cx = sTableX;
-        for (const col of sCols) {
-          ctx.textAlign = col.align;
-          const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
-          ctx.fillText(col.name, tx, y + 18);
-          cx += col.w;
-        }
-        ctx.strokeStyle = "#475569";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(sTableX, y + tableHeaderH);
-        ctx.lineTo(sTableX + sTableW, y + tableHeaderH);
-        ctx.stroke();
-        y += tableHeaderH;
-
-        // 数据行
-        ctx.font = "12px sans-serif";
-        for (const s of userPlayerStats) {
-          cx = sTableX;
-          const displayName = (s.isTransfer ? "[换] " : "") + s.player.name;
-          const sVals = [
-            { v: s.pos, col: sCols[0] },
-            { v: displayName, col: sCols[1] },
-            { v: String(s.appearances), col: sCols[2] },
-            { v: String(s.goals), col: sCols[3] },
-            { v: String(s.assists), col: sCols[4] },
-            { v: cleanSheetPositions.includes(s.pos) ? String(s.cleanSheets) : "-", col: sCols[5] }
-          ];
-          ctx.globalAlpha = s.replaced ? 0.5 : 1;
-          for (let si = 0; si < sVals.length; si++) {
-            const { v, col } = sVals[si];
-            if (s.replaced) {
-              ctx.fillStyle = "#64748b";
-            } else if (s.isTransfer) {
-              ctx.fillStyle = si === 1 ? "#facc15" : "#94a3b8";
-            } else {
-              ctx.fillStyle = si === 1 ? "#e2e8f0" : "#94a3b8";
-            }
-            ctx.textAlign = col.align;
-            const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
-            ctx.fillText(v, tx, y + 16);
-            cx += col.w;
-          }
-          ctx.globalAlpha = 1;
-          ctx.strokeStyle = "#334155";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(sTableX, y + rowH);
-          ctx.lineTo(sTableX + sTableW, y + rowH);
-          ctx.stroke();
-          y += rowH;
-        }
-        y += 16;
-      }
-
       // 足总杯进程
       if (cupMatches.length > 0) {
         ctx.fillStyle = "#34d399";
@@ -1940,6 +1867,74 @@
           ctx.beginPath();
           ctx.moveTo(padding, y + rowH);
           ctx.lineTo(W - padding, y + rowH);
+          ctx.stroke();
+          y += rowH;
+        }
+        y += 16;
+      }
+
+      // 个人数据（累计）
+      if (shareStats.length > 0) {
+        ctx.fillStyle = "#34d399";
+        ctx.font = "bold 15px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("个人数据", padding, y + 16);
+        y += sectionTitleH;
+
+        const sCols = [
+          { name: "位置", w: 45, align: "left" },
+          { name: "球员", w: 155, align: "left" },
+          { name: "上场", w: 40, align: "center" },
+          { name: "进球", w: 40, align: "center" },
+          { name: "助攻", w: 40, align: "center" },
+          { name: "零封", w: 40, align: "center" }
+        ];
+        const sTableW = sCols.reduce((s, c) => s + c.w, 0);
+        const sTableX = (W - sTableW) / 2;
+
+        // 表头
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "12px sans-serif";
+        cx = sTableX;
+        for (const col of sCols) {
+          ctx.textAlign = col.align;
+          const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
+          ctx.fillText(col.name, tx, y + 18);
+          cx += col.w;
+        }
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sTableX, y + tableHeaderH);
+        ctx.lineTo(sTableX + sTableW, y + tableHeaderH);
+        ctx.stroke();
+        y += tableHeaderH;
+
+        // 数据行
+        ctx.font = "12px sans-serif";
+        for (const s of shareStats) {
+          cx = sTableX;
+          const sVals = [
+            { v: s.pos, col: sCols[0] },
+            { v: s.playerName, col: sCols[1] },
+            { v: String(s.appearances), col: sCols[2] },
+            { v: String(s.goals), col: sCols[3] },
+            { v: String(s.assists), col: sCols[4] },
+            { v: cleanSheetPositions.includes(s.pos) ? String(s.cleanSheets) : "-", col: sCols[5] }
+          ];
+          for (let si = 0; si < sVals.length; si++) {
+            const { v, col } = sVals[si];
+            ctx.fillStyle = si === 1 ? "#e2e8f0" : "#94a3b8";
+            ctx.textAlign = col.align;
+            const tx = col.align === "center" ? cx + col.w / 2 : cx + 4;
+            ctx.fillText(v, tx, y + 16);
+            cx += col.w;
+          }
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(sTableX, y + rowH);
+          ctx.lineTo(sTableX + sTableW, y + rowH);
           ctx.stroke();
           y += rowH;
         }
