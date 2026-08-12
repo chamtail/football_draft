@@ -4296,10 +4296,10 @@
               ${buildStandingsTableHtml(sorted)}
             </div>
           </div>
-          ${buildPlayerStatsHtml(null, { showFilter: true })}
-          ${uclStandingsHtml}
           ${cupHtml}
-          ${uclBracketHtml}`;
+          ${uclStandingsHtml}
+          ${uclBracketHtml}
+          ${buildPlayerStatsHtml(null, { showFilter: true })}`;
       } else if (viewSeason === "cumulative") {
         contentHtml = `<div class="empty-state" style="text-align:left; padding:0;">累计统计涵盖所有已完成赛季的数据</div>` + buildPlayerStatsHtml(buildCumulativeStats(), { showAge: false, showFilter: true });
       } else {
@@ -4314,9 +4314,9 @@
             <div style="flex:1; min-width:280px;">
               ${buildStandingsTableHtml(sorted)}
             </div>
-            ${buildPlayerStatsHtml(hist.stats, { showFilter: true })}
             ${histCupHtml}
-            ${histUclHtml}`;
+            ${histUclHtml}
+            ${buildPlayerStatsHtml(hist.stats, { showFilter: true })}`;
         } else {
           contentHtml = '<div class="empty-state">无数据</div>';
         }
