@@ -2950,17 +2950,12 @@
           const aColor = aIsUser ? '#34d399' : decided ? (aWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
           const bColor = bIsUser ? '#34d399' : decided ? (bWon ? '#e2e8f0' : '#64748b') : '#e2e8f0';
 
-          // 比分颜色: 默认蓝色, 用户比赛决定后用绿色(晋级)/红色(淘汰)
-          const userInTie = aIsUser || bIsUser;
-          const userWon = (aIsUser && aWon) || (bIsUser && bWon);
-
           let scoreText = "vs";
           let scoreColor = '#60a5fa';
           if (tie.leg1 && tie.leg2) {
             scoreText = `${tie.aggA} - ${tie.aggB}`;
             if (tie.leg2.et) scoreText += ' (加时)';
             if (tie.penaltyHome !== undefined) scoreText += ` (点${tie.penaltyHome}-${tie.penaltyAway})`;
-            if (userInTie && decided) scoreColor = userWon ? '#34d399' : '#f87171';
           } else if (tie.leg1) {
             const l1 = tie.leg1;
             scoreText = `${l1.homeGoals} - ${l1.awayGoals}`;
