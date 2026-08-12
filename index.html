@@ -1568,36 +1568,64 @@
       const honorsH = sectionTitleH + (leagueHonorsRows + cupHonorsRows + uclHonorsRows) * honorsLineH + 16;
 
       // 欧冠进程
-      const uclMatches = [];
+      const uclLines = [];
       if (ucl && ucl.active) {
-        // 联赛阶段用户比赛
-        for (let md = 0; md < ucl.leagueFixtures.length; md++) {
-          const mdMatches = ucl.leagueFixtures[md];
-          if (!mdMatches[0] || mdMatches[0].homeGoals === undefined) break;
-          const userMatch = mdMatches.find(m => m.isUser);
-          if (userMatch) {
-            uclMatches.push({ roundName: `联赛${md + 1}`, match: userMatch, isLeague: true });
-          }
+        // 联赛阶段：排名和晋级状态
+        const sorted = [...ucl.leagueStandings].sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
+        const userPos = sorted.findIndex(s => ucl.teams[s.idx].isUser);
+        if (userPos >= 0 && sorted[userPos].played > 0) {
+          const pos = userPos + 1;
+          let qualStatus;
+          if (pos <= 8) qualStatus = "直接晋级";
+          else if (pos <= 24) qualStatus = "附加赛";
+          else qualStatus = "淘汰";
+          uclLines.push({ text: `联赛阶段  第${pos}名 · ${qualStatus}`, result: null });
         }
-        // 淘汰赛用户比赛
+        // 淘汰赛：只显示总比分
         const userTeamIdx = ucl.teams.findIndex(t => t.isUser);
-        for (const [key, name] of [["playoff","附加赛"],["r16","16强"],["qf","8强"],["sf","半决赛"]]) {
+        const knockoutRounds = [
+          ["playoff", "附加赛"], ["r16", "16强"], ["qf", "8强"], ["sf", "半决赛"]
+        ];
+        for (const [key, name] of knockoutRounds) {
           const round = ucl.knockout[key];
-          if (!round || round.ties.length === 0) break;
+          if (!round || !round.done) break;
           const userTie = round.ties.find(t => t.teamAIdx === userTeamIdx || t.teamBIdx === userTeamIdx);
-          if (!userTie) break;
-          if (userTie.leg1) {
-            const h = ucl.teams[userTie.leg1.homeIdx];
-            const a = ucl.teams[userTie.leg1.homeIdx];
-            uclMatches.push({ roundName: `${name}首`, match: userTie.leg1, tie: userTie });
+          if (!userTie || !userTie.leg2) break;
+          const isUserA = userTie.teamAIdx === userTeamIdx;
+          const oppName = isUserA ? userTie.teamBName : userTie.teamAName;
+          const userAgg = isUserA ? userTie.aggA : userTie.aggB;
+          const oppAgg = isUserA ? userTie.aggB : userTie.aggA;
+          let scoreStr = `${userAgg}-${oppAgg}`;
+          if (userTie.leg2.et) scoreStr += '(加)';
+          if (userTie.penaltyHome !== undefined) {
+            const userPen = isUserA ? userTie.penaltyHome : userTie.penaltyAway;
+            const oppPen = isUserA ? userTie.penaltyAway : userTie.penaltyHome;
+            scoreStr += `(点${userPen}-${oppPen})`;
           }
-          if (userTie.leg2) {
-            uclMatches.push({ roundName: `${name}次`, match: userTie.leg2, tie: userTie });
+          const userWon = userTie.winnerIdx === userTeamIdx;
+          uclLines.push({ text: `${name}  vs ${oppName}  ${scoreStr}`, result: userWon ? "胜" : "负", resultColor: userWon ? "#34d399" : "#f87171" });
+          if (!userWon) break;
+        }
+        // 决赛
+        const fm = ucl.knockout.final && ucl.knockout.final.match;
+        if (fm && ucl.knockout.final.done) {
+          const homeIsUser = ucl.teams[fm.homeIdx].isUser;
+          const oppName = homeIsUser ? ucl.teams[fm.awayIdx].name : ucl.teams[fm.homeIdx].name;
+          const userGoals = homeIsUser ? fm.homeGoals : fm.awayGoals;
+          const oppGoals = homeIsUser ? fm.awayGoals : fm.homeGoals;
+          let scoreStr = `${userGoals}-${oppGoals}`;
+          if (fm.et) scoreStr += '(加)';
+          if (fm.penaltyHome !== undefined) {
+            const userPen = homeIsUser ? fm.penaltyHome : fm.penaltyAway;
+            const oppPen = homeIsUser ? fm.penaltyAway : fm.penaltyHome;
+            scoreStr += `(点${userPen}-${oppPen})`;
           }
-          if (userTie.winnerIdx !== userTeamIdx) break; // 被淘汰
+          const userWon = fm.winnerIdx === (homeIsUser ? fm.homeIdx : fm.awayIdx);
+          const isDraw = userGoals === oppGoals && fm.penaltyHome === undefined;
+          uclLines.push({ text: `决赛  vs ${oppName}  ${scoreStr}`, result: userWon ? "胜" : isDraw ? "平" : "负", resultColor: userWon ? "#34d399" : isDraw ? "#facc15" : "#f87171" });
         }
       }
-      const uclSectionH = uclMatches.length > 0 ? sectionTitleH + uclMatches.length * rowH + 16 : 0;
+      const uclSectionH = uclLines.length > 0 ? sectionTitleH + uclLines.length * rowH + 16 : 0;
 
       const H = padding + titleH + subtitleH + honorsH + standingsH + statsH + cupSectionH + uclSectionH + qrH + padding;
 
@@ -1886,7 +1914,7 @@
       }
 
       // 欧冠进程
-      if (uclMatches.length > 0) {
+      if (uclLines.length > 0) {
         ctx.fillStyle = "#60a5fa";
         ctx.font = "bold 15px sans-serif";
         ctx.textAlign = "left";
@@ -1894,34 +1922,18 @@
         y += sectionTitleH;
 
         ctx.font = "12px sans-serif";
-        for (const { roundName, match: m, tie } of uclMatches) {
-          const homeIsUser = ucl.teams[m.homeIdx].isUser;
-          const oppName = homeIsUser ? ucl.teams[m.awayIdx].name : ucl.teams[m.homeIdx].name;
-          const userGoals = homeIsUser ? m.homeGoals : m.awayGoals;
-          const oppGoals = homeIsUser ? m.awayGoals : m.homeGoals;
-          const userTeamIdx = ucl.teams.findIndex(t => t.isUser);
-
-          let isWin;
-          if (tie && tie.winnerIdx !== null) {
-            isWin = tie.winnerIdx === userTeamIdx;
-          } else {
-            isWin = m.userResult === "win" || (m.userResult === "draw" && m.winnerIdx === userTeamIdx);
-          }
-          const resultText = isWin ? "胜" : m.userResult === "draw" ? "平" : "负";
-          const resultColor = isWin ? "#34d399" : m.userResult === "draw" ? "#facc15" : "#f87171";
-
-          let scoreText = `${userGoals}-${oppGoals}${m.et ? ' (加)' : ''}`;
-
-          const line = `${roundName}  vs ${oppName}  ${scoreText}`;
+        for (const { text, result, resultColor } of uclLines) {
           ctx.fillStyle = "#e2e8f0";
           ctx.textAlign = "left";
-          ctx.fillText(line, padding, y + 16);
+          ctx.fillText(text, padding, y + 16);
 
-          ctx.fillStyle = resultColor;
-          ctx.font = "bold 12px sans-serif";
-          ctx.textAlign = "right";
-          ctx.fillText(resultText, W - padding, y + 16);
-          ctx.font = "12px sans-serif";
+          if (result) {
+            ctx.fillStyle = resultColor;
+            ctx.font = "bold 12px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText(result, W - padding, y + 16);
+            ctx.font = "12px sans-serif";
+          }
 
           ctx.strokeStyle = "#334155";
           ctx.lineWidth = 1;
