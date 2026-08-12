@@ -4075,7 +4075,7 @@
                 return `<div style="margin-bottom:10px;">
                   <div style="display:flex; justify-content:space-between; font-size:13px; padding:4px 0;">
                     <span style="text-align:right; flex:1; color:${homeColor}; font-weight:${homeIsUser ? 700 : 400};">${homeName}</span>
-                    <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${leg.homeGoals} - ${leg.awayGoals}${leg.et ? '<span style="font-size:11px;"> (加时)</span>' : ''}</span>
+                    <span style="flex:0 0 auto; padding:0 10px; color:${scoreColor}; font-weight:700;">${leg.homeGoals} - ${leg.awayGoals}${leg.et ? '<span style="font-size:11px;"> (加时)</span>' : ''}${lastUclResults.legNum === 2 && tie.penaltyHome !== undefined ? `<span style="font-size:11px;"> (点${tie.penaltyAway}-${tie.penaltyHome})</span>` : ''}</span>
                     <span style="flex:1; color:${awayColor}; font-weight:${awayIsUser ? 700 : 400};">${awayName}</span>
                   </div>
                   ${leg.isUser ? formatMatchEvents(leg.events, homeIsUser) : ""}
