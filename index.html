@@ -1591,7 +1591,8 @@
           const round = ucl.knockout[key];
           if (!round || !round.done) break;
           const userTie = round.ties.find(t => t.teamAIdx === userTeamIdx || t.teamBIdx === userTeamIdx);
-          if (!userTie || !userTie.leg2) break;
+          if (!userTie) continue; // 用户本轮轮空（如前8名跳过附加赛）
+          if (!userTie.leg2) break;
           const isUserA = userTie.teamAIdx === userTeamIdx;
           const oppName = isUserA ? userTie.teamBName : userTie.teamAName;
           const userAgg = isUserA ? userTie.aggA : userTie.aggB;
