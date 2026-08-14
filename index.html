@@ -1364,11 +1364,7 @@
       if (tianyanMode) {
         progressionSubtitle.textContent = `平均能力 ${avgOld.toFixed(1)} → ${avgNew.toFixed(1)} (${avgDiff >= 0 ? '+' : ''}${avgDiff.toFixed(1)})`;
       } else {
-        const avgOldStars = getStars(Math.round(avgOld));
-        const avgNewStars = getStars(Math.round(avgNew));
-        progressionSubtitle.textContent = avgOldStars !== avgNewStars
-          ? `平均能力 ${avgOldStars || '—'} → ${avgNewStars || '—'}`
-          : `平均能力 ${avgArrow}`;
+        progressionSubtitle.textContent = `平均能力 ${avgArrow}`;
       }
 
       progressionList.innerHTML = changes.map(c => {
