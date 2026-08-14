@@ -1005,7 +1005,7 @@
       .then(r => r.json())
       .then(data => {
         allPlayers = data.players.map(p => ({ ...p, baseOvr: p.ovr, baseAge: p.age }));
-        allTeams = data.teams;
+        allTeams = tagTeamTiers(data.teams);
         playersLoaded = true;
         loadingOverlay.style.display = "none";
       })
@@ -1355,7 +1355,7 @@
         .then(r => r.json())
         .then(data => {
           allPlayers = data.players.map(p => ({ ...p, baseOvr: p.ovr, baseAge: p.age }));
-          allTeams = data.teams;
+          allTeams = tagTeamTiers(data.teams);
         });
 
       // 重置 DOM
@@ -1403,6 +1403,7 @@
       // 30岁以上球员赛季末可能退役，退役后立即转生为17岁新球员
       const retirements = processRetirements();
       progressAllPlayers();
+      progressCpuTeams(); // CPU球队总评演变
       // 构建成长变化数据
       const slots = formations[selectedFormation];
       const changes = draftPicks.map((p, i) => {
@@ -2627,6 +2628,41 @@
         }
       }
       return retiredByIndex;
+    }
+
+    // ===== CPU球队总评演变 =====
+    // 各分档软上限：争冠组按正常流程模拟后期玩家球队总评(约86-87)校准为88，其余组上限稍宽松
+    const CPU_TEAM_CAPS = { contender: 88, european: 86, midtable: 84, relegation: 82 };
+
+    function tagTeamTiers(teams) {
+      const sorted = [...teams].sort((a, b) => b.strength - a.strength);
+      const n = sorted.length;
+      return sorted.map((t, idx) => {
+        let tier = "relegation";
+        if (idx < Math.ceil(n * 0.15)) tier = "contender";
+        else if (idx < Math.ceil(n * 0.40)) tier = "european";
+        else if (idx < Math.ceil(n * 0.75)) tier = "midtable";
+        return { ...t, tier };
+      });
+    }
+
+    // 赛季末：CPU球队总评随机-1~+1，总体趋势缓慢变强，各分档设软上限（上限后主要维持/回落，20%仍可小幅突破，硬顶=上限+3）
+    function progressCpuTeams() {
+      for (const t of allTeams) {
+        const cap = CPU_TEAM_CAPS[t.tier] !== undefined ? CPU_TEAM_CAPS[t.tier] : 84;
+        const r = Math.random();
+        let change;
+        if (t.strength >= cap) {
+          if (r < 0.5) change = 0;
+          else if (r < 0.8) change = -1;
+          else change = 1;
+        } else {
+          if (r < 0.5) change = 1;
+          else if (r < 0.8) change = 0;
+          else change = -1;
+        }
+        t.strength = Math.max(50, Math.min(cap + 3, t.strength + change));
+      }
     }
 
     function startNewSeason() {
