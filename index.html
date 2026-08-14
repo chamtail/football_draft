@@ -727,6 +727,16 @@
     </div>
   </div>
 
+  <div id="seasonSummaryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9998; align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
+      <h2 id="seasonSummaryTitle" style="text-align:center; color:#34d399; font-size:18px; margin:0 0 14px;">赛季总结</h2>
+      <div id="seasonSummaryContent" style="display:flex; flex-direction:column; gap:10px;"></div>
+      <div style="text-align:center; margin-top:20px;">
+        <button id="seasonSummaryOkBtn" style="padding:12px 32px; background:#10b981; color:#064e3b; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:15px;">确定</button>
+      </div>
+    </div>
+  </div>
+
   <div id="transferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
     <div class="transfer-modal-content">
       <div class="transfer-modal-header">
@@ -957,6 +967,10 @@
     const trainingList = document.getElementById("trainingList");
     const trainingSkipBtn = document.getElementById("trainingSkipBtn");
     const trainingContinueBtn = document.getElementById("trainingContinueBtn");
+    const seasonSummaryModal = document.getElementById("seasonSummaryModal");
+    const seasonSummaryTitle = document.getElementById("seasonSummaryTitle");
+    const seasonSummaryContent = document.getElementById("seasonSummaryContent");
+    const seasonSummaryOkBtn = document.getElementById("seasonSummaryOkBtn");
     const currentPosName = document.getElementById("currentPosName");
     const progressText = document.getElementById("progressText");
     const candidateList = document.getElementById("candidateList");
@@ -1520,6 +1534,9 @@
     trainingSkipBtn.addEventListener("click", () => {
       trainingModal.style.display = "none";
       startNewSeason();
+    });
+    seasonSummaryOkBtn.addEventListener("click", () => {
+      seasonSummaryModal.style.display = "none";
     });
     transferRatingOkBtn.addEventListener("click", () => {
       transferRatingModal.style.display = "none";
@@ -4441,6 +4458,74 @@
         </div>`;
     }
 
+    // 赛季总结弹窗：各项赛事成绩 + 个人奖项
+    function showSeasonSummary() {
+      const sorted = [...standings].sort((a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf
+      );
+      const myRank = sorted.findIndex(s => s.isUser) + 1;
+      const champSpan = (name) => {
+        const isMe = name === "我的球队";
+        return `<span style="color:${isMe ? "#34d399" : "#e2e8f0"}; font-weight:700;">${name}${isMe ? " (我)" : ""}</span>`;
+      };
+      const cupResultOf = (cupData) => {
+        if (!cupData || !cupData.champion) return "未参赛";
+        if (cupData.champion === "我的球队") return "冠军";
+        const reached = (key) => cupData.rounds[key] && cupData.rounds[key].matches &&
+          cupData.rounds[key].matches.some(m => m.homeName === "我的球队" || m.awayName === "我的球队");
+        if (reached("final")) return "亚军";
+        if (reached("semiFinals")) return "4强";
+        if (reached("quarterFinals")) return "8强";
+        if (reached("roundOf16")) return "16强";
+        if (reached("roundOf32")) return "32强";
+        if (reached("roundOf64")) return "64强";
+        return "—";
+      };
+      const uclResultOf = (uclData) => {
+        if (!uclData || !uclData.active) return "未参赛";
+        if (uclData.champion === "我的球队") return "冠军";
+        const fm = uclData.knockout.final && uclData.knockout.final.match;
+        if (fm && (fm.homeName === "我的球队" || fm.awayName === "我的球队")) return "亚军";
+        const inTies = (key) => uclData.knockout[key] && uclData.knockout[key].ties &&
+          uclData.knockout[key].ties.some(t => t.teamAName === "我的球队" || t.teamBName === "我的球队");
+        if (inTies("sf")) return "4强";
+        if (inTies("qf")) return "8强";
+        if (inTies("r16")) return "16强";
+        if (inTies("playoff")) return "附加赛";
+        return "联赛阶段";
+      };
+      const row = (label, value) => `<div style="display:flex; justify-content:space-between; font-size:13px; padding:2px 0;">
+        <span style="color:#94a3b8;">${label}</span>
+        <span>${value}</span>
+      </div>`;
+
+      const items = [];
+      items.push(`
+        <div style="background:#0f172a; border-radius:8px; padding:12px 14px;">
+          <div style="font-weight:700; color:#34d399; margin-bottom:6px;">联赛</div>
+          ${row("我的球队排名", `<span style="color:#e2e8f0; font-weight:700;">第 ${myRank} 名</span>`)}
+          ${row("冠军", champSpan(sorted[0].name))}
+        </div>`);
+      items.push(`
+        <div style="background:#0f172a; border-radius:8px; padding:12px 14px;">
+          <div style="font-weight:700; color:#facc15; margin-bottom:6px;">足总杯</div>
+          ${row("我的球队成绩", `<span style="color:#e2e8f0; font-weight:600;">${cupResultOf(cup)}</span>`)}
+          ${row("冠军", champSpan(cup.champion))}
+        </div>`);
+      if (ucl && ucl.active) {
+        items.push(`
+          <div style="background:#0f172a; border-radius:8px; padding:12px 14px;">
+            <div style="font-weight:700; color:#60a5fa; margin-bottom:6px;">欧冠</div>
+            ${row("我的球队成绩", `<span style="color:#e2e8f0; font-weight:600;">${uclResultOf(ucl)}</span>`)}
+            ${row("冠军", champSpan(ucl.champion))}
+          </div>`);
+      }
+
+      seasonSummaryTitle.textContent = `${seasonLabel(currentSeason)} 赛季总结`;
+      seasonSummaryContent.innerHTML = items.join("") + buildAwardsHtml(seasonAwards);
+      seasonSummaryModal.style.display = "flex";
+    }
+
     function renderLeague() {
       const isFinished = currentRound >= fixtures.length;
       const half = Math.floor(fixtures.length / 2);
@@ -4487,9 +4572,12 @@
           }
         }
 
-        // 赛季全部结束（联赛+足总杯+欧冠）后计算个人奖项
+        // 赛季全部结束（联赛+足总杯+欧冠）后计算个人奖项并弹出赛季总结
         if (isFinished && cup && cup.rounds.final.done && (!ucl || !ucl.active || ucl.knockout.final.done)) {
-          if (!seasonAwards) seasonAwards = computeSeasonAwards();
+          if (!seasonAwards) {
+            seasonAwards = computeSeasonAwards();
+            showSeasonSummary();
+          }
         }
 
         const hasAnyPending = cupFinalPending || uclSfPending || uclFinalPending || uclRoundPending || cupRoundPending;
