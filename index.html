@@ -533,7 +533,7 @@
       letter-spacing: 1px;
     }
     .star-badge-platinum {
-      background: linear-gradient(180deg, #ffffff 0%, #fde68a 55%, #facc15 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #dbeafe 55%, #93c5fd 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -860,7 +860,7 @@
       return `<span class="${cls}">${stars}</span>`;
     }
     function getStarColor(ovr) {
-      return ovr >= 99 ? '#fdf6d8' : '#facc15';
+      return ovr >= 99 ? '#dbeafe' : '#facc15';
     }
     let dreamClicks = 0;
     let currentCandidates = [];
@@ -1808,7 +1808,7 @@
       // 阵型
       ctx.fillStyle = "#94a3b8";
       ctx.font = "14px sans-serif";
-      ctx.fillText(`阵型：${selectedFormation}`, W / 2, y + 16);
+      ctx.fillText(`阵型：${selectedFormation} · 第 ${currentSeason} 个赛季`, W / 2, y + 16);
       y += subtitleH;
 
       // 荣誉
