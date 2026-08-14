@@ -715,6 +715,18 @@
     </div>
   </div>
 
+  <div id="trainingModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:#1e293b; border-radius:12px; padding:24px; max-width:520px; width:90vw; max-height:85vh; overflow-y:auto;">
+      <h2 style="text-align:center; color:#34d399; font-size:18px; margin:0 0 4px;">赛季结束 · 特训</h2>
+      <p id="trainingSubtitle" style="text-align:center; color:#94a3b8; font-size:13px; margin:0 0 16px;">选择最多一名球员进行特训，能力值提升1-3点（+1:70% / +2:25% / +3:5%）</p>
+      <div id="trainingList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div style="text-align:center; margin-top:20px;">
+        <button id="trainingSkipBtn" style="padding:12px 28px; background:#334155; color:#e2e8f0; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:15px; margin-right:8px;">跳过特训</button>
+        <button id="trainingContinueBtn" class="hidden" style="padding:12px 32px; background:#10b981; color:#064e3b; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:15px;">继续</button>
+      </div>
+    </div>
+  </div>
+
   <div id="transferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
     <div class="transfer-modal-content">
       <div class="transfer-modal-header">
@@ -937,6 +949,11 @@
     const transferRatingText = document.getElementById("transferRatingText");
     const transferRatingDetail = document.getElementById("transferRatingDetail");
     const transferRatingOkBtn = document.getElementById("transferRatingOkBtn");
+    const trainingModal = document.getElementById("trainingModal");
+    const trainingSubtitle = document.getElementById("trainingSubtitle");
+    const trainingList = document.getElementById("trainingList");
+    const trainingSkipBtn = document.getElementById("trainingSkipBtn");
+    const trainingContinueBtn = document.getElementById("trainingContinueBtn");
     const currentPosName = document.getElementById("currentPosName");
     const progressText = document.getElementById("progressText");
     const candidateList = document.getElementById("candidateList");
@@ -1433,8 +1450,67 @@
       progressionModal.style.display = "flex";
     }
 
+    // ===== 特训：赛季末可选一名球员，能力值提升1-3点（70%/25%/5%） =====
+    function openTraining() {
+      trainingModal.style.display = "flex";
+      trainingSkipBtn.classList.remove("hidden");
+      trainingContinueBtn.classList.add("hidden");
+      trainingSubtitle.textContent = "选择最多一名球员进行特训，能力值提升1-3点（+1:70% / +2:25% / +3:5%）";
+      const slots = formations[selectedFormation];
+      trainingList.innerHTML = draftPicks.map((p, i) => {
+        if (!p) return "";
+        const ovrText = tianyanMode ? `OVR ${p.ovr}` : (getStars(p.ovr) || "");
+        return `
+          <div class="training-row" data-index="${i}" style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border:2px solid #334155; border-radius:8px; padding:10px 14px; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="color:#64748b; font-size:12px; min-width:42px;">${slots[i].label}</span>
+              <span style="color:#e2e8f0; font-weight:600; font-size:14px;">${p.name}</span>
+              <span style="color:#64748b; font-size:12px;">${p.age}岁</span>
+            </div>
+            <span style="color:#facc15; font-weight:700; font-size:13px;">${ovrText}</span>
+          </div>`;
+      }).join("");
+      trainingList.querySelectorAll(".training-row").forEach(row => {
+        row.addEventListener("click", () => trainPlayer(Number(row.dataset.index)));
+      });
+    }
+
+    function trainPlayer(index) {
+      const p = draftPicks[index];
+      if (!p) return;
+      const r = Math.random();
+      const gain = r < 0.70 ? 1 : r < 0.95 ? 2 : 3;
+      const oldOvr = p.ovr;
+      p.ovr = Math.min(99, oldOvr + gain);
+      leagueTeams[0].strength = teamAverageOvr();
+      const slots = formations[selectedFormation];
+      const resultText = tianyanMode
+        ? `能力值 ${oldOvr} → ${p.ovr} (+${p.ovr - oldOvr})`
+        : `能力提升 +${p.ovr - oldOvr}`;
+      trainingSubtitle.textContent = "特训完成！";
+      trainingList.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border-radius:8px; padding:12px 14px; border:2px solid #34d399;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="color:#64748b; font-size:12px; min-width:42px;">${slots[index].label}</span>
+            <span style="color:#e2e8f0; font-weight:600; font-size:14px;">${p.name}</span>
+            <span style="color:#64748b; font-size:12px;">${p.age}岁</span>
+          </div>
+          <span style="color:#34d399; font-weight:700; font-size:13px;">${resultText}</span>
+        </div>`;
+      trainingSkipBtn.classList.add("hidden");
+      trainingContinueBtn.classList.remove("hidden");
+    }
+
     progressionContinueBtn.addEventListener("click", () => {
       progressionModal.style.display = "none";
+      openTraining();
+    });
+    trainingContinueBtn.addEventListener("click", () => {
+      trainingModal.style.display = "none";
+      openTransferWindow(true);
+    });
+    trainingSkipBtn.addEventListener("click", () => {
+      trainingModal.style.display = "none";
       openTransferWindow(true);
     });
     transferRatingOkBtn.addEventListener("click", () => {
