@@ -1511,15 +1511,15 @@
 
     progressionContinueBtn.addEventListener("click", () => {
       progressionModal.style.display = "none";
-      openTraining();
+      openTransferWindow(true);
     });
     trainingContinueBtn.addEventListener("click", () => {
       trainingModal.style.display = "none";
-      openTransferWindow(true);
+      startNewSeason();
     });
     trainingSkipBtn.addEventListener("click", () => {
       trainingModal.style.display = "none";
-      openTransferWindow(true);
+      startNewSeason();
     });
     transferRatingOkBtn.addEventListener("click", () => {
       transferRatingModal.style.display = "none";
@@ -3764,9 +3764,9 @@
       transferCandidateCache = {};
 
       if (wasSummer) {
-        // 夏季转会结束 → 新赛季（能力已在窗口开启前成长）
+        // 夏季转会结束 → 先特训，特训结束后进入新赛季
         draftLayout.classList.add("league");
-        startNewSeason();
+        openTraining();
       } else {
         // 冬季转会结束 → 继续当前赛季
         draftStepTitle.textContent = `${seasonLabel(currentSeason)} · 赛季模拟`;
