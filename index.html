@@ -4201,7 +4201,11 @@
             const fm = lastUclResults.match;
             const homeIsUser = ucl.teams[fm.homeIdx].isUser;
             const awayIsUser = ucl.teams[fm.awayIdx].isUser;
-            const scoreColor = fm.isUser ? (fm.userResult === "win" ? "#34d399" : "#f87171") : "#e2e8f0";
+            let scoreColor = "#e2e8f0";
+            if (fm.isUser) {
+              const userWon = fm.winnerIdx === (homeIsUser ? fm.homeIdx : fm.awayIdx);
+              scoreColor = userWon ? "#34d399" : "#f87171";
+            }
             let sc = `${fm.homeGoals} - ${fm.awayGoals}`;
             if (fm.et) sc += ' (加时)';
             if (fm.penaltyHome !== undefined) sc += ` (点${fm.penaltyHome}-${fm.penaltyAway})`;
@@ -4228,8 +4232,9 @@
                 const awayIsUser = m.awayName === "我的球队";
                 const homeWon = m.winnerIdx === m.homeIdx;
                 const awayWon = m.winnerIdx === m.awayIdx;
-                const scoreColor = getMatchScoreColor(m.isUser, m.userResult);
-                const penaltyColor = !m.isUser ? "#94a3b8" : m.userResult === "win" ? "#34d399" : "#f87171";
+                const userWon = m.isUser && m.winnerIdx === (homeIsUser ? m.homeIdx : m.awayIdx);
+                const scoreColor = m.isUser ? (userWon ? "#34d399" : "#f87171") : "#e2e8f0";
+                const penaltyColor = !m.isUser ? "#94a3b8" : userWon ? "#34d399" : "#f87171";
                 const scoreText = m.penaltyHome !== undefined
                   ? `${m.homeGoals} - ${m.awayGoals}<span style="font-size:11px; color:${penaltyColor};"> (点${m.penaltyHome}-${m.penaltyAway})</span>`
                   : `${m.homeGoals} - ${m.awayGoals}`;
