@@ -4195,25 +4195,27 @@
     }
 
     // 为电脑球员按位置和能力合成单赛季某项赛事的数据（进球/助攻/零封按位置区分）
+    // 使用幂次曲线：顶级前锋约25-30球/赛季，与用户球队真实数据同一量级
     function synthCompStats(player, matches, csRate) {
       const cat = playerCategory(player.positions[0]);
       const ovr = player.ovr;
       const noise = () => 0.6 + Math.random() * 0.8;
       const apps = Math.max(1, Math.round(matches * (0.7 + Math.random() * 0.3)));
+      const x = Math.max(0, ovr - 55);
       let goals = 0, assists = 0, cleanSheets = 0;
       if (cat === "GK") {
         cleanSheets = Math.round(matches * csRate * (0.75 + Math.random() * 0.25));
       } else if (cat === "DEF") {
-        goals = Math.round(Math.max(0, (ovr - 58) * 0.0028) * matches * noise());
-        assists = Math.round(Math.max(0, (ovr - 60) * 0.0025) * matches * noise());
+        goals = Math.round(Math.pow(x, 1.6) * 0.00018 * matches * noise());
+        assists = Math.round(Math.pow(x, 1.7) * 0.00016 * matches * noise());
         cleanSheets = Math.round(matches * csRate * (0.3 + Math.random() * 0.6));
       } else if (cat === "MID") {
-        goals = Math.round(Math.max(0, (ovr - 58) * 0.0065) * matches * noise());
-        assists = Math.round(Math.max(0, (ovr - 60) * 0.009) * matches * noise());
+        goals = Math.round(Math.pow(x, 2.2) * 0.00012 * matches * noise());
+        assists = Math.round(Math.pow(x, 2.2) * 0.00015 * matches * noise());
         cleanSheets = Math.round(matches * csRate * (0.1 + Math.random() * 0.25));
       } else {
-        goals = Math.round(Math.max(0, (ovr - 58) * 0.011) * matches * noise());
-        assists = Math.round(Math.max(0, (ovr - 60) * 0.0045) * matches * noise());
+        goals = Math.round(Math.pow(x, 2.6) * 0.00006 * matches * noise());
+        assists = Math.round(Math.pow(x, 1.9) * 0.00016 * matches * noise());
       }
       return { goals, assists, cleanSheets, apps };
     }
@@ -4263,32 +4265,33 @@
       );
       const idx = sorted.findIndex(s => s.name === teamName);
       if (idx < 0) return 0;
-      if (idx === 0) return 15;
-      if (idx <= 3) return 8;
-      if (idx <= 7) return 4;
+      if (idx === 0) return 25;
+      if (idx <= 3) return 15;
+      if (idx <= 7) return 8;
+      if (idx <= 11) return 3;
       return 0;
     }
 
     function cupTeamBonus(teamName) {
       if (!cup) return 0;
-      if (cup.champion === teamName) return 12;
+      if (cup.champion === teamName) return 20;
       const reached = (key) => cup.rounds[key] && cup.rounds[key].matches &&
         cup.rounds[key].matches.some(m => m.homeName === teamName || m.awayName === teamName);
-      if (reached("final")) return 8;
-      if (reached("semiFinals")) return 4;
-      if (reached("quarterFinals")) return 2;
+      if (reached("final")) return 12;
+      if (reached("semiFinals")) return 7;
+      if (reached("quarterFinals")) return 3;
       return 0;
     }
 
     function uclTeamBonus(teamName) {
       if (!ucl || !ucl.active) return 0;
-      if (ucl.champion === teamName) return 15;
+      if (ucl.champion === teamName) return 25;
       const fm = ucl.knockout.final && ucl.knockout.final.match;
-      if (fm && (fm.homeName === teamName || fm.awayName === teamName)) return 8;
+      if (fm && (fm.homeName === teamName || fm.awayName === teamName)) return 16;
       const inTies = (key) => ucl.knockout[key] && ucl.knockout[key].ties &&
         ucl.knockout[key].ties.some(t => t.teamAName === teamName || t.teamBName === teamName);
-      if (inTies("sf")) return 4;
-      if (inTies("qf")) return 2;
+      if (inTies("sf")) return 10;
+      if (inTies("qf")) return 5;
       return 0;
     }
 
@@ -4319,7 +4322,7 @@
       for (let i = 1; i < Math.min(20, leagueTeams.length); i++) {
         const t = leagueTeams[i];
         if (!t.roster) continue;
-        const csRate = 0.15 + t.strength / 400;
+        const csRate = 0.18 + t.strength / 380;
         for (const p of t.roster) {
           addComp(p, t.name, false, "league", synthCompStats(p, 38, csRate));
         }
@@ -4331,7 +4334,7 @@
         if (!t.roster) continue;
         const matches = countCupMatches(i);
         if (matches === 0) continue;
-        const csRate = 0.15 + t.strength / 400;
+        const csRate = 0.18 + t.strength / 380;
         for (const p of t.roster) {
           addComp(p, t.name, i === 0, "cup", synthCompStats(p, matches, csRate));
         }
@@ -4344,7 +4347,7 @@
           if (!t.roster) continue;
           const matches = countUclMatches(i);
           if (matches === 0) continue;
-          const csRate = 0.15 + t.strength / 400;
+          const csRate = 0.18 + t.strength / 380;
           for (const p of t.roster) {
             addComp(p, t.name, !!t.isUser, "ucl", synthCompStats(p, matches, csRate));
           }
