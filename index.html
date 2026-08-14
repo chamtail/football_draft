@@ -703,6 +703,18 @@
     </div>
   </div>
 
+  <div id="transferRatingModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#1e293b; border-radius:12px; padding:28px 24px; max-width:420px; width:90vw; text-align:center;">
+      <h2 style="text-align:center; color:#34d399; font-size:18px; margin:0 0 16px;">转会评级</h2>
+      <div id="transferRatingLetter" style="font-size:76px; font-weight:800; line-height:1; letter-spacing:2px;"></div>
+      <p id="transferRatingText" style="text-align:center; color:#e2e8f0; font-size:14px; margin:14px 0 6px;"></p>
+      <p id="transferRatingDetail" style="text-align:center; color:#94a3b8; font-size:12px; margin:0 0 20px;"></p>
+      <div style="text-align:center;">
+        <button id="transferRatingOkBtn" style="padding:12px 32px; background:#10b981; color:#064e3b; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:15px;">确定</button>
+      </div>
+    </div>
+  </div>
+
   <div id="transferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
     <div class="transfer-modal-content">
       <div class="transfer-modal-header">
@@ -920,6 +932,11 @@
     const progressionSubtitle = document.getElementById("progressionSubtitle");
     const progressionList = document.getElementById("progressionList");
     const progressionContinueBtn = document.getElementById("progressionContinueBtn");
+    const transferRatingModal = document.getElementById("transferRatingModal");
+    const transferRatingLetter = document.getElementById("transferRatingLetter");
+    const transferRatingText = document.getElementById("transferRatingText");
+    const transferRatingDetail = document.getElementById("transferRatingDetail");
+    const transferRatingOkBtn = document.getElementById("transferRatingOkBtn");
     const currentPosName = document.getElementById("currentPosName");
     const progressText = document.getElementById("progressText");
     const candidateList = document.getElementById("candidateList");
@@ -1402,6 +1419,10 @@
     progressionContinueBtn.addEventListener("click", () => {
       progressionModal.style.display = "none";
       openTransferWindow(true);
+    });
+    transferRatingOkBtn.addEventListener("click", () => {
+      transferRatingModal.style.display = "none";
+      closeTransferWindow();
     });
     skipTransferBtn.addEventListener("click", () => closeTransferWindow());
     transferModalClose.addEventListener("click", closeTransferModal);
@@ -3290,6 +3311,48 @@
       return "#e2e8f0";
     }
 
+    function getTransferRating(diff) {
+      if (diff >= 10) return "S";
+      if (diff >= 5) return "A";
+      if (diff > 0) return "B";
+      if (diff === 0) return "C";
+      if (diff > -5) return "D";
+      if (diff > -10) return "E";
+      return "F";
+    }
+
+    const TRANSFER_RATING_INFO = {
+      S: { text: "你的转会极大幅度提升了该位置的能力", color: "#facc15" },
+      A: { text: "你的转会大幅度提升了该位置的能力", color: "#34d399" },
+      B: { text: "你的转会小幅度提升了该位置的能力", color: "#86efac" },
+      C: { text: "你的转会没有改变该位置的能力", color: "#94a3b8" },
+      D: { text: "你的转会削弱了该位置的能力", color: "#f87171" },
+      E: { text: "你的转会削弱了该位置的能力", color: "#f87171" },
+      F: { text: "你的转会削弱了该位置的能力", color: "#f87171" }
+    };
+
+    function showTransferRating(newPlayer, posLabel, oldOvr) {
+      const diff = newPlayer.ovr - oldOvr;
+      const rating = getTransferRating(diff);
+      const info = TRANSFER_RATING_INFO[rating];
+      transferRatingLetter.textContent = rating;
+      transferRatingLetter.style.color = info.color;
+      transferRatingText.textContent = info.text;
+      const sign = diff > 0 ? "+" : "";
+      if (tianyanMode) {
+        transferRatingDetail.textContent = `${posLabel} · 能力值 ${oldOvr} → ${newPlayer.ovr} (${sign}${diff})`;
+      } else if (diff !== 0) {
+        const oldStars = getStars(oldOvr);
+        const newStars = getStars(newPlayer.ovr);
+        transferRatingDetail.textContent = oldStars !== newStars
+          ? `${posLabel} · ${oldStars || "—"} → ${newStars || "—"}`
+          : posLabel;
+      } else {
+        transferRatingDetail.textContent = posLabel;
+      }
+      transferRatingModal.style.display = "flex";
+    }
+
     function openTransferModal(index) {
       if (!mobileTransferMode) return;
       const slots = formations[selectedFormation];
@@ -3454,6 +3517,9 @@
     function confirmTransfer(player) {
       const slots = formations[selectedFormation];
       const pos = slots[transferPosIndex].pos;
+      const posLabel = slots[transferPosIndex].label;
+      const oldPlayer = draftPicks[transferPosIndex];
+      const oldOvr = oldPlayer.ovr;
 
       // 旧球员标记替换
       userPlayerStats[transferPosIndex].replaced = true;
@@ -3482,7 +3548,8 @@
         isTransfer: true
       });
 
-      closeTransferWindow();
+      transferModal.style.display = "none";
+      showTransferRating(player, posLabel, oldOvr);
     }
 
     function closeTransferWindow() {
