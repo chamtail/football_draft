@@ -4304,7 +4304,7 @@
     }
 
     function mvpScore(e, st, teamBonus) {
-      return mvpDataScore(e, st) + (e.player.ovr - 70) * 1.2 + teamBonus;
+      return mvpDataScore(e, st) + (e.player.ovr - 70) * 0.8 + teamBonus;
     }
 
     function computeSeasonAwards() {
@@ -4427,7 +4427,7 @@
         if (e.cat === "MID") return g * 2 + a * 2;
         return g * 2.4 + a * 1.4;
       };
-      const ballonScore = (e) => ballonData(e) + (e.player.ovr - 70) * 1.5 +
+      const ballonScore = (e) => ballonData(e) + (e.player.ovr - 70) * 1.0 +
         leagueTeamBonus(e.teamName) + cupTeamBonus(e.teamName) + uclTeamBonus(e.teamName);
       let ballon = null, goldenBoy = null;
       for (const e of entries) {
