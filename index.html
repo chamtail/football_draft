@@ -4295,12 +4295,13 @@
       return 0;
     }
 
-    // MVP评分：数据按位置区分（前锋看进球，中场看进球+助攻，后卫看零封+防守数据，门将看零封）
+    // MVP评分：数据按位置区分（前锋看进球，中场看重进球+助攻，后卫看零封+防守数据，门将看零封）
+    // 各位置顶级赛季的数据分应接近：前锋28球6助≈69 / 中场12球16助≈65 / 后卫5球6助15零封≈61 / 门将18零封≈63
     function mvpDataScore(e, st) {
-      if (e.cat === "GK") return st.cleanSheets * 3.2;
-      if (e.cat === "DEF") return st.goals * 2 + st.assists * 1.5 + st.cleanSheets * 2.2;
-      if (e.cat === "MID") return st.goals * 2 + st.assists * 2;
-      return st.goals * 2.4 + st.assists * 1.4;
+      if (e.cat === "GK") return st.cleanSheets * 3.5;
+      if (e.cat === "DEF") return st.goals * 2.2 + st.assists * 1.8 + st.cleanSheets * 2.6;
+      if (e.cat === "MID") return st.goals * 2.5 + st.assists * 2.2;
+      return st.goals * 2.2 + st.assists * 1.3;
     }
 
     function mvpScore(e, st, teamBonus) {
@@ -4422,10 +4423,10 @@
         const g = totalGoals(e);
         const a = (e.league ? e.league.assists : 0) + (e.cup ? e.cup.assists : 0) + (e.ucl ? e.ucl.assists : 0);
         const cs = (e.league ? e.league.cleanSheets : 0) + (e.cup ? e.cup.cleanSheets : 0) + (e.ucl ? e.ucl.cleanSheets : 0);
-        if (e.cat === "GK") return cs * 3;
-        if (e.cat === "DEF") return g * 2 + a * 1.5 + cs * 2.2;
-        if (e.cat === "MID") return g * 2 + a * 2;
-        return g * 2.4 + a * 1.4;
+        if (e.cat === "GK") return cs * 3.5;
+        if (e.cat === "DEF") return g * 2.2 + a * 1.8 + cs * 2.6;
+        if (e.cat === "MID") return g * 2.5 + a * 2.2;
+        return g * 2.2 + a * 1.3;
       };
       const ballonScore = (e) => ballonData(e) + (e.player.ovr - 70) * 1.0 +
         leagueTeamBonus(e.teamName) + cupTeamBonus(e.teamName) + uclTeamBonus(e.teamName);
