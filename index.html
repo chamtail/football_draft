@@ -4299,7 +4299,7 @@
     // 各位置顶级赛季的数据分应接近：前锋28球6助≈69 / 中场12球16助≈65 / 后卫5球6助15零封≈61 / 门将18零封≈63
     function mvpDataScore(e, st) {
       if (e.cat === "GK") return st.cleanSheets * 3.5;
-      if (e.cat === "DEF") return st.goals * 2.2 + st.assists * 1.8 + st.cleanSheets * 2.6;
+      if (e.cat === "DEF") return st.goals * 2.2 + st.assists * 1.8 + st.cleanSheets * 3.0;
       if (e.cat === "MID") return st.goals * 2.5 + st.assists * 2.2;
       return st.goals * 2.2 + st.assists * 1.3;
     }
@@ -4424,7 +4424,7 @@
         const a = (e.league ? e.league.assists : 0) + (e.cup ? e.cup.assists : 0) + (e.ucl ? e.ucl.assists : 0);
         const cs = (e.league ? e.league.cleanSheets : 0) + (e.cup ? e.cup.cleanSheets : 0) + (e.ucl ? e.ucl.cleanSheets : 0);
         if (e.cat === "GK") return cs * 3.5;
-        if (e.cat === "DEF") return g * 2.2 + a * 1.8 + cs * 2.6;
+        if (e.cat === "DEF") return g * 2.2 + a * 1.8 + cs * 3.0;
         if (e.cat === "MID") return g * 2.5 + a * 2.2;
         return g * 2.2 + a * 1.3;
       };
