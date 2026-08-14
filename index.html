@@ -4252,15 +4252,20 @@
 
     // 为电脑球员按位置和能力合成单赛季某项赛事的数据（进球/助攻/零封按位置区分）
     // 使用幂次曲线：顶级前锋约25-30球/赛季，与用户球队真实数据同一量级
-    function synthCompStats(player, matches, csRate) {
+    function synthCompStats(player, matches, csRate, gkRank = 0) {
       const cat = playerCategory(player.positions[0]);
       const ovr = player.ovr;
       const noise = () => 0.6 + Math.random() * 0.8;
-      const apps = Math.max(1, Math.round(matches * (0.7 + Math.random() * 0.3)));
+      let apps = Math.max(1, Math.round(matches * (0.7 + Math.random() * 0.3)));
       const x = Math.max(0, ovr - 55);
       let goals = 0, assists = 0, cleanSheets = 0;
       if (cat === "GK") {
-        cleanSheets = Math.round(matches * csRate * (0.75 + Math.random() * 0.25));
+        // 按门将顺位分配出场与零封：一门85%-100%，二门15%-30%，三门及以下0-10%
+        const share = gkRank === 0 ? 0.85 + Math.random() * 0.15
+          : gkRank === 1 ? 0.15 + Math.random() * 0.15
+          : Math.random() * 0.1;
+        apps = Math.max(1, Math.round(matches * share));
+        cleanSheets = Math.round(matches * csRate * share * (0.9 + Math.random() * 0.2));
       } else if (cat === "DEF") {
         goals = Math.round(Math.pow(x, 1.6) * 0.00018 * matches * noise());
         assists = Math.round(Math.pow(x, 1.7) * 0.00016 * matches * noise());
@@ -4274,6 +4279,14 @@
         assists = Math.round(Math.pow(x, 1.9) * 0.00016 * matches * noise());
       }
       return { goals, assists, cleanSheets, apps };
+    }
+
+    // 按能力排序的门将顺位（0=一门，1=二门...），用于让主力门将获得绝大多数零封
+    function buildGkRankFn(roster) {
+      const gks = roster.filter(p => playerCategory(p.positions[0]) === "GK").sort((a, b) => b.ovr - a.ovr);
+      const map = {};
+      gks.forEach((g, i) => { map[g.id] = i; });
+      return (p) => map[p.id] !== undefined ? map[p.id] : 0;
     }
 
     function countCupMatches(teamIdx) {
@@ -4380,8 +4393,9 @@
         const t = leagueTeams[i];
         if (!t.roster) continue;
         const csRate = 0.18 + t.strength / 380;
+        const gkRankOf = buildGkRankFn(t.roster);
         for (const p of t.roster) {
-          addComp(p, t.name, false, "league", synthCompStats(p, 38, csRate));
+          addComp(p, t.name, false, "league", synthCompStats(p, 38, csRate, gkRankOf(p)));
         }
       }
 
@@ -4392,8 +4406,9 @@
         const matches = countCupMatches(i);
         if (matches === 0) continue;
         const csRate = 0.18 + t.strength / 380;
+        const gkRankOf = buildGkRankFn(t.roster);
         for (const p of t.roster) {
-          addComp(p, t.name, i === 0, "cup", synthCompStats(p, matches, csRate));
+          addComp(p, t.name, i === 0, "cup", synthCompStats(p, matches, csRate, gkRankOf(p)));
         }
       }
 
@@ -4405,8 +4420,9 @@
           const matches = countUclMatches(i);
           if (matches === 0) continue;
           const csRate = 0.18 + t.strength / 380;
+          const gkRankOf = buildGkRankFn(t.roster);
           for (const p of t.roster) {
-            addComp(p, t.name, !!t.isUser, "ucl", synthCompStats(p, matches, csRate));
+            addComp(p, t.name, !!t.isUser, "ucl", synthCompStats(p, matches, csRate, gkRankOf(p)));
           }
         }
       }
