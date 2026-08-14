@@ -4260,10 +4260,12 @@
       const x = Math.max(0, ovr - 55);
       let goals = 0, assists = 0, cleanSheets = 0;
       if (cat === "GK") {
-        // 按门将顺位分配出场与零封：一门85%-100%，二门15%-30%，三门及以下0-10%
-        const share = gkRank === 0 ? 0.85 + Math.random() * 0.15
-          : gkRank === 1 ? 0.15 + Math.random() * 0.15
-          : Math.random() * 0.1;
+        // 按门将顺位分配出场与零封（各顺位独立随机）：
+        // 一门60%概率全勤(100%)，否则85%-95%；二门10%-25%；三门及以下0-5%
+        const share = gkRank === 0
+          ? (Math.random() < 0.6 ? 1 : 0.85 + Math.random() * 0.1)
+          : gkRank === 1 ? 0.1 + Math.random() * 0.15
+          : Math.random() * 0.05;
         apps = Math.max(1, Math.round(matches * share));
         cleanSheets = Math.round(matches * csRate * share * (0.9 + Math.random() * 0.2));
       } else if (cat === "DEF") {
