@@ -2585,6 +2585,9 @@
         if (di >= 0) {
           draftPicks[di] = reborn;
           retiredByIndex[di] = { oldPlayer: p, rebornPlayer: reborn };
+          // 同步个人数据条目指向转生球员，避免列表显示旧球员（名字/年龄/星级不符）
+          const statEntry = userPlayerStats.find(s => s.player === p);
+          if (statEntry) statEntry.player = reborn;
         }
       }
       return retiredByIndex;
@@ -4007,9 +4010,9 @@
                     <td colspan="${colCount}" class="transfer-empty-slot">[已离队] 点击选择新球员</td>
                   </tr>`;
                 }
-                return `<tr ${dataAttr} style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : s.isTransfer ? '#facc15' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
+                return `<tr ${dataAttr} style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
-                  <td style="padding:6px 4px; font-weight:700;">${s.isTransfer ? '[换] ' : ''}${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : getStarBadge(getOvr(s))}</td>
+                  <td style="padding:6px 4px; font-weight:700;">${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : getStarBadge(getOvr(s))}</td>
                   ${showAge ? `<td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>` : ''}
                   <td style="text-align:center; padding:6px 4px;">${getStat(s, "appearances")}</td>
                   <td style="text-align:center; padding:6px 4px;">${getStat(s, "goals")}</td>
