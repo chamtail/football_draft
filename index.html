@@ -737,10 +737,12 @@
         <button class="transfer-modal-close" id="transferModalClose" aria-label="关闭">×</button>
       </div>
       <div class="transfer-modal-body">
+        <!-- 转会窗口刷新功能已停用
         <div class="refresh-row" style="margin-bottom:10px;">
           <span id="modalRefreshText">剩余刷新次数：2</span>
           <button id="modalRefreshBtn">刷新选项</button>
         </div>
+        -->
         <div class="candidate-list" id="modalCandidateList"></div>
       </div>
     </div>
@@ -1528,12 +1530,13 @@
     transferModal.addEventListener("click", (e) => {
       if (e.target === transferModal) closeTransferModal();
     });
-    modalRefreshBtn.addEventListener("click", () => {
-      if (refreshesLeft <= 0) return;
-      refreshesLeft--;
-      transferCandidateCache[transferPosIndex] = null;
-      renderCandidatesToModal(transferPosIndex);
-    });
+    // 转会窗口刷新功能已停用
+    // modalRefreshBtn.addEventListener("click", () => {
+    //   if (refreshesLeft <= 0) return;
+    //   refreshesLeft--;
+    //   transferCandidateCache[transferPosIndex] = null;
+    //   renderCandidatesToModal(transferPosIndex);
+    // });
     shareCloseBtn.addEventListener("click", () => { shareModal.style.display = "none"; });
     shareModal.addEventListener("click", (e) => {
       if (e.target === shareModal) shareModal.style.display = "none";
@@ -2097,16 +2100,17 @@
     }
 
     refreshBtn.addEventListener("click", () => {
-      if (transferSelecting) {
-        if (refreshesLeft <= 0) return;
-        refreshesLeft--;
-        updateRefreshState();
-        const slots = formations[selectedFormation];
-        const pos = slots[transferPosIndex].pos;
-        transferCandidateCache[transferPosIndex] = null;
-        renderCandidates(pickCandidates(pos));
-        return;
-      }
+      // 转会窗口刷新功能已停用
+      // if (transferSelecting) {
+      //   if (refreshesLeft <= 0) return;
+      //   refreshesLeft--;
+      //   updateRefreshState();
+      //   const slots = formations[selectedFormation];
+      //   const pos = slots[transferPosIndex].pos;
+      //   transferCandidateCache[transferPosIndex] = null;
+      //   renderCandidates(pickCandidates(pos));
+      //   return;
+      // }
       if (refreshesLeft <= 0) return;
       refreshesLeft--;
       updateRefreshState();
@@ -3585,8 +3589,9 @@
         modalCandidateList.appendChild(card);
       });
 
-      modalRefreshText.textContent = `剩余刷新次数：${refreshesLeft}`;
-      modalRefreshBtn.disabled = refreshesLeft <= 0;
+      // 转会窗口刷新功能已停用
+      // modalRefreshText.textContent = `剩余刷新次数：${refreshesLeft}`;
+      // modalRefreshBtn.disabled = refreshesLeft <= 0;
     }
 
     function attachTransferRowClickHandlers() {
@@ -3681,12 +3686,13 @@
       currentPosName.style.color = '';
       currentPosName.textContent = `替换 ${pos} · 当前：${currentPlayer.name} ${currentPlayer.age}岁${ovrText}`;
 
-      // 显示刷新按钮
-      refreshBtn.style.display = "";
-      refreshBtn.textContent = "刷新选项";
-      refreshBtn.disabled = refreshesLeft <= 0;
-      refreshText.style.display = "";
-      updateRefreshState();
+      // 转会窗口刷新功能已停用
+      // // 显示刷新按钮
+      // refreshBtn.style.display = "";
+      // refreshBtn.textContent = "刷新选项";
+      // refreshBtn.disabled = refreshesLeft <= 0;
+      // refreshText.style.display = "";
+      // updateRefreshState();
 
       // 使用缓存的候选，没有缓存才生成
       const cached = transferCandidateCache[index];
