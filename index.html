@@ -1506,9 +1506,16 @@
       const slots = formations[selectedFormation];
       const actualGain = p.ovr - oldOvr;
       const gainText = actualGain === 3 ? "极大幅" : actualGain === 2 ? "大幅" : actualGain === 1 ? "小幅" : "没有";
-      const resultText = tianyanMode
-        ? `能力值 ${oldOvr} → ${p.ovr} (+${actualGain})`
-        : `能力${gainText}提升`;
+      let resultText;
+      if (tianyanMode) {
+        resultText = `能力值 ${oldOvr} → ${p.ovr} (+${actualGain})`;
+      } else {
+        const oldStars = getStars(oldOvr);
+        const newStars = getStars(p.ovr);
+        resultText = oldStars !== newStars
+          ? `能力${gainText}提升（${oldStars || "—"} → ${newStars || "—"}）`
+          : `能力${gainText}提升`;
+      }
       trainingSubtitle.textContent = "特训完成！";
       trainingList.innerHTML = `
         <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border-radius:8px; padding:12px 14px; border:2px solid #34d399;">
