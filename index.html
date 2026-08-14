@@ -1400,7 +1400,7 @@
       saveSeasonHistory();
       // 记录成长前OVR快照
       const beforeSnapshot = draftPicks.map(p => p ? { id: p.id, ovr: p.ovr, age: p.age } : null);
-      // 30岁以上球员赛季末可能退役，退役后立即转生为17岁新球员
+      // 30岁以上球员赛季末可能退役，退役后立即转生为17-21岁新球员
       const retirements = processRetirements();
       progressAllPlayers();
       progressCpuTeams(); // CPU球队总评演变
@@ -1444,7 +1444,7 @@
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
               <span style="color:#64748b; font-size:12px; min-width:42px;">${c.pos}</span>
               <span style="color:#f0abfc; font-weight:600; font-size:14px;">${r.oldPlayer.name} 退役转生 → ${r.rebornPlayer.name}</span>
-              <span style="color:#64748b; font-size:12px;">17岁</span>
+              <span style="color:#64748b; font-size:12px;">${r.rebornPlayer.age}岁</span>
             </div>
             <span style="color:#c084fc; font-weight:700; font-size:13px; white-space:nowrap;">转生 · ${newOvrText}</span>
           </div>`;
@@ -2581,17 +2581,17 @@
       return r < 0.05 ? 0 : (r < 0.30 ? -1 : -(1 + Math.floor(Math.random() * 2)));
     }
 
-    // 按成长机制倒推原始能力值到17岁（带随机性）
-    function reverseProgressTo17(origOvr, origAge) {
+    // 按成长机制倒推原始能力值到目标年龄（17-21岁随机，带随机性）
+    function reverseProgressToAge(origOvr, origAge, targetAge) {
       let ovr = origOvr;
-      for (let age = origAge - 1; age >= 17; age--) {
+      for (let age = origAge - 1; age >= targetAge; age--) {
         ovr -= sampleProgression(age);
         ovr = Math.max(50, Math.min(94, ovr));
       }
       return ovr;
     }
 
-    // 赛季末退役判定：30岁以上球员可能退役并立即转生为17岁新球员
+    // 赛季末退役判定：30岁以上球员可能退役并立即转生为17-21岁新球员（年龄随机）
     // 返回用户阵容中发生退役的槽位信息 { draftIndex: { oldPlayer, rebornPlayer } }
     function processRetirements() {
       skipProgressIds = new Set();
@@ -2602,14 +2602,15 @@
         if (Math.random() > retirementChance(p.age, p.ovr)) continue;
         const baseOvr = p.baseOvr !== undefined ? p.baseOvr : p.ovr;
         const baseAge = p.baseAge !== undefined ? p.baseAge : p.age;
+        const rebornAge = 17 + Math.floor(Math.random() * 5); // 17-21随机
         const reborn = {
           id: "rebirth-" + (++rebirthCounter),
           name: getRebornName(p.name),
           nation: p.nation,
           league: p.league,
           team: p.team,
-          ovr: reverseProgressTo17(baseOvr, baseAge),
-          age: 17,
+          ovr: reverseProgressToAge(baseOvr, baseAge, rebornAge),
+          age: rebornAge,
           positions: [...p.positions],
           baseOvr: baseOvr,
           baseAge: baseAge
