@@ -959,7 +959,7 @@
     fetch("players.json")
       .then(r => r.json())
       .then(data => {
-        allPlayers = data.players;
+        allPlayers = data.players.map(p => ({ ...p, baseOvr: p.ovr, baseAge: p.age }));
         allTeams = data.teams;
         playersLoaded = true;
         loadingOverlay.style.display = "none";
@@ -1308,7 +1308,7 @@
       fetch("players.json")
         .then(r => r.json())
         .then(data => {
-          allPlayers = data.players;
+          allPlayers = data.players.map(p => ({ ...p, baseOvr: p.ovr, baseAge: p.age }));
           allTeams = data.teams;
         });
 
@@ -1354,6 +1354,8 @@
       saveSeasonHistory();
       // 记录成长前OVR快照
       const beforeSnapshot = draftPicks.map(p => p ? { id: p.id, ovr: p.ovr, age: p.age } : null);
+      // 30岁以上球员赛季末可能退役，退役后立即转生为17岁新球员
+      const retirements = processRetirements();
       progressAllPlayers();
       // 构建成长变化数据
       const slots = formations[selectedFormation];
@@ -1366,7 +1368,8 @@
           oldOvr: before.ovr,
           newOvr: p.ovr,
           oldAge: before.age,
-          newAge: p.age
+          newAge: p.age,
+          retired: retirements[i] || null
         };
       }).filter(Boolean);
       renderProgression(changes);
@@ -1385,6 +1388,20 @@
       }
 
       progressionList.innerHTML = changes.map(c => {
+        // 退役转生球员特殊展示
+        if (c.retired) {
+          const r = c.retired;
+          const newOvrText = tianyanMode ? `OVR ${c.newOvr}` : (getStars(c.newOvr) || '—');
+          return `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border-radius:8px; padding:10px 14px; border:1px solid #c084fc;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span style="color:#64748b; font-size:12px; min-width:42px;">${c.pos}</span>
+              <span style="color:#f0abfc; font-weight:600; font-size:14px;">${r.oldPlayer.name} 退役转生 → ${r.rebornPlayer.name}</span>
+              <span style="color:#64748b; font-size:12px;">17岁</span>
+            </div>
+            <span style="color:#c084fc; font-weight:700; font-size:13px; white-space:nowrap;">转生 · ${newOvrText}</span>
+          </div>`;
+        }
         const diff = c.newOvr - c.oldOvr;
         const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
         const arrowColor = diff > 0 ? '#34d399' : diff < 0 ? '#f87171' : '#94a3b8';
@@ -2395,6 +2412,7 @@
     function progressAllPlayers() {
       const changes = [];
       for (const p of allPlayers) {
+        if (skipProgressIds.has(p.id)) continue; // 本赛季刚转生的球员不参与成长
         const oldOvr = p.ovr;
         const oldAge = p.age;
         p.age++;
@@ -2402,6 +2420,83 @@
         changes.push({ player: p, oldOvr, newOvr: p.ovr, oldAge, newAge: p.age });
       }
       return changes;
+    }
+
+    // ===== 退役与转生 =====
+    let rebirthCounter = 0;
+    let skipProgressIds = new Set();
+
+    // 退役概率：年龄越大、能力越低越容易退役（30岁起，赛季末判定）
+    function retirementChance(age, ovr) {
+      if (age < 30) return 0;
+      const ageFactor = (age - 29) * 0.05;             // 30→5% ... 40→55%
+      const ovrFactor = Math.max(0, 85 - ovr) * 0.008; // 85→0, 80→4%, 75→8%, 70→12%
+      return Math.min(0.8, Math.max(0.03, ageFactor + ovrFactor));
+    }
+
+    // 转生名字：原名 → 原名+ → 原名+2 → 原名+3 ...
+    function getRebornName(name) {
+      const m = name.match(/^(.*)\+(\d+)$/);
+      if (m) return m[1] + "+" + (parseInt(m[2], 10) + 1);
+      if (name.endsWith("+")) return name + "2";
+      return name + "+";
+    }
+
+    // 按年龄段采样成长值（与 progressOvr 同分布），用于倒推
+    function sampleProgression(age) {
+      const r = Math.random();
+      if (age <= 20) return r < 0.90 ? 2 + Math.floor(Math.random() * 3) : 1;
+      if (age <= 23) return r < 0.80 ? 1 + Math.floor(Math.random() * 3) : 1;
+      if (age <= 26) return r < 0.50 ? 1 : 0;
+      if (age <= 29) return r < 0.35 ? 1 : (r < 0.80 ? 0 : -1);
+      if (age <= 32) return r < 0.15 ? 1 : (r < 0.60 ? 0 : -1);
+      return r < 0.05 ? 0 : (r < 0.30 ? -1 : -(1 + Math.floor(Math.random() * 2)));
+    }
+
+    // 按成长机制倒推原始能力值到17岁（带随机性）
+    function reverseProgressTo17(origOvr, origAge) {
+      let ovr = origOvr;
+      for (let age = origAge - 1; age >= 17; age--) {
+        ovr -= sampleProgression(age);
+        ovr = Math.max(50, Math.min(94, ovr));
+      }
+      return ovr;
+    }
+
+    // 赛季末退役判定：30岁以上球员可能退役并立即转生为17岁新球员
+    // 返回用户阵容中发生退役的槽位信息 { draftIndex: { oldPlayer, rebornPlayer } }
+    function processRetirements() {
+      skipProgressIds = new Set();
+      const retiredByIndex = {};
+      const snapshot = [...allPlayers];
+      for (const p of snapshot) {
+        if (p.age < 30) continue;
+        if (Math.random() > retirementChance(p.age, p.ovr)) continue;
+        const baseOvr = p.baseOvr !== undefined ? p.baseOvr : p.ovr;
+        const baseAge = p.baseAge !== undefined ? p.baseAge : p.age;
+        const reborn = {
+          id: "rebirth-" + (++rebirthCounter),
+          name: getRebornName(p.name),
+          nation: p.nation,
+          league: p.league,
+          team: p.team,
+          ovr: reverseProgressTo17(baseOvr, baseAge),
+          age: 17,
+          positions: [...p.positions],
+          baseOvr: baseOvr,
+          baseAge: baseAge
+        };
+        const idx = allPlayers.indexOf(p);
+        allPlayers[idx] = reborn;
+        skipProgressIds.add(reborn.id);
+        // 用户阵容中的球员同步替换为转生球员
+        const di = draftPicks.indexOf(p);
+        if (di >= 0) {
+          draftPicks[di] = reborn;
+          retiredByIndex[di] = { oldPlayer: p, rebornPlayer: reborn };
+        }
+      }
+      return retiredByIndex;
     }
 
     function startNewSeason() {
