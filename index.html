@@ -734,7 +734,7 @@
   </div>
 
   <div id="seasonSummaryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9998; align-items:center; justify-content:center; overflow-y:auto;">
-    <div style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
+    <div id="seasonSummaryBody" style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
       <h2 id="seasonSummaryTitle" style="text-align:center; color:#34d399; font-size:18px; margin:0 0 14px;">赛季总结</h2>
       <div id="seasonSummaryContent" style="display:flex; flex-direction:column; gap:10px;"></div>
       <div style="text-align:center; margin-top:20px;">
@@ -744,7 +744,7 @@
   </div>
 
   <div id="playerCareerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9997; align-items:center; justify-content:center; overflow-y:auto;">
-    <div style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
+    <div id="pcmBody" style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
           <div id="pcmTitle" style="color:#e2e8f0; font-size:18px; font-weight:700;"></div>
@@ -1004,10 +1004,12 @@
     const trainingSkipBtn = document.getElementById("trainingSkipBtn");
     const trainingContinueBtn = document.getElementById("trainingContinueBtn");
     const seasonSummaryModal = document.getElementById("seasonSummaryModal");
+    const seasonSummaryBody = document.getElementById("seasonSummaryBody");
     const seasonSummaryTitle = document.getElementById("seasonSummaryTitle");
     const seasonSummaryContent = document.getElementById("seasonSummaryContent");
     const seasonSummaryOkBtn = document.getElementById("seasonSummaryOkBtn");
     const playerCareerModal = document.getElementById("playerCareerModal");
+    const pcmBody = document.getElementById("pcmBody");
     const pcmTitle = document.getElementById("pcmTitle");
     const pcmInfo = document.getElementById("pcmInfo");
     const pcmHonors = document.getElementById("pcmHonors");
@@ -4648,6 +4650,7 @@
 
       seasonSummaryTitle.textContent = `${seasonLabel(currentSeason)} 赛季总结`;
       seasonSummaryContent.innerHTML = items.join("") + buildAwardsHtml(seasonAwards);
+      seasonSummaryBody.scrollTop = 0; // 每次打开从头看
       seasonSummaryModal.style.display = "flex";
     }
 
@@ -4703,6 +4706,7 @@
       pcmTitle.innerHTML = titleHtml;
       pcmInfo.textContent = info;
       renderPlayerCareer();
+      pcmBody.scrollTop = 0; // 每次打开从头看
       playerCareerModal.style.display = "flex";
     }
 
