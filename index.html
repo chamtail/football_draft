@@ -743,6 +743,31 @@
     </div>
   </div>
 
+  <div id="playerCareerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9997; align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div id="pcmTitle" style="color:#e2e8f0; font-size:18px; font-weight:700;"></div>
+          <div id="pcmInfo" style="color:#94a3b8; font-size:13px; margin-top:4px;"></div>
+        </div>
+        <button id="pcmCloseBtn" style="background:transparent; border:none; color:#94a3b8; font-size:24px; line-height:1; cursor:pointer;">×</button>
+      </div>
+      <div id="pcmHonors"></div>
+      <div id="pcmCareerSection" style="margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-weight:700; color:#34d399;">生涯数据</span>
+          <select id="pcmFilter" style="background:#1e293b; color:#e2e8f0; border:1px solid #475569; border-radius:6px; padding:5px 8px; font-size:13px;">
+            <option value="all">总计</option>
+            <option value="league">联赛</option>
+            <option value="cup">足总杯</option>
+            <option value="ucl">欧冠</option>
+          </select>
+        </div>
+        <div id="pcmTable"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="transferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
     <div class="transfer-modal-content">
       <div class="transfer-modal-header">
@@ -982,6 +1007,14 @@
     const seasonSummaryTitle = document.getElementById("seasonSummaryTitle");
     const seasonSummaryContent = document.getElementById("seasonSummaryContent");
     const seasonSummaryOkBtn = document.getElementById("seasonSummaryOkBtn");
+    const playerCareerModal = document.getElementById("playerCareerModal");
+    const pcmTitle = document.getElementById("pcmTitle");
+    const pcmInfo = document.getElementById("pcmInfo");
+    const pcmHonors = document.getElementById("pcmHonors");
+    const pcmCareerSection = document.getElementById("pcmCareerSection");
+    const pcmFilter = document.getElementById("pcmFilter");
+    const pcmTable = document.getElementById("pcmTable");
+    const pcmCloseBtn = document.getElementById("pcmCloseBtn");
     const currentPosName = document.getElementById("currentPosName");
     const progressText = document.getElementById("progressText");
     const candidateList = document.getElementById("candidateList");
@@ -1557,6 +1590,20 @@
     });
     seasonSummaryOkBtn.addEventListener("click", () => {
       seasonSummaryModal.style.display = "none";
+    });
+    pcmCloseBtn.addEventListener("click", () => {
+      playerCareerModal.style.display = "none";
+    });
+    pcmFilter.addEventListener("change", (e) => {
+      careerFilter = e.target.value;
+      renderPlayerCareer();
+    });
+    // 点击个人数据行或荣誉行打开球员生涯弹窗（移动端转会选择模式下不触发）
+    document.addEventListener("click", (e) => {
+      const row = e.target.closest(".player-career-row, .award-winner-row");
+      if (!row) return;
+      if (row.classList.contains("player-career-row") && e.target.closest(".transfer-clickable")) return;
+      openPlayerCareer(row.dataset.name);
     });
     transferRatingOkBtn.addEventListener("click", () => {
       transferRatingModal.style.display = "none";
@@ -4083,7 +4130,7 @@
                     <td colspan="${colCount}" class="transfer-empty-slot">[已离队] 点击选择新球员</td>
                   </tr>`;
                 }
-                return `<tr ${dataAttr} style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
+                return `<tr ${dataAttr} class="player-career-row" data-name="${getName(s)}" style="border-bottom:1px solid #334155; color:${s.replaced ? '#64748b' : '#e2e8f0'}; ${s.replaced ? 'opacity:0.6;' : ''}">
                   <td style="padding:6px 4px; color:#94a3b8;">${s.pos}</td>
                   <td style="padding:6px 4px; font-weight:700;">${getName(s)}${tianyanMode ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${getOvr(s)}</span>` : getStarBadge(getOvr(s))}</td>
                   ${showAge ? `<td style="text-align:center; padding:6px 4px; color:#94a3b8;">${getAge(s)}</td>` : ''}
@@ -4523,7 +4570,7 @@
       const rows = awards.map(a => {
         const nameColor = a.winner.isUser ? "#34d399" : "#e2e8f0";
         return `
-          <div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #1e293b; font-size:13px;">
+          <div class="award-winner-row" data-name="${a.winner.name}" style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #1e293b; font-size:13px; cursor:pointer;">
             <span style="color:#94a3b8; flex:0 0 auto; min-width:120px;">🏆 ${a.title}</span>
             <span style="flex:1; text-align:left; padding-left:6px;"><span style="color:${nameColor}; font-weight:600;">${a.winner.name}</span> <span style="color:#64748b; font-size:12px;">${a.winner.teamName}</span></span>
             <span style="color:#facc15; font-weight:700; white-space:nowrap;">${a.valueText}</span>
@@ -4602,6 +4649,121 @@
       seasonSummaryTitle.textContent = `${seasonLabel(currentSeason)} 赛季总结`;
       seasonSummaryContent.innerHTML = items.join("") + buildAwardsHtml(seasonAwards);
       seasonSummaryModal.style.display = "flex";
+    }
+
+    // ===== 球员生涯弹窗 =====
+    let careerModalPlayer = null;
+    let careerFilter = "all";
+
+    function openPlayerCareer(name) {
+      const live = allPlayers.find(p => p.name === name);
+      // 历史各赛季数据（按姓名匹配，转生后姓名带+视为另一名球员）
+      const seasons = [];
+      for (const h of seasonHistory) {
+        const s = h.stats.find(st => st.playerName === name);
+        if (s) seasons.push({ seasonNum: h.seasonNum, s });
+      }
+      const cur = userPlayerStats.find(s => s.player && s.player.name === name);
+      if (cur) seasons.push({ seasonNum: currentSeason, s: cur });
+      // 荣誉（历史各赛季奖项 + 当前赛季已评选奖项）
+      const honors = [];
+      const pushHonors = (list, label) => {
+        if (!list) return;
+        for (const a of list) {
+          if (a.winner && a.winner.name === name) honors.push({ season: label, title: a.title, valueText: a.valueText || "" });
+        }
+      };
+      for (const h of seasonHistory) {
+        if (h.awards) pushHonors(h.awards, seasonLabel(h.seasonNum));
+      }
+      pushHonors(seasonAwards, seasonLabel(currentSeason));
+      careerModalPlayer = { name, seasons, honors };
+      careerFilter = "all";
+      pcmFilter.value = "all";
+      // 标题与信息
+      let titleHtml = name;
+      let info;
+      if (live) {
+        const badge = tianyanMode
+          ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${live.ovr}</span>`
+          : getStarBadge(live.ovr);
+        titleHtml += badge;
+        info = `${live.age}岁 · ${live.positions.join(" / ")} · ${live.team}`;
+      } else {
+        const last = seasons[seasons.length - 1];
+        const ovr = last ? (last.s.playerOvr !== undefined ? last.s.playerOvr : (last.s.player ? last.s.player.ovr : null)) : null;
+        const age = last ? (last.s.playerAge !== undefined ? last.s.playerAge : (last.s.player ? last.s.player.age : null)) : null;
+        if (ovr !== null && ovr !== undefined) {
+          titleHtml += tianyanMode
+            ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${ovr}</span>`
+            : getStarBadge(ovr);
+        }
+        info = `${age !== null && age !== undefined ? age + "岁" : ""} · 已离队`;
+      }
+      pcmTitle.innerHTML = titleHtml;
+      pcmInfo.textContent = info;
+      renderPlayerCareer();
+      playerCareerModal.style.display = "flex";
+    }
+
+    function renderPlayerCareer() {
+      const data = careerModalPlayer;
+      if (!data) return;
+      pcmHonors.innerHTML = data.honors.length > 0
+        ? `<div style="margin-top:14px;">
+            <div style="font-weight:700; color:#facc15; margin-bottom:6px;">荣誉</div>
+            ${data.honors.map(h => `<div style="display:flex; justify-content:space-between; font-size:13px; padding:3px 0; border-bottom:1px solid #1e293b;">
+              <span style="color:#94a3b8; flex:0 0 auto;">${h.season}</span>
+              <span style="color:#e2e8f0; font-weight:600; flex:1; text-align:left; padding-left:10px;">🏆 ${h.title}</span>
+              <span style="color:#facc15; font-weight:700;">${h.valueText}</span>
+            </div>`).join("")}
+          </div>`
+        : `<div style="margin-top:14px; color:#64748b; font-size:13px;">暂无个人荣誉</div>`;
+      if (data.seasons.length === 0) {
+        pcmCareerSection.style.display = "none";
+        return;
+      }
+      pcmCareerSection.style.display = "";
+      const comp = careerFilter;
+      const rows = data.seasons.map(({ seasonNum, s }) => {
+        const st = comp === "all"
+          ? { apps: s.appearances || 0, g: s.goals || 0, a: s.assists || 0, cs: s.cleanSheets || 0 }
+          : {
+              apps: s[comp + "Appearances"] || 0,
+              g: s[comp + "Goals"] || 0,
+              a: s[comp + "Assists"] || 0,
+              cs: s[comp + "CleanSheets"] || 0
+            };
+        const isCsPos = cleanSheetPositions.includes(s.pos);
+        return { label: seasonLabel(seasonNum), apps: st.apps, g: st.g, a: st.a, cs: st.cs, isCsPos };
+      }).filter(r => r.apps > 0);
+      const totals = rows.reduce((t, r) => { t.apps += r.apps; t.g += r.g; t.a += r.a; t.cs += r.cs; return t; }, { apps: 0, g: 0, a: 0, cs: 0 });
+      pcmTable.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead><tr style="color:#94a3b8; border-bottom:2px solid #475569;">
+            <th style="text-align:left; padding:6px 4px;">赛季</th>
+            <th style="text-align:center; padding:6px 4px;">上场</th>
+            <th style="text-align:center; padding:6px 4px;">进球</th>
+            <th style="text-align:center; padding:6px 4px;">助攻</th>
+            <th style="text-align:center; padding:6px 4px;">零封</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(r => `<tr style="border-bottom:1px solid #334155;">
+              <td style="padding:6px 4px; color:#94a3b8;">${r.label}</td>
+              <td style="text-align:center; padding:6px 4px;">${r.apps}</td>
+              <td style="text-align:center; padding:6px 4px;">${r.g}</td>
+              <td style="text-align:center; padding:6px 4px;">${r.a}</td>
+              <td style="text-align:center; padding:6px 4px;">${r.isCsPos ? r.cs : "-"}</td>
+            </tr>`).join("")}
+            <tr style="border-top:2px solid #475569; color:#facc15; font-weight:700;">
+              <td style="padding:6px 4px;">合计</td>
+              <td style="text-align:center; padding:6px 4px;">${totals.apps}</td>
+              <td style="text-align:center; padding:6px 4px;">${totals.g}</td>
+              <td style="text-align:center; padding:6px 4px;">${totals.a}</td>
+              <td style="text-align:center; padding:6px 4px;">${totals.cs}</td>
+            </tr>
+          </tbody>
+        </table>`;
     }
 
     function renderLeague() {
