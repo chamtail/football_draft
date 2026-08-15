@@ -4717,16 +4717,43 @@
     function renderPlayerCareer() {
       const data = careerModalPlayer;
       if (!data) return;
-      pcmHonors.innerHTML = data.honors.length > 0
+      // 荣誉折叠展示（类似分享图片）：只显示数量与赛季，团队荣誉为在队期间随队获得的冠军
+      const seasonLabels = data.seasons.map(({ seasonNum }) => seasonLabel(seasonNum));
+      const teamHonors = [
+        { title: "联赛冠军", list: championshipSeasons },
+        { title: "足总杯冠军", list: cupSeasons },
+        { title: "欧冠冠军", list: uclSeasons }
+      ].map(h => ({ title: h.title, seasons: seasonLabels.filter(l => h.list.includes(l)) }))
+        .filter(h => h.seasons.length > 0);
+      const honorGroups = [];
+      for (const h of data.honors) {
+        let g = honorGroups.find(x => x.title === h.title);
+        if (!g) { g = { title: h.title, seasons: [] }; honorGroups.push(g); }
+        g.seasons.push(h.season);
+      }
+      const honorRow = (title, count, seasons) => `
+        <div style="padding:3px 0; border-bottom:1px solid #1e293b;">
+          <div style="display:flex; justify-content:space-between; font-size:13px;">
+            <span style="color:#e2e8f0; font-weight:600;">🏆 ${title}</span>
+            <span style="color:#facc15; font-weight:700;">×${count}</span>
+          </div>
+          <div style="font-size:11px; color:#64748b;">${seasons.join(" · ")}</div>
+        </div>`;
+      const honorBlock = (label, rowsHtml) => rowsHtml
+        ? `<div style="margin-bottom:8px;">
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">${label}</div>
+            ${rowsHtml}
+          </div>`
+        : "";
+      const teamRows = teamHonors.map(h => honorRow(h.title, h.seasons.length, h.seasons)).join("");
+      const personalRows = honorGroups.map(g => honorRow(g.title, g.seasons.length, g.seasons)).join("");
+      pcmHonors.innerHTML = (teamHonors.length > 0 || honorGroups.length > 0)
         ? `<div style="margin-top:14px;">
             <div style="font-weight:700; color:#facc15; margin-bottom:6px;">荣誉</div>
-            ${data.honors.map(h => `<div style="display:flex; justify-content:space-between; font-size:13px; padding:3px 0; border-bottom:1px solid #1e293b;">
-              <span style="color:#94a3b8; flex:0 0 auto;">${h.season}</span>
-              <span style="color:#e2e8f0; font-weight:600; flex:1; text-align:left; padding-left:10px;">🏆 ${h.title}</span>
-              <span style="color:#facc15; font-weight:700;">${h.valueText}</span>
-            </div>`).join("")}
+            ${honorBlock("团队荣誉", teamRows)}
+            ${honorBlock("个人荣誉", personalRows)}
           </div>`
-        : `<div style="margin-top:14px; color:#64748b; font-size:13px;">暂无个人荣誉</div>`;
+        : `<div style="margin-top:14px; color:#64748b; font-size:13px;">暂无荣誉</div>`;
       if (data.seasons.length === 0) {
         pcmCareerSection.style.display = "none";
         return;
