@@ -15,781 +15,2861 @@
       "name": "Liverpool",
       "league": "Premier League",
       "playerCount": 28,
-      "strength": 86.73
+      "strength": 86.73,
+      "formation": "4-3-3",
+      "lineup": [
+        212831,
+        253149,
+        203376,
+        237678,
+        260908,
+        256630,
+        239837,
+        246104,
+        209331,
+        233731,
+        242516
+      ],
+      "attack": 2431,
+      "defense": 2339
     },
     {
       "name": "Real Madrid",
       "league": "LALIGA EA SPORTS",
       "playerCount": 26,
-      "strength": 86.64
+      "strength": 86.64,
+      "formation": "4-4-2",
+      "lineup": [
+        192119,
+        239053,
+        205452,
+        241637,
+        248243,
+        231281,
+        252371,
+        222509,
+        231747,
+        238794,
+        243812
+      ],
+      "attack": 2600,
+      "defense": 2165
     },
     {
       "name": "FC Barcelona",
       "league": "LALIGA EA SPORTS",
       "playerCount": 23,
-      "strength": 86.18
+      "strength": 86.18,
+      "formation": "4-3-3",
+      "lineup": [
+        192448,
+        241486,
+        253163,
+        278046,
+        263578,
+        251854,
+        228702,
+        244260,
+        277643,
+        188545,
+        233419
+      ],
+      "attack": 2425,
+      "defense": 2315
     },
     {
       "name": "Paris SG",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
-      "strength": 86.09
+      "strength": 86.09,
+      "formation": "4-3-3",
+      "lineup": [
+        251752,
+        235212,
+        207865,
+        256196,
+        252145,
+        255253,
+        272834,
+        271421,
+        231443,
+        256903,
+        247635
+      ],
+      "attack": 2497,
+      "defense": 2238
     },
     {
       "name": "Manchester City",
       "league": "Premier League",
       "playerCount": 26,
-      "strength": 85.73
+      "strength": 85.73,
+      "formation": "4-2-3-1",
+      "lineup": [
+        230621,
+        203574,
+        239818,
+        251517,
+        208920,
+        231866,
+        240638,
+        237692,
+        218667,
+        256675,
+        239085
+      ],
+      "attack": 2490,
+      "defense": 2225
     },
     {
       "name": "Arsenal",
       "league": "Premier League",
       "playerCount": 24,
-      "strength": 85.73
+      "strength": 85.73,
+      "formation": "4-3-3",
+      "lineup": [
+        220901,
+        231936,
+        232580,
+        243715,
+        256197,
+        234378,
+        222665,
+        225193,
+        246669,
+        241651,
+        235794
+      ],
+      "attack": 2401,
+      "defense": 2314
     },
     {
       "name": "FC Bayern München",
       "league": "Bundesliga",
       "playerCount": 25,
-      "strength": 85.55
+      "strength": 85.55,
+      "formation": "4-3-3",
+      "lineup": [
+        167495,
+        212622,
+        213331,
+        229558,
+        234396,
+        256790,
+        209658,
+        225375,
+        247827,
+        202126,
+        241084
+      ],
+      "attack": 2406,
+      "defense": 2299
     },
     {
       "name": "Inter Milan",
       "league": "Serie A Enilive",
       "playerCount": 25,
-      "strength": 85
+      "strength": 85,
+      "formation": "4-4-2",
+      "lineup": [
+        177683,
+        233096,
+        237383,
+        199845,
+        226268,
+        184392,
+        224232,
+        208128,
+        258648,
+        231478,
+        228093
+      ],
+      "attack": 2302,
+      "defense": 2373
     },
     {
       "name": "Atlético de Madrid",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
-      "strength": 84
+      "strength": 84,
+      "formation": "3-4-3",
+      "lineup": [
+        200389,
+        247103,
+        216460,
+        233486,
+        226161,
+        272449,
+        238216,
+        194765,
+        216549,
+        246191,
+        257279
+      ],
+      "attack": 2519,
+      "defense": 2101
     },
     {
       "name": "SSC Napoli",
       "league": "Serie A Enilive",
       "playerCount": 28,
-      "strength": 82.91
+      "strength": 82.91,
+      "formation": "4-3-3",
+      "lineup": [
+        225116,
+        217870,
+        244263,
+        243241,
+        261865,
+        192985,
+        237238,
+        216435,
+        216409,
+        192505,
+        236632
+      ],
+      "attack": 2327,
+      "defense": 2233
     },
     {
       "name": "Borussia Dortmund",
       "league": "Bundesliga",
       "playerCount": 28,
-      "strength": 82.27
+      "strength": 82.27,
+      "formation": "4-3-3",
+      "lineup": [
+        235073,
+        212190,
+        247819,
+        208333,
+        224196,
+        212194,
+        246863,
+        204923,
+        251852,
+        215441,
+        252037
+      ],
+      "attack": 2382,
+      "defense": 2143
     },
     {
       "name": "Newcastle Utd",
       "league": "Premier League",
       "playerCount": 28,
-      "strength": 82.27
+      "strength": 82.27,
+      "formation": "3-4-3",
+      "lineup": [
+        203841,
+        210047,
+        251809,
+        198032,
+        206085,
+        247851,
+        241096,
+        242964,
+        257470,
+        234824,
+        223334
+      ],
+      "attack": 2392,
+      "defense": 2133
     },
     {
       "name": "Spurs",
       "league": "Premier League",
       "playerCount": 29,
-      "strength": 82.09
+      "strength": 82.09,
+      "formation": "4-2-3-1",
+      "lineup": [
+        240091,
+        243576,
+        264453,
+        232488,
+        259583,
+        220697,
+        229391,
+        247394,
+        245367,
+        245155,
+        237679
+      ],
+      "attack": 2300,
+      "defense": 2215
     },
     {
       "name": "Aston Villa",
       "league": "Premier League",
       "playerCount": 22,
-      "strength": 81.73
+      "strength": 81.73,
+      "formation": "4-4-2",
+      "lineup": [
+        202811,
+        227678,
+        241464,
+        212419,
+        210881,
+        260247,
+        216393,
+        236987,
+        200458,
+        221697,
+        258444
+      ],
+      "attack": 2291,
+      "defense": 2204
     },
     {
       "name": "Chelsea",
       "league": "Premier League",
       "playerCount": 30,
-      "strength": 81.64
+      "strength": 81.64,
+      "formation": "4-3-3",
+      "lineup": [
+        228789,
+        238074,
+        262859,
+        230918,
+        239231,
+        256079,
+        247090,
+        273018,
+        238616,
+        257534,
+        202652
+      ],
+      "attack": 2214,
+      "defense": 2276
     },
     {
       "name": "Athletic Club",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
-      "strength": 81.55
+      "strength": 81.55,
+      "formation": "4-4-2",
+      "lineup": [
+        230869,
+        241049,
+        248550,
+        263617,
+        183512,
+        256516,
+        244675,
+        205157,
+        225201,
+        216201,
+        231184
+      ],
+      "attack": 2360,
+      "defense": 2125
     },
     {
       "name": "Man Utd",
       "league": "Premier League",
       "playerCount": 27,
-      "strength": 81.45
+      "strength": 81.45,
+      "formation": "4-4-2",
+      "lineup": [
+        226753,
+        236401,
+        235243,
+        239301,
+        234574,
+        243014,
+        212198,
+        200145,
+        205988,
+        240243,
+        260592
+      ],
+      "attack": 2207,
+      "defense": 2273
     },
     {
       "name": "Juventus",
       "league": "Serie A Enilive",
       "playerCount": 26,
-      "strength": 81.27
+      "strength": 81.27,
+      "formation": "4-4-2",
+      "lineup": [
+        235840,
+        258966,
+        239580,
+        255654,
+        208574,
+        239763,
+        222077,
+        247246,
+        277954,
+        243580,
+        243630
+      ],
+      "attack": 2441,
+      "defense": 2029
     },
     {
       "name": "AS Roma",
       "league": "Serie A Enilive",
       "playerCount": 28,
-      "strength": 80.82
+      "strength": 80.82,
+      "formation": "4-4-2",
+      "lineup": [
+        230872,
+        80170,
+        229582,
+        236403,
+        220651,
+        229906,
+        228251,
+        208268,
+        190813,
+        211110,
+        242458
+      ],
+      "attack": 2266,
+      "defense": 2179
     },
     {
       "name": "Nott'm Forest",
       "league": "Premier League",
       "playerCount": 28,
-      "strength": 80.73
+      "strength": 80.73,
+      "formation": "4-4-2",
+      "lineup": [
+        199641,
+        224656,
+        278016,
+        238095,
+        243057,
+        257980,
+        254243,
+        236499,
+        240740,
+        236015,
+        192123
+      ],
+      "attack": 2256,
+      "defense": 2184
     },
     {
       "name": "AC Milan",
       "league": "Serie A Enilive",
       "playerCount": 23,
-      "strength": 80.55
+      "strength": 80.55,
+      "formation": "4-3-3",
+      "lineup": [
+        215698,
+        279782,
+        232756,
+        240277,
+        237942,
+        210008,
+        177003,
+        245630,
+        227796,
+        232411,
+        241721
+      ],
+      "attack": 2181,
+      "defense": 2249
     },
     {
       "name": "Leverkusen",
       "league": "Bundesliga",
       "playerCount": 26,
-      "strength": 80.55
+      "strength": 80.55,
+      "formation": "4-3-3",
+      "lineup": [
+        211738,
+        275028,
+        212242,
+        247263,
+        210035,
+        231521,
+        228813,
+        256853,
+        237328,
+        234236,
+        236786
+      ],
+      "attack": 2514,
+      "defense": 1916
     },
     {
       "name": "OM",
       "league": "Ligue 1 McDonald's",
       "playerCount": 32,
-      "strength": 80.45
+      "strength": 80.45,
+      "formation": "4-4-2",
+      "lineup": [
+        215316,
+        241496,
+        226851,
+        242835,
+        236804,
+        246147,
+        213648,
+        240734,
+        271400,
+        188567,
+        240753
+      ],
+      "attack": 2407,
+      "defense": 2018
     },
     {
       "name": "Lazio",
       "league": "Serie A Enilive",
       "playerCount": 27,
-      "strength": 80.18
+      "strength": 80.18,
+      "formation": "4-4-2",
+      "lineup": [
+        224987,
+        224031,
+        210413,
+        268804,
+        251530,
+        235374,
+        236496,
+        255001,
+        220502,
+        237712,
+        246242
+      ],
+      "attack": 2247,
+      "defense": 2163
     },
     {
       "name": "Atalanta BC",
       "league": "Serie A Enilive",
       "playerCount": 25,
-      "strength": 79.82
+      "strength": 79.82,
+      "formation": "4-4-2",
+      "lineup": [
+        252154,
+        247229,
+        246875,
+        207993,
+        262113,
+        216150,
+        266866,
+        251470,
+        239368,
+        230899,
+        226710
+      ],
+      "attack": 2395,
+      "defense": 1995
     },
     {
       "name": "Villarreal CF",
       "league": "LALIGA EA SPORTS",
       "playerCount": 28,
-      "strength": 79.82
+      "strength": 79.82,
+      "formation": "4-4-2",
+      "lineup": [
+        258534,
+        209989,
+        237221,
+        243923,
+        262402,
+        226110,
+        189513,
+        241707,
+        264388,
+        215590,
+        208093
+      ],
+      "attack": 2409,
+      "defense": 1981
     },
     {
       "name": "RB Leipzig",
       "league": "Bundesliga",
       "playerCount": 29,
-      "strength": 79.73
+      "strength": 79.73,
+      "formation": "3-4-3",
+      "lineup": [
+        185122,
+        204638,
+        262138,
+        222331,
+        228579,
+        233195,
+        257876,
+        236703,
+        240709,
+        212188,
+        262863
+      ],
+      "attack": 2057,
+      "defense": 2328
     },
     {
       "name": "Real Sociedad",
       "league": "LALIGA EA SPORTS",
       "playerCount": 25,
-      "strength": 79.55
+      "strength": 79.55,
+      "formation": "4-3-3",
+      "lineup": [
+        227127,
+        259848,
+        233738,
+        226221,
+        241811,
+        234060,
+        235944,
+        258775,
+        237681,
+        230142,
+        246672
+      ],
+      "attack": 2309,
+      "defense": 2066
     },
     {
       "name": "Frankfurt",
       "league": "Bundesliga",
       "playerCount": 28,
-      "strength": 79.36
+      "strength": 79.36,
+      "formation": "4-4-2",
+      "lineup": [
+        227370,
+        232639,
+        236532,
+        257278,
+        269701,
+        192318,
+        225126,
+        268896,
+        257540,
+        244257,
+        204529
+      ],
+      "attack": 2387,
+      "defense": 1978
     },
     {
       "name": "Real Betis",
       "league": "LALIGA EA SPORTS",
       "playerCount": 27,
-      "strength": 79.27
+      "strength": 79.27,
+      "formation": "4-3-3",
+      "lineup": [
+        221087,
+        241867,
+        212602,
+        198141,
+        267860,
+        197781,
+        226226,
+        226456,
+        255475,
+        237034,
+        252324
+      ],
+      "attack": 2224,
+      "defense": 2136
     },
     {
       "name": "Brighton",
       "league": "Premier League",
       "playerCount": 26,
-      "strength": 79.09
+      "strength": 79.09,
+      "formation": "4-4-2",
+      "lineup": [
+        258498,
+        251479,
+        258908,
+        225863,
+        235152,
+        208004,
+        272500,
+        248793,
+        255565,
+        186146,
+        245637
+      ],
+      "attack": 2136,
+      "defense": 2214
     },
     {
       "name": "Crystal Palace",
       "league": "Premier League",
       "playerCount": 27,
-      "strength": 79.09
+      "strength": 79.09,
+      "formation": "4-4-2",
+      "lineup": [
+        233306,
+        237646,
+        241159,
+        244067,
+        240947,
+        259377,
+        259240,
+        235353,
+        243388,
+        236461,
+        73374
+      ],
+      "attack": 2213,
+      "defense": 2137
     },
     {
       "name": "AS Monaco",
       "league": "Ligue 1 McDonald's",
       "playerCount": 27,
-      "strength": 79
+      "strength": 79,
+      "formation": "4-2-3-1",
+      "lineup": [
+        190941,
+        263781,
+        202335,
+        226229,
+        232440,
+        229261,
+        195864,
+        264862,
+        225663,
+        226627,
+        270050
+      ],
+      "attack": 2211,
+      "defense": 2134
     },
     {
       "name": "AFC Bournemouth",
       "league": "Premier League",
       "playerCount": 27,
-      "strength": 78.91
+      "strength": 78.91,
+      "formation": "4-4-2",
+      "lineup": [
+        269626,
+        224294,
+        246565,
+        236506,
+        256769,
+        241236,
+        213884,
+        232999,
+        236920,
+        256612,
+        255223
+      ],
+      "attack": 2368,
+      "defense": 1972
     },
     {
       "name": "Fulham",
       "league": "Premier League",
       "playerCount": 24,
-      "strength": 78.64
+      "strength": 78.64,
+      "formation": "3-4-3",
+      "lineup": [
+        192563,
+        228092,
+        241436,
+        224221,
+        213655,
+        236699,
+        240273,
+        229348,
+        246172,
+        204838,
+        70571
+      ],
+      "attack": 2274,
+      "defense": 2051
     },
     {
       "name": "Everton",
       "league": "Premier League",
       "playerCount": 24,
-      "strength": 78.55
+      "strength": 78.55,
+      "formation": "4-4-2",
+      "lineup": [
+        204935,
+        253510,
+        202695,
+        247649,
+        244380,
+        243282,
+        193474,
+        237386,
+        206517,
+        276295,
+        251892
+      ],
+      "attack": 2264,
+      "defense": 2056
     },
     {
       "name": "VfB Stuttgart",
       "league": "Bundesliga",
       "playerCount": 32,
-      "strength": 78.55
+      "strength": 78.55,
+      "formation": "4-4-2",
+      "lineup": [
+        223885,
+        260574,
+        239340,
+        238476,
+        227647,
+        252448,
+        250959,
+        257504,
+        241925,
+        238900,
+        244176
+      ],
+      "attack": 2278,
+      "defense": 2042
     },
     {
       "name": "West Ham",
       "league": "Premier League",
       "playerCount": 26,
-      "strength": 78.36
+      "strength": 78.36,
+      "formation": "4-4-2",
+      "lineup": [
+        193105,
+        229880,
+        245388,
+        205569,
+        241585,
+        224371,
+        233927,
+        236792,
+        251954,
+        205431,
+        196978
+      ],
+      "attack": 2355,
+      "defense": 1955
     },
     {
       "name": "Fiorentina",
       "league": "Serie A Enilive",
       "playerCount": 25,
-      "strength": 78.18
+      "strength": 78.18,
+      "formation": "4-4-2",
+      "lineup": [
+        193080,
+        234112,
+        260823,
+        240777,
+        223697,
+        242418,
+        225439,
+        253162,
+        258976,
+        236610,
+        180930
+      ],
+      "attack": 2192,
+      "defense": 2108
     },
     {
       "name": "PSV",
       "league": "Eredivisie",
       "playerCount": 24,
-      "strength": 78.18
+      "strength": 78.18,
+      "formation": "4-3-3",
+      "lineup": [
+        224241,
+        251804,
+        235149,
+        270633,
+        241509,
+        259480,
+        253109,
+        235663,
+        181458,
+        206467,
+        275592
+      ],
+      "attack": 2269,
+      "defense": 2031
     },
     {
       "name": "CA Osasuna",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
-      "strength": 77.82
+      "strength": 77.82,
+      "formation": "4-4-2",
+      "lineup": [
+        224003,
+        247495,
+        243976,
+        259066,
+        271145,
+        211022,
+        208137,
+        258937,
+        206590,
+        188335,
+        223790
+      ],
+      "attack": 2335,
+      "defense": 1945
     },
     {
       "name": "Rayo Vallecano",
       "league": "LALIGA EA SPORTS",
       "playerCount": 25,
-      "strength": 77.82
+      "strength": 77.82,
+      "formation": "4-3-3",
+      "lineup": [
+        227186,
+        248165,
+        197948,
+        250858,
+        258371,
+        232498,
+        243558,
+        222390,
+        243559,
+        248805,
+        216447
+      ],
+      "attack": 2249,
+      "defense": 2031
     },
     {
       "name": "Celta",
       "league": "LALIGA EA SPORTS",
       "playerCount": 26,
-      "strength": 77.73
+      "strength": 77.73,
+      "formation": "4-4-2",
+      "lineup": [
+        234102,
+        259694,
+        192638,
+        220821,
+        240223,
+        192629,
+        259233,
+        235997,
+        271916,
+        224179,
+        265800
+      ],
+      "attack": 2262,
+      "defense": 2013
     },
     {
       "name": "Girona FC",
       "league": "LALIGA EA SPORTS",
       "playerCount": 25,
-      "strength": 77.64
+      "strength": 77.64,
+      "formation": "4-3-3",
+      "lineup": [
+        241671,
+        260815,
+        190815,
+        177413,
+        217036,
+        213565,
+        246928,
+        221363,
+        244369,
+        186537,
+        246785
+      ],
+      "attack": 2169,
+      "defense": 2101
     },
     {
       "name": "Brentford",
       "league": "Premier League",
       "playerCount": 29,
-      "strength": 77.64
+      "strength": 77.64,
+      "formation": "4-3-3",
+      "lineup": [
+        240913,
+        242453,
+        248484,
+        238717,
+        243606,
+        241508,
+        183711,
+        229723,
+        231448,
+        265552,
+        260926
+      ],
+      "attack": 2095,
+      "defense": 2175
     },
     {
       "name": "RCD Mallorca",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
-      "strength": 77.55
+      "strength": 77.55,
+      "formation": "4-4-2",
+      "lineup": [
+        258466,
+        221342,
+        228805,
+        219585,
+        214026,
+        198451,
+        202648,
+        255566,
+        232008,
+        223710,
+        232610
+      ],
+      "attack": 2097,
+      "defense": 2168
     },
     {
       "name": "Como",
       "league": "Serie A Enilive",
       "playerCount": 26,
-      "strength": 77.45
+      "strength": 77.45,
+      "formation": "4-3-3",
+      "lineup": [
+        225149,
+        223671,
+        219693,
+        228349,
+        205566,
+        277846,
+        262842,
+        246646,
+        239977,
+        201153,
+        275324
+      ],
+      "attack": 2178,
+      "defense": 2082
     },
     {
       "name": "VfL Wolfsburg",
       "league": "Bundesliga",
       "playerCount": 28,
-      "strength": 77.45
+      "strength": 77.45,
+      "formation": "3-4-3",
+      "lineup": [
+        228383,
+        240988,
+        270077,
+        241494,
+        244261,
+        206511,
+        254566,
+        264697,
+        240017,
+        241522,
+        255272
+      ],
+      "attack": 2325,
+      "defense": 1935
     },
     {
       "name": "Bologna",
       "league": "Serie A Enilive",
       "playerCount": 26,
-      "strength": 77.36
+      "strength": 77.36,
+      "formation": "4-4-2",
+      "lineup": [
+        189908,
+        252440,
+        231207,
+        239770,
+        240915,
+        233556,
+        202024,
+        242280,
+        266500,
+        192387,
+        212404
+      ],
+      "attack": 2246,
+      "defense": 2009
     },
     {
       "name": "Valencia CF",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
-      "strength": 77.36
+      "strength": 77.36,
+      "formation": "4-3-3",
+      "lineup": [
+        211348,
+        247832,
+        230578,
+        265726,
+        211688,
+        266436,
+        230786,
+        246258,
+        224415,
+        243032,
+        264238
+      ],
+      "attack": 2165,
+      "defense": 2090
     },
     {
       "name": "Sunderland",
       "league": "Premier League",
       "playerCount": 33,
-      "strength": 77.27
+      "strength": 77.27,
+      "formation": "4-2-3-1",
+      "lineup": [
+        263798,
+        226166,
+        236045,
+        241187,
+        212491,
+        199503,
+        269230,
+        260779,
+        264293,
+        246350,
+        251810
+      ],
+      "attack": 2168,
+      "defense": 2082
     },
     {
       "name": "OGC Nice",
       "league": "Ligue 1 McDonald's",
       "playerCount": 28,
-      "strength": 77.18
+      "strength": 77.18,
+      "formation": "4-3-3",
+      "lineup": [
+        235633,
+        239093,
+        254548,
+        158625,
+        252711,
+        253157,
+        244889,
+        255533,
+        256476,
+        224422,
+        244892
+      ],
+      "attack": 2002,
+      "defense": 2243
     },
     {
       "name": "Wolves",
       "league": "Premier League",
       "playerCount": 26,
-      "strength": 77.09
+      "strength": 77.09,
+      "formation": "3-4-3",
+      "lineup": [
+        212442,
+        258575,
+        252064,
+        237658,
+        241602,
+        273463,
+        74866,
+        261224,
+        235432,
+        258911,
+        226380
+      ],
+      "attack": 2237,
+      "defense": 2003
     },
     {
       "name": "LOSC Lille",
       "league": "Ligue 1 McDonald's",
       "playerCount": 27,
-      "strength": 76.82
+      "strength": 76.82,
+      "formation": "4-4-2",
+      "lineup": [
+        239254,
+        270559,
+        269493,
+        201143,
+        231318,
+        202371,
+        190674,
+        262088,
+        246548,
+        178509,
+        73449
+      ],
+      "attack": 2151,
+      "defense": 2074
     },
     {
       "name": "Stade Rennais FC",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
-      "strength": 76.73
+      "strength": 76.73,
+      "formation": "4-4-2",
+      "lineup": [
+        204883,
+        220093,
+        251380,
+        252512,
+        261616,
+        231102,
+        223874,
+        243631,
+        259191,
+        222357,
+        70415
+      ],
+      "attack": 2219,
+      "defense": 2001
     },
     {
       "name": "1. FSV Mainz 05",
       "league": "Bundesliga",
       "playerCount": 29,
-      "strength": 76.64
+      "strength": 76.64,
+      "formation": "4-4-2",
+      "lineup": [
+        224251,
+        236636,
+        212212,
+        202429,
+        216275,
+        257075,
+        225309,
+        73078,
+        258715,
+        236518,
+        256127
+      ],
+      "attack": 2215,
+      "defense": 2000
     },
     {
       "name": "M'gladbach",
       "league": "Bundesliga",
       "playerCount": 28,
-      "strength": 76.55
+      "strength": 76.55,
+      "formation": "4-3-3",
+      "lineup": [
+        223550,
+        220876,
+        221491,
+        224841,
+        271119,
+        257919,
+        204497,
+        234943,
+        245541,
+        214096,
+        239367
+      ],
+      "attack": 2230,
+      "defense": 1980
     },
     {
       "name": "SV Werder Bremen",
       "league": "Bundesliga",
       "playerCount": 31,
-      "strength": 76.55
+      "strength": 76.55,
+      "formation": "4-3-3",
+      "lineup": [
+        248732,
+        206591,
+        237595,
+        261659,
+        243350,
+        256688,
+        232711,
+        239701,
+        266183,
+        247679,
+        256548
+      ],
+      "attack": 2304,
+      "defense": 1906
     },
     {
       "name": "Ajax",
       "league": "Eredivisie",
       "playerCount": 27,
-      "strength": 76.55
+      "strength": 76.55,
+      "formation": "4-4-2",
+      "lineup": [
+        162328,
+        265390,
+        256325,
+        233152,
+        264220,
+        200260,
+        255009,
+        203483,
+        258139,
+        223689,
+        228687
+      ],
+      "attack": 2301,
+      "defense": 1909
     },
     {
       "name": "OL",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
-      "strength": 76.45
+      "strength": 76.45,
+      "formation": "4-3-3",
+      "lineup": [
+        263139,
+        208364,
+        225859,
+        262102,
+        211256,
+        219683,
+        234078,
+        247050,
+        225782,
+        264325,
+        256420
+      ],
+      "attack": 2065,
+      "defense": 2140
     },
     {
       "name": "Torino",
       "league": "Serie A Enilive",
       "playerCount": 30,
-      "strength": 76.36
+      "strength": 76.36,
+      "formation": "4-4-2",
+      "lineup": [
+        270141,
+        211147,
+        241854,
+        265650,
+        201389,
+        243481,
+        241095,
+        258683,
+        255150,
+        215333,
+        226093
+      ],
+      "attack": 2154,
+      "defense": 2046
     },
     {
       "name": "Leeds United",
       "league": "Premier League",
       "playerCount": 25,
-      "strength": 76.36
+      "strength": 76.36,
+      "formation": "4-4-2",
+      "lineup": [
+        230670,
+        244591,
+        257191,
+        236822,
+        231554,
+        232104,
+        236764,
+        237161,
+        242530,
+        230084,
+        247249
+      ],
+      "attack": 2359,
+      "defense": 1841
     },
     {
       "name": "SC Freiburg",
       "league": "Bundesliga",
       "playerCount": 27,
-      "strength": 76.27
+      "strength": 76.27,
+      "formation": "4-2-3-1",
+      "lineup": [
+        262659,
+        208335,
+        207862,
+        231366,
+        209846,
+        250931,
+        226168,
+        74431,
+        212096,
+        240451,
+        234875
+      ],
+      "attack": 2123,
+      "defense": 2072
     },
     {
       "name": "Getafe CF",
       "league": "LALIGA EA SPORTS",
       "playerCount": 22,
-      "strength": 76.27
+      "strength": 76.27,
+      "formation": "4-3-3",
+      "lineup": [
+        223952,
+        217940,
+        245628,
+        234835,
+        220414,
+        232665,
+        242201,
+        226157,
+        275986,
+        228635,
+        74403
+      ],
+      "attack": 2130,
+      "defense": 2065
     },
     {
       "name": "Burnley",
       "league": "Premier League",
       "playerCount": 31,
-      "strength": 76.18
+      "strength": 76.18,
+      "formation": "3-4-3",
+      "lineup": [
+        220407,
+        234569,
+        262042,
+        242660,
+        188377,
+        228151,
+        258171,
+        271121,
+        235619,
+        262642,
+        227503
+      ],
+      "attack": 2129,
+      "defense": 2061
     },
     {
       "name": "Sevilla FC",
       "league": "LALIGA EA SPORTS",
       "playerCount": 25,
-      "strength": 76.09
+      "strength": 76.09,
+      "formation": "4-3-3",
+      "lineup": [
+        185427,
+        264172,
+        193198,
+        244114,
+        271755,
+        229752,
+        224309,
+        246683,
+        243034,
+        184941,
+        238050
+      ],
+      "attack": 2207,
+      "defense": 1978
     },
     {
       "name": "TSG Hoffenheim",
       "league": "Bundesliga",
       "playerCount": 32,
-      "strength": 76
+      "strength": 76,
+      "formation": "4-4-2",
+      "lineup": [
+        193698,
+        211856,
+        232873,
+        232805,
+        263041,
+        246618,
+        216354,
+        228595,
+        271246,
+        237321,
+        216258
+      ],
+      "attack": 2270,
+      "defense": 1910
     },
     {
       "name": "Paris FC",
       "league": "Ligue 1 McDonald's",
       "playerCount": 29,
-      "strength": 75.91
+      "strength": 75.91,
+      "formation": "4-2-3-1",
+      "lineup": [
+        188943,
+        219789,
+        275070,
+        247248,
+        237331,
+        230020,
+        224030,
+        234612,
+        257118,
+        216820,
+        256731
+      ],
+      "attack": 2119,
+      "defense": 2056
     },
     {
       "name": "Feyenoord",
       "league": "Eredivisie",
       "playerCount": 32,
-      "strength": 75.91
+      "strength": 75.91,
+      "formation": "4-3-3",
+      "lineup": [
+        223686,
+        271266,
+        199813,
+        246826,
+        257502,
+        251806,
+        244728,
+        228010,
+        70726,
+        226777,
+        277482
+      ],
+      "attack": 2131,
+      "defense": 2044
     },
     {
       "name": "RCD Espanyol",
       "league": "LALIGA EA SPORTS",
       "playerCount": 25,
-      "strength": 75.82
+      "strength": 75.82,
+      "formation": "4-4-2",
+      "lineup": [
+        227290,
+        261654,
+        192816,
+        240289,
+        270728,
+        259521,
+        229862,
+        244407,
+        244622,
+        192678,
+        263676
+      ],
+      "attack": 2272,
+      "defense": 1898
     },
     {
       "name": "Strasbourg",
       "league": "Ligue 1 McDonald's",
       "playerCount": 29,
-      "strength": 75.73
+      "strength": 75.73,
+      "formation": "4-4-2",
+      "lineup": [
+        270821,
+        275208,
+        257090,
+        275507,
+        270039,
+        255434,
+        264869,
+        256782,
+        229984,
+        258437,
+        273748
+      ],
+      "attack": 2199,
+      "defense": 1966
     },
     {
       "name": "FC Augsburg",
       "league": "Bundesliga",
       "playerCount": 29,
-      "strength": 75.55
+      "strength": 75.55,
+      "formation": "4-4-2",
+      "lineup": [
+        242818,
+        224425,
+        202201,
+        258432,
+        236457,
+        237629,
+        236477,
+        257889,
+        263194,
+        233216,
+        245716
+      ],
+      "attack": 2183,
+      "defense": 1972
     },
     {
       "name": "Union Berlin",
       "league": "Bundesliga",
       "playerCount": 28,
-      "strength": 75.45
+      "strength": 75.45,
+      "formation": "4-4-2",
+      "lineup": [
+        201269,
+        257771,
+        232658,
+        234575,
+        250941,
+        193254,
+        211999,
+        247028,
+        215449,
+        229286,
+        225632
+      ],
+      "attack": 2021,
+      "defense": 2129
     },
     {
       "name": "Stade Brestois 29",
       "league": "Ligue 1 McDonald's",
       "playerCount": 22,
-      "strength": 75.36
+      "strength": 75.36,
+      "formation": "4-3-3",
+      "lineup": [
+        235413,
+        204105,
+        215410,
+        262344,
+        263908,
+        244480,
+        252541,
+        227234,
+        231612,
+        219733,
+        237960
+      ],
+      "attack": 2181,
+      "defense": 1964
     },
     {
       "name": "Sassuolo",
       "league": "Serie A Enilive",
       "playerCount": 30,
-      "strength": 75
+      "strength": 75,
+      "formation": "4-3-3",
+      "lineup": [
+        254502,
+        251335,
+        262396,
+        256856,
+        255561,
+        191202,
+        242725,
+        252027,
+        210935,
+        235842,
+        243593
+      ],
+      "attack": 2114,
+      "defense": 2011
     },
     {
       "name": "RC Lens",
       "league": "Ligue 1 McDonald's",
       "playerCount": 26,
-      "strength": 74.82
+      "strength": 74.82,
+      "formation": "4-4-2",
+      "lineup": [
+        271918,
+        223597,
+        221284,
+        229236,
+        220837,
+        246688,
+        208787,
+        258601,
+        259816,
+        204970,
+        227232
+      ],
+      "attack": 2100,
+      "defense": 2015
     },
     {
       "name": "D. Alavés",
       "league": "LALIGA EA SPORTS",
       "playerCount": 22,
-      "strength": 74.73
+      "strength": 74.73,
+      "formation": "4-4-2",
+      "lineup": [
+        222464,
+        244767,
+        240953,
+        255854,
+        210455,
+        233113,
+        240458,
+        238126,
+        205192,
+        234826,
+        222041
+      ],
+      "attack": 2237,
+      "defense": 1873
     },
     {
       "name": "1. FC Köln",
       "league": "Bundesliga",
       "playerCount": 30,
-      "strength": 74.45
+      "strength": 74.45,
+      "formation": "4-4-2",
+      "lineup": [
+        224041,
+        233965,
+        256942,
+        234727,
+        206198,
+        254660,
+        251392,
+        195038,
+        244390,
+        242997,
+        235360
+      ],
+      "attack": 2306,
+      "defense": 1789
     },
     {
       "name": "Parma",
       "league": "Serie A Enilive",
       "playerCount": 28,
-      "strength": 74.09
+      "strength": 74.09,
+      "formation": "4-3-3",
+      "lineup": [
+        255981,
+        252442,
+        259150,
+        261539,
+        258714,
+        225475,
+        252794,
+        269276,
+        236706,
+        237715,
+        255460
+      ],
+      "attack": 2147,
+      "defense": 1928
     },
     {
       "name": "Udinese",
       "league": "Serie A Enilive",
       "playerCount": 27,
-      "strength": 74
+      "strength": 74,
+      "formation": "4-4-2",
+      "lineup": [
+        257288,
+        225669,
+        242238,
+        190324,
+        220421,
+        238067,
+        214658,
+        223866,
+        243249,
+        224438,
+        231743
+      ],
+      "attack": 2144,
+      "defense": 1926
     },
     {
       "name": "R. Oviedo",
       "league": "LALIGA EA SPORTS",
       "playerCount": 29,
-      "strength": 74
+      "strength": 74,
+      "formation": "4-3-3",
+      "lineup": [
+        220383,
+        238305,
+        251616,
+        212501,
+        256097,
+        146562,
+        232770,
+        275985,
+        245870,
+        189250,
+        234711
+      ],
+      "attack": 2144,
+      "defense": 1926
     },
     {
       "name": "Cagliari",
       "league": "Serie A Enilive",
       "playerCount": 26,
-      "strength": 73.91
+      "strength": 73.91,
+      "formation": "4-4-2",
+      "lineup": [
+        255303,
+        252964,
+        220523,
+        220534,
+        248857,
+        261243,
+        268683,
+        246877,
+        259011,
+        208596,
+        247888
+      ],
+      "attack": 2283,
+      "defense": 1782
     },
     {
       "name": "AZ",
       "league": "Eredivisie",
       "playerCount": 27,
-      "strength": 73.82
+      "strength": 73.82,
+      "formation": "4-3-3",
+      "lineup": [
+        272958,
+        266071,
+        273752,
+        264288,
+        78784,
+        199422,
+        254789,
+        260076,
+        244513,
+        245902,
+        264263
+      ],
+      "attack": 2071,
+      "defense": 1989
     },
     {
       "name": "Hamburger SV",
       "league": "Bundesliga",
       "playerCount": 32,
-      "strength": 73.82
+      "strength": 73.82,
+      "formation": "4-4-2",
+      "lineup": [
+        212197,
+        246885,
+        232839,
+        236947,
+        246666,
+        256958,
+        241928,
+        276119,
+        224970,
+        207791,
+        236533
+      ],
+      "attack": 2217,
+      "defense": 1843
     },
     {
       "name": "Genoa",
       "league": "Serie A Enilive",
       "playerCount": 26,
-      "strength": 73.82
+      "strength": 73.82,
+      "formation": "4-4-2",
+      "lineup": [
+        201299,
+        206159,
+        244349,
+        238516,
+        236295,
+        240938,
+        212207,
+        231969,
+        215798,
+        263829,
+        256949
+      ],
+      "attack": 2076,
+      "defense": 1984
     },
     {
       "name": "Cremonese",
       "league": "Serie A Enilive",
       "playerCount": 28,
-      "strength": 73.73
+      "strength": 73.73,
+      "formation": "4-4-2",
+      "lineup": [
+        228413,
+        237669,
+        268573,
+        210964,
+        233968,
+        233732,
+        240970,
+        217338,
+        230681,
+        219932,
+        207471
+      ],
+      "attack": 2281,
+      "defense": 1774
     },
     {
       "name": "Toulouse FC",
       "league": "Ligue 1 McDonald's",
       "playerCount": 22,
-      "strength": 73.36
+      "strength": 73.36,
+      "formation": "3-4-3",
+      "lineup": [
+        265526,
+        235244,
+        201042,
+        242195,
+        237936,
+        242534,
+        235022,
+        252937,
+        257970,
+        266299,
+        76803
+      ],
+      "attack": 2041,
+      "defense": 1994
     },
     {
       "name": "Elche CF",
       "league": "LALIGA EA SPORTS",
       "playerCount": 28,
-      "strength": 73.36
+      "strength": 73.36,
+      "formation": "4-4-2",
+      "lineup": [
+        246139,
+        229667,
+        261264,
+        206222,
+        246113,
+        276745,
+        269622,
+        235522,
+        254860,
+        228941,
+        231628
+      ],
+      "attack": 2121,
+      "defense": 1914
     },
     {
       "name": "Heidenheim",
       "league": "Bundesliga",
       "playerCount": 26,
-      "strength": 73.36
+      "strength": 73.36,
+      "formation": "4-4-2",
+      "lineup": [
+        202873,
+        257136,
+        216199,
+        231227,
+        224980,
+        253133,
+        256292,
+        260369,
+        232156,
+        260290,
+        237633
+      ],
+      "attack": 2199,
+      "defense": 1836
     },
     {
       "name": "Levante UD",
       "league": "LALIGA EA SPORTS",
       "playerCount": 24,
-      "strength": 73.36
+      "strength": 73.36,
+      "formation": "4-3-3",
+      "lineup": [
+        271532,
+        214622,
+        233588,
+        267873,
+        252327,
+        262500,
+        243312,
+        242279,
+        274209,
+        216475,
+        241591
+      ],
+      "attack": 2209,
+      "defense": 1826
     },
     {
       "name": "Lecce",
       "league": "Serie A Enilive",
       "playerCount": 27,
-      "strength": 73
+      "strength": 73,
+      "formation": "4-3-3",
+      "lineup": [
+        210676,
+        271539,
+        275783,
+        259299,
+        244717,
+        230107,
+        265732,
+        236838,
+        253139,
+        273915,
+        246431
+      ],
+      "attack": 2031,
+      "defense": 1984
     },
     {
       "name": "AJ Auxerre",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
-      "strength": 73
+      "strength": 73,
+      "formation": "4-4-2",
+      "lineup": [
+        205377,
+        263112,
+        277503,
+        257204,
+        247124,
+        274516,
+        272894,
+        238392,
+        251170,
+        239631,
+        260943
+      ],
+      "attack": 2114,
+      "defense": 1901
     },
     {
       "name": "FC Utrecht",
       "league": "Eredivisie",
       "playerCount": 31,
-      "strength": 72.91
+      "strength": 72.91,
+      "formation": "4-3-3",
+      "lineup": [
+        239272,
+        235222,
+        207725,
+        193440,
+        262473,
+        239361,
+        262025,
+        277483,
+        258730,
+        205693,
+        263268
+      ],
+      "attack": 2041,
+      "defense": 1969
     },
     {
       "name": "FC St. Pauli",
       "league": "Bundesliga",
       "playerCount": 27,
-      "strength": 72.82
+      "strength": 72.82,
+      "formation": "4-4-2",
+      "lineup": [
+        262956,
+        222542,
+        222369,
+        230855,
+        237884,
+        242946,
+        211378,
+        242214,
+        233061,
+        269264,
+        261766
+      ],
+      "attack": 2173,
+      "defense": 1832
     },
     {
       "name": "FC Nantes",
       "league": "Ligue 1 McDonald's",
       "playerCount": 26,
-      "strength": 72.73
+      "strength": 72.73,
+      "formation": "4-4-2",
+      "lineup": [
+        199482,
+        231235,
+        232693,
+        80570,
+        239136,
+        264422,
+        189271,
+        258619,
+        74473,
+        254247,
+        194209
+      ],
+      "attack": 2187,
+      "defense": 1813
     },
     {
       "name": "FC Twente",
       "league": "Eredivisie",
       "playerCount": 23,
-      "strength": 72.64
+      "strength": 72.64,
+      "formation": "4-4-2",
+      "lineup": [
+        199833,
+        262311,
+        208462,
+        259163,
+        217585,
+        259563,
+        252383,
+        259478,
+        255010,
+        184457,
+        236498
+      ],
+      "attack": 2098,
+      "defense": 1897
     },
     {
       "name": "Havre AC",
       "league": "Ligue 1 McDonald's",
       "playerCount": 26,
-      "strength": 72.36
+      "strength": 72.36,
+      "formation": "4-4-2",
+      "lineup": [
+        220820,
+        262237,
+        222286,
+        264449,
+        203741,
+        188537,
+        210450,
+        263468,
+        260558,
+        218066,
+        253121
+      ],
+      "attack": 1958,
+      "defense": 2022
     },
     {
       "name": "Hellas Verona",
       "league": "Serie A Enilive",
       "playerCount": 24,
-      "strength": 72.18
+      "strength": 72.18,
+      "formation": "4-4-2",
+      "lineup": [
+        215363,
+        276314,
+        240900,
+        235658,
+        252000,
+        262930,
+        252308,
+        230065,
+        238009,
+        273564,
+        256453
+      ],
+      "attack": 1956,
+      "defense": 2014
     },
     {
       "name": "Pisa",
       "league": "Serie A Enilive",
       "playerCount": 26,
-      "strength": 72
+      "strength": 72,
+      "formation": "4-3-3",
+      "lineup": [
+        220048,
+        193082,
+        199174,
+        264480,
+        252033,
+        236593,
+        236898,
+        240797,
+        240660,
+        240452,
+        270658
+      ],
+      "attack": 2099,
+      "defense": 1861
     },
     {
       "name": "FC Lorient",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
-      "strength": 71.45
+      "strength": 71.45,
+      "formation": "4-4-2",
+      "lineup": [
+        224442,
+        276007,
+        264401,
+        245410,
+        253490,
+        264010,
+        213367,
+        69997,
+        265544,
+        253181,
+        261084
+      ],
+      "attack": 2142,
+      "defense": 1788
     },
     {
       "name": "N.E.C. Nijmegen",
       "league": "Eredivisie",
       "playerCount": 26,
-      "strength": 71.09
+      "strength": 71.09,
+      "formation": "4-4-2",
+      "lineup": [
+        199987,
+        266653,
+        234679,
+        264728,
+        229155,
+        204060,
+        277809,
+        262334,
+        203725,
+        199386,
+        255579
+      ],
+      "attack": 2045,
+      "defense": 1865
     },
     {
       "name": "FC Metz",
       "league": "Ligue 1 McDonald's",
       "playerCount": 25,
-      "strength": 71
+      "strength": 71,
+      "formation": "3-4-3",
+      "lineup": [
+        70118,
+        252975,
+        278065,
+        70160,
+        234239,
+        198200,
+        241238,
+        244694,
+        245131,
+        225293,
+        73330
+      ],
+      "attack": 2210,
+      "defense": 1695
     },
     {
       "name": "Angers SCO",
       "league": "Ligue 1 McDonald's",
       "playerCount": 23,
-      "strength": 70.73
+      "strength": 70.73,
+      "formation": "4-3-3",
+      "lineup": [
+        239342,
+        228591,
+        234515,
+        199313,
+        194846,
+        246297,
+        224444,
+        269725,
+        251191,
+        277485,
+        275024
+      ],
+      "attack": 1966,
+      "defense": 1924
     },
     {
       "name": "Go Ahead Eagles",
       "league": "Eredivisie",
       "playerCount": 29,
-      "strength": 70.64
+      "strength": 70.64,
+      "formation": "4-2-3-1",
+      "lineup": [
+        244218,
+        262790,
+        228363,
+        192559,
+        269247,
+        239512,
+        244725,
+        246777,
+        256800,
+        72892,
+        259921
+      ],
+      "attack": 1975,
+      "defense": 1910
     },
     {
       "name": "Shanghai Port FC",
       "league": "CSL",
       "playerCount": 30,
-      "strength": 69.45
+      "strength": 69.45,
+      "formation": "4-4-2",
+      "lineup": [
+        224599,
+        247197,
+        200741,
+        241328,
+        243100,
+        236679,
+        70832,
+        238704,
+        240131,
+        254894,
+        222729
+      ],
+      "attack": 2035,
+      "defense": 1785
     },
     {
       "name": "Sparta Rotterdam",
       "league": "Eredivisie",
       "playerCount": 24,
-      "strength": 69.36
+      "strength": 69.36,
+      "formation": "4-3-3",
+      "lineup": [
+        228279,
+        74344,
+        199550,
+        236037,
+        186190,
+        242531,
+        198006,
+        269471,
+        231864,
+        230737,
+        269562
+      ],
+      "attack": 2008,
+      "defense": 1807
     },
     {
       "name": "Fortuna Sittard",
       "league": "Eredivisie",
       "playerCount": 24,
-      "strength": 69.18
+      "strength": 69.18,
+      "formation": "4-2-3-1",
+      "lineup": [
+        210832,
+        197860,
+        220385,
+        260436,
+        216380,
+        261249,
+        72972,
+        246960,
+        216349,
+        210386,
+        239378
+      ],
+      "attack": 1936,
+      "defense": 1869
     },
     {
       "name": "Shanghai Shenhua",
       "league": "CSL",
       "playerCount": 29,
-      "strength": 69
+      "strength": 69,
+      "formation": "4-4-2",
+      "lineup": [
+        248735,
+        238857,
+        217153,
+        211382,
+        73718,
+        241418,
+        246093,
+        210377,
+        245042,
+        263563,
+        70810
+      ],
+      "attack": 2161,
+      "defense": 1634
     },
     {
       "name": "Shandong Taishan",
       "league": "CSL",
       "playerCount": 25,
-      "strength": 68.82
+      "strength": 68.82,
+      "formation": "4-4-2",
+      "lineup": [
+        182224,
+        232871,
+        234032,
+        222346,
+        240207,
+        261927,
+        76744,
+        223298,
+        230601,
+        205401,
+        268313
+      ],
+      "attack": 2015,
+      "defense": 1770
     },
     {
       "name": "Beijing FC",
       "league": "CSL",
       "playerCount": 30,
-      "strength": 68.82
+      "strength": 68.82,
+      "formation": "4-3-3",
+      "lineup": [
+        191528,
+        199088,
+        236690,
+        215892,
+        224648,
+        251294,
+        225478,
+        266170,
+        241239,
+        227527,
+        228017
+      ],
+      "attack": 2009,
+      "defense": 1776
     },
     {
       "name": "Chengdu FC",
       "league": "CSL",
       "playerCount": 29,
-      "strength": 68.73
+      "strength": 68.73,
+      "formation": "4-2-3-1",
+      "lineup": [
+        224702,
+        269476,
+        209839,
+        241318,
+        207740,
+        208480,
+        216741,
+        226096,
+        247677,
+        223344,
+        244723
+      ],
+      "attack": 2002,
+      "defense": 1778
     },
     {
       "name": "sc Heerenveen",
       "league": "Eredivisie",
       "playerCount": 25,
-      "strength": 68.27
+      "strength": 68.27,
+      "formation": "4-2-3-1",
+      "lineup": [
+        218212,
+        277672,
+        220230,
+        269120,
+        252999,
+        210010,
+        70569,
+        259131,
+        264452,
+        255015,
+        237807
+      ],
+      "attack": 1917,
+      "defense": 1838
     },
     {
       "name": "PEC Zwolle",
       "league": "Eredivisie",
       "playerCount": 24,
-      "strength": 67.82
+      "strength": 67.82,
+      "formation": "4-4-2",
+      "lineup": [
+        244676,
+        242690,
+        262889,
+        272980,
+        233098,
+        239397,
+        265741,
+        231150,
+        247209,
+        279948,
+        257484
+      ],
+      "attack": 1894,
+      "defense": 1836
     },
     {
       "name": "FC Groningen",
       "league": "Eredivisie",
       "playerCount": 24,
-      "strength": 67.45
+      "strength": 67.45,
+      "formation": "4-4-2",
+      "lineup": [
+        250916,
+        257957,
+        275867,
+        200122,
+        72299,
+        275418,
+        275411,
+        204684,
+        273008,
+        224324,
+        271932
+      ],
+      "attack": 2021,
+      "defense": 1689
     },
     {
       "name": "NAC Breda",
       "league": "Eredivisie",
       "playerCount": 29,
-      "strength": 67.36
+      "strength": 67.36,
+      "formation": "4-3-3",
+      "lineup": [
+        244256,
+        69987,
+        250813,
+        72711,
+        251812,
+        188154,
+        224185,
+        261386,
+        73599,
+        244601,
+        274449
+      ],
+      "attack": 1954,
+      "defense": 1751
     },
     {
       "name": "Heracles Almelo",
       "league": "Eredivisie",
       "playerCount": 27,
-      "strength": 67.27
+      "strength": 67.27,
+      "formation": "4-4-2",
+      "lineup": [
+        253442,
+        257570,
+        247931,
+        223814,
+        264248,
+        254831,
+        228509,
+        202050,
+        223370,
+        73949,
+        241835
+      ],
+      "attack": 1954,
+      "defense": 1746
     },
     {
       "name": "Excelsior",
       "league": "Eredivisie",
       "playerCount": 24,
-      "strength": 67.09
+      "strength": 67.09,
+      "formation": "4-3-3",
+      "lineup": [
+        269434,
+        263259,
+        256892,
+        259923,
+        248604,
+        73617,
+        274448,
+        271118,
+        271511,
+        257340,
+        70922
+      ],
+      "attack": 1944,
+      "defense": 1746
     },
     {
       "name": "FC Volendam",
       "league": "Eredivisie",
       "playerCount": 27,
-      "strength": 66.09
+      "strength": 66.09,
+      "formation": "4-4-2",
+      "lineup": [
+        271150,
+        216230,
+        271658,
+        75787,
+        243293,
+        228666,
+        269257,
+        79039,
+        188621,
+        227537,
+        225152
+      ],
+      "attack": 1854,
+      "defense": 1781
     },
     {
       "name": "Tianjin JMT FC",
       "league": "CSL",
       "playerCount": 26,
-      "strength": 66
+      "strength": 66,
+      "formation": "4-2-3-1",
+      "lineup": [
+        221798,
+        224466,
+        263029,
+        252181,
+        71394,
+        236997,
+        228077,
+        236810,
+        237670,
+        260645,
+        243117
+      ],
+      "attack": 1986,
+      "defense": 1644
     },
     {
       "name": "Yunnan Yukun",
       "league": "CSL",
       "playerCount": 28,
-      "strength": 65.91
+      "strength": 65.91,
+      "formation": "3-4-3",
+      "lineup": [
+        250978,
+        248003,
+        221850,
+        222278,
+        257518,
+        233874,
+        251486,
+        226296,
+        222853,
+        257703,
+        242698
+      ],
+      "attack": 1987,
+      "defense": 1638
     },
     {
       "name": "Wuhan Three Towns",
       "league": "CSL",
       "playerCount": 29,
-      "strength": 65.82
+      "strength": 65.82,
+      "formation": "4-3-3",
+      "lineup": [
+        221844,
+        237010,
+        212912,
+        222199,
+        224546,
+        263789,
+        224692,
+        224675,
+        230665,
+        247941,
+        214250
+      ],
+      "attack": 1917,
+      "defense": 1703
     },
     {
       "name": "Dalian Yingbo",
       "league": "CSL",
       "playerCount": 27,
-      "strength": 65.64
+      "strength": 65.64,
+      "formation": "4-4-2",
+      "lineup": [
+        226182,
+        269579,
+        276076,
+        237033,
+        240393,
+        264324,
+        198640,
+        77906,
+        261947,
+        212601,
+        224677
+      ],
+      "attack": 1854,
+      "defense": 1756
     },
     {
       "name": "Zhejiang Pro",
       "league": "CSL",
       "playerCount": 27,
-      "strength": 65.55
+      "strength": 65.55,
+      "formation": "4-4-2",
+      "lineup": [
+        269536,
+        233946,
+        238862,
+        221826,
+        222192,
+        271525,
+        229804,
+        239148,
+        224549,
+        270203,
+        277782
+      ],
+      "attack": 1850,
+      "defense": 1755
     },
     {
       "name": "Qingdao W. Coast",
       "league": "CSL",
       "playerCount": 27,
-      "strength": 65.27
+      "strength": 65.27,
+      "formation": "4-3-3",
+      "lineup": [
+        77573,
+        182409,
+        252095,
+        227970,
+        224544,
+        269155,
+        245039,
+        241335,
+        258731,
+        248788,
+        237135
+      ],
+      "attack": 1856,
+      "defense": 1734
     },
     {
       "name": "Henan FC",
       "league": "CSL",
       "playerCount": 28,
-      "strength": 65
+      "strength": 65,
+      "formation": "4-2-3-1",
+      "lineup": [
+        226838,
+        253966,
+        226151,
+        260094,
+        243088,
+        216736,
+        224470,
+        241619,
+        219908,
+        213013,
+        261636
+      ],
+      "attack": 1946,
+      "defense": 1629
     },
     {
       "name": "Meizhou Hakka FC",
       "league": "CSL",
       "playerCount": 24,
-      "strength": 64.55
+      "strength": 64.55,
+      "formation": "4-3-3",
+      "lineup": [
+        240704,
+        271526,
+        70550,
+        231956,
+        224674,
+        268286,
+        77572,
+        247195,
+        227509,
+        221815,
+        272540
+      ],
+      "attack": 1875,
+      "defense": 1675
     },
     {
       "name": "Qingdao Hainiu",
       "league": "CSL",
       "playerCount": 28,
-      "strength": 64.09
+      "strength": 64.09,
+      "formation": "4-2-3-1",
+      "lineup": [
+        248221,
+        239859,
+        73444,
+        238103,
+        239858,
+        244517,
+        207733,
+        232264,
+        234710,
+        198635,
+        251111
+      ],
+      "attack": 1871,
+      "defense": 1654
     },
     {
       "name": "Changchun Yatai",
       "league": "CSL",
       "playerCount": 30,
-      "strength": 64.09
+      "strength": 64.09,
+      "formation": "4-4-2",
+      "lineup": [
+        221964,
+        245048,
+        235002,
+        190276,
+        257493,
+        242678,
+        212886,
+        217160,
+        202855,
+        201876,
+        269027
+      ],
+      "attack": 1858,
+      "defense": 1667
     },
     {
       "name": "SC Telstar",
       "league": "Eredivisie",
       "playerCount": 11,
-      "strength": 64
+      "strength": 64,
+      "formation": "4-3-3",
+      "lineup": [
+        221986,
+        212485,
+        275861,
+        276363,
+        79029,
+        266722,
+        210205,
+        261755,
+        223696,
+        79030,
+        270475
+      ],
+      "attack": 1726,
+      "defense": 1794
     },
     {
       "name": "SZ Peng City",
       "league": "CSL",
       "playerCount": 27,
-      "strength": 63.82
+      "strength": 63.82,
+      "formation": "4-4-2",
+      "lineup": [
+        269127,
+        224602,
+        239581,
+        224685,
+        222273,
+        235984,
+        274024,
+        200294,
+        71471,
+        232381,
+        261618
+      ],
+      "attack": 2042,
+      "defense": 1468
     }
   ],
   "players": [

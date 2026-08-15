@@ -4361,20 +4361,22 @@
 
     // 防守权重：门将4/后卫3/中场2/锋线1 → 零封率
     function teamCsRate(roster) {
+      // 按11人首发的能力总和映射（首发总和约1600-2250）
       const sum = lineWeightedSum(roster, { gk: 4, def: 3, mid: 2, fwd: 1 });
-      return Math.min(0.40, Math.max(0.15, (sum - 250) / 15000));
+      return Math.min(0.40, Math.max(0.15, (sum - 900) / 3500));
     }
 
     // 同样的防守权重 → 每场丢球期望（防守越强丢球越少）
     function teamConcedeRate(roster) {
       const sum = lineWeightedSum(roster, { gk: 4, def: 3, mid: 2, fwd: 1 });
-      return Math.min(2.4, Math.max(0.45, 3.35 - sum / 2100));
+      return Math.min(2.4, Math.max(0.45, 5.4 - sum / 460));
     }
 
     // 攻击权重相反：锋线4/中场3/后卫2/门将1 → 每场进球期望
     function teamGoalRate(roster) {
+      // 按11人首发的能力总和映射（首发总和约1600-2510）
       const sum = lineWeightedSum(roster, { gk: 1, def: 2, mid: 3, fwd: 4 });
-      return Math.min(3.0, Math.max(0.7, sum / 2800));
+      return Math.min(2.6, Math.max(0.9, (sum - 600) / 950));
     }
 
     // 按能力排序的门将顺位（0=一门，1=二门...），用于让主力门将获得绝大多数零封
@@ -4484,15 +4486,30 @@
         e[comp] = stats;
       };
 
+      // 预处理记录的固定首发11人（阵型+球员确定），模拟数据只分配给这些球员
+      const draftedIds = new Set(draftPicks.filter(Boolean).map(p => p.id));
+      const teamLineupIds = {};
+      for (const td of allTeams) {
+        if (td.lineup && td.lineup.length) teamLineupIds[td.name] = td.lineup;
+      }
+      const lineupRoster = (t) => {
+        const ids = teamLineupIds[t.name];
+        if (!ids || ids.length === 0) return t.roster || [];
+        return ids
+          .map(id => allPlayers.find(p => p.id === id))
+          .filter(p => p && !draftedIds.has(p.id));
+      };
+
       // 联赛（除用户队外的19队）
       for (let i = 1; i < Math.min(20, leagueTeams.length); i++) {
         const t = leagueTeams[i];
-        if (!t.roster) continue;
-        const csRate = teamCsRate(t.roster);
-        const concedeRate = teamConcedeRate(t.roster);
-        const attackMult = Math.min(1.3, Math.max(0.7, teamGoalRate(t.roster) / 1.7));
-        const gkRankOf = buildGkRankFn(t.roster);
-        for (const p of t.roster) {
+        const roster = lineupRoster(t);
+        if (roster.length === 0) continue;
+        const csRate = teamCsRate(roster);
+        const concedeRate = teamConcedeRate(roster);
+        const attackMult = Math.min(1.3, Math.max(0.7, teamGoalRate(roster) / 1.7));
+        const gkRankOf = buildGkRankFn(roster);
+        for (const p of roster) {
           addComp(p, t.name, false, "league", synthCompStats(p, 38, csRate, gkRankOf(p), attackMult, concedeRate));
         }
       }
@@ -4500,14 +4517,15 @@
       // 足总杯（全部64队）
       for (let i = 0; i < leagueTeams.length; i++) {
         const t = leagueTeams[i];
-        if (!t.roster) continue;
+        const roster = lineupRoster(t);
+        if (roster.length === 0) continue;
         const matches = countCupMatches(i);
         if (matches === 0) continue;
-        const csRate = teamCsRate(t.roster);
-        const concedeRate = teamConcedeRate(t.roster);
-        const attackMult = Math.min(1.3, Math.max(0.7, teamGoalRate(t.roster) / 1.7));
-        const gkRankOf = buildGkRankFn(t.roster);
-        for (const p of t.roster) {
+        const csRate = teamCsRate(roster);
+        const concedeRate = teamConcedeRate(roster);
+        const attackMult = Math.min(1.3, Math.max(0.7, teamGoalRate(roster) / 1.7));
+        const gkRankOf = buildGkRankFn(roster);
+        for (const p of roster) {
           addComp(p, t.name, i === 0, "cup", synthCompStats(p, matches, csRate, gkRankOf(p), attackMult, concedeRate));
         }
       }
@@ -4516,14 +4534,15 @@
       if (ucl && ucl.active) {
         for (let i = 0; i < ucl.teams.length; i++) {
           const t = ucl.teams[i];
-          if (!t.roster) continue;
+          const roster = lineupRoster(t);
+          if (roster.length === 0) continue;
           const matches = countUclMatches(i);
           if (matches === 0) continue;
-          const csRate = teamCsRate(t.roster);
-          const concedeRate = teamConcedeRate(t.roster);
-          const attackMult = Math.min(1.3, Math.max(0.7, teamGoalRate(t.roster) / 1.7));
-          const gkRankOf = buildGkRankFn(t.roster);
-          for (const p of t.roster) {
+          const csRate = teamCsRate(roster);
+          const concedeRate = teamConcedeRate(roster);
+          const attackMult = Math.min(1.3, Math.max(0.7, teamGoalRate(roster) / 1.7));
+          const gkRankOf = buildGkRankFn(roster);
+          for (const p of roster) {
             addComp(p, t.name, !!t.isUser, "ucl", synthCompStats(p, matches, csRate, gkRankOf(p), attackMult, concedeRate));
           }
         }
