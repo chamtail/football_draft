@@ -4389,33 +4389,33 @@
       );
       const idx = sorted.findIndex(s => s.name === teamName);
       if (idx < 0) return 0;
-      if (idx === 0) return 25;
-      if (idx <= 3) return 15;
-      if (idx <= 7) return 8;
-      if (idx <= 11) return 3;
+      if (idx === 0) return 30;
+      if (idx <= 3) return 18;
+      if (idx <= 7) return 10;
+      if (idx <= 11) return 4;
       return 0;
     }
 
     function cupTeamBonus(teamName) {
       if (!cup) return 0;
-      if (cup.champion === teamName) return 20;
+      if (cup.champion === teamName) return 18;
       const reached = (key) => cup.rounds[key] && cup.rounds[key].matches &&
         cup.rounds[key].matches.some(m => m.homeName === teamName || m.awayName === teamName);
-      if (reached("final")) return 12;
-      if (reached("semiFinals")) return 7;
+      if (reached("final")) return 11;
+      if (reached("semiFinals")) return 6;
       if (reached("quarterFinals")) return 3;
       return 0;
     }
 
     function uclTeamBonus(teamName) {
       if (!ucl || !ucl.active) return 0;
-      if (ucl.champion === teamName) return 30; // 欧冠冠军加成最高
+      if (ucl.champion === teamName) return 45; // 欧冠冠军加成最高
       const fm = ucl.knockout.final && ucl.knockout.final.match;
-      if (fm && (fm.homeName === teamName || fm.awayName === teamName)) return 18;
+      if (fm && (fm.homeName === teamName || fm.awayName === teamName)) return 28;
       const inTies = (key) => ucl.knockout[key] && ucl.knockout[key].ties &&
         ucl.knockout[key].ties.some(t => t.teamAName === teamName || t.teamBName === teamName);
-      if (inTies("sf")) return 12;
-      if (inTies("qf")) return 6;
+      if (inTies("sf")) return 18;
+      if (inTies("qf")) return 10;
       return 0;
     }
 
