@@ -4409,13 +4409,13 @@
 
     function uclTeamBonus(teamName) {
       if (!ucl || !ucl.active) return 0;
-      if (ucl.champion === teamName) return 25;
+      if (ucl.champion === teamName) return 30; // 欧冠冠军加成最高
       const fm = ucl.knockout.final && ucl.knockout.final.match;
-      if (fm && (fm.homeName === teamName || fm.awayName === teamName)) return 16;
+      if (fm && (fm.homeName === teamName || fm.awayName === teamName)) return 18;
       const inTies = (key) => ucl.knockout[key] && ucl.knockout[key].ties &&
         ucl.knockout[key].ties.some(t => t.teamAName === teamName || t.teamBName === teamName);
-      if (inTies("sf")) return 10;
-      if (inTies("qf")) return 5;
+      if (inTies("sf")) return 12;
+      if (inTies("qf")) return 6;
       return 0;
     }
 
