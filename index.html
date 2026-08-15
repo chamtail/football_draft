@@ -4322,8 +4322,15 @@
         apps = Math.max(1, Math.round(matches * share));
         cleanSheets = Math.round(matches * csRate * share * (0.9 + Math.random() * 0.2));
       } else if (cat === "DEF") {
-        goals = Math.round(Math.pow(x, 1.6) * 0.00018 * matches * noise());
-        assists = Math.round(Math.pow(x, 1.7) * 0.00016 * matches * noise());
+        // 中后卫：进球概率提升、助攻概率下降；边后卫：助攻概率提升、进球略降
+        const pos0 = player.positions[0];
+        if (pos0 === "CB") {
+          goals = Math.round(Math.pow(x, 1.8) * 0.00022 * matches * noise());
+          assists = Math.round(Math.pow(x, 1.4) * 0.00008 * matches * noise());
+        } else {
+          goals = Math.round(Math.pow(x, 1.5) * 0.00012 * matches * noise());
+          assists = Math.round(Math.pow(x, 1.9) * 0.00028 * matches * noise());
+        }
         cleanSheets = Math.round(matches * csRate * (0.3 + Math.random() * 0.6));
       } else if (cat === "MID") {
         goals = Math.round(Math.pow(x, 2.2) * 0.00012 * matches * noise());
