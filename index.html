@@ -1645,7 +1645,11 @@
       const tableHeaderH = 28;
       const rowH = 24;
       const standingsH = sectionTitleH + tableHeaderH + sorted.length * rowH + 16;
-      const shareStats = buildCumulativeStats();
+      // 个人数据只展示目前在队伍里的11人
+      const squadNames = new Set(draftPicks.filter(Boolean).map(p => p.name));
+      const shareStats = buildCumulativeStats().filter(s => squadNames.has(s.playerName));
+      const squadOrder = new Map(draftPicks.map((p, i) => [p ? p.name : "", i]));
+      shareStats.sort((a, b) => (squadOrder.get(a.playerName) ?? 99) - (squadOrder.get(b.playerName) ?? 99));
       const statsH = shareStats.length > 0 ? sectionTitleH + tableHeaderH + shareStats.length * rowH + 16 : 0;
       // 足总杯进程
       const cupMatches = [];
@@ -1772,6 +1776,10 @@
       const cupHonorsRows = allCupTitles.length > 0 ? 1 + cupHonorsLines.length : (cupBestResult && cupBestResult !== "冠军" ? 1 : 0);
       const uclHonorsRows = allUclTitles.length > 0 ? 1 + uclHonorsLines.length : (uclBestResult && uclBestResult !== "冠军" ? 1 : 0);
       const honorsH = sectionTitleH + (leagueHonorsRows + cupHonorsRows + uclHonorsRows) * honorsLineH + 16;
+      // 当赛季个人奖项（仅我的球员）
+      if (!seasonAwards && isFinished) seasonAwards = computeSeasonAwards();
+      const myAwards = (seasonAwards || []).filter(a => a.winner && a.winner.isUser);
+      const awardsSectionH = myAwards.length > 0 ? sectionTitleH + myAwards.length * rowH + 16 : 0;
 
       // 欧冠进程
       const uclLines = [];
@@ -1837,7 +1845,7 @@
       }
       const uclSectionH = uclLines.length > 0 ? sectionTitleH + uclLines.length * rowH + 16 : 0;
 
-      const H = padding + titleH + subtitleH + honorsH + standingsH + cupSectionH + uclSectionH + statsH + qrH + padding;
+      const H = padding + titleH + subtitleH + honorsH + standingsH + cupSectionH + uclSectionH + statsH + awardsSectionH + qrH + padding;
 
       canvas.width = W;
       canvas.height = H;
@@ -2142,6 +2150,26 @@
           ctx.moveTo(sTableX, y + rowH);
           ctx.lineTo(sTableX + sTableW, y + rowH);
           ctx.stroke();
+          y += rowH;
+        }
+        y += 16;
+      }
+
+      // 当赛季个人奖项
+      if (myAwards.length > 0) {
+        ctx.fillStyle = "#facc15";
+        ctx.font = "bold 15px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("当赛季个人奖项", padding, y + 16);
+        y += sectionTitleH;
+        ctx.font = "13px sans-serif";
+        for (const a of myAwards) {
+          ctx.fillStyle = "#e2e8f0";
+          ctx.textAlign = "left";
+          ctx.fillText(a.title, padding, y + 16);
+          ctx.fillStyle = "#34d399";
+          ctx.textAlign = "right";
+          ctx.fillText(a.winner.name + (a.valueText ? " " + a.valueText : ""), W - padding, y + 16);
           y += rowH;
         }
         y += 16;
