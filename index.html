@@ -743,7 +743,7 @@
     </div>
   </div>
 
-  <div id="playerCareerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9997; align-items:center; justify-content:center; overflow-y:auto;">
+  <div id="playerCareerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:10001; align-items:center; justify-content:center; overflow-y:auto;">
     <div id="pcmBody" style="background:#1e293b; border-radius:12px; padding:24px; max-width:560px; width:90vw; max-height:85vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
@@ -2787,7 +2787,7 @@
         return;
       }
 
-      // 判断用户是否有资格：上赛季前4或本身是争冠队
+      // 判断用户是否有资格：上赛季前4、上赛季欧冠冠军（保送）或本身是争冠队
       const sorted_all = [...allTeams].sort((a, b) => b.strength - a.strength);
       const n = sorted_all.length;
       const contenders = sorted_all.slice(0, Math.ceil(n * 0.15));
@@ -2795,6 +2795,10 @@
       const contenderNames = new Set(contenders.map(t => t.name));
 
       let userQualified = contenderNames.has("我的球队"); // unlikely but check
+      // 欧冠冠军保送：上赛季欧冠冠军即使联赛未进前4也拥有欧冠席位（相当于联赛多一个名额）
+      if (!userQualified && uclSeasons.includes(seasonLabel(currentSeason - 1))) {
+        userQualified = true;
+      }
       if (!userQualified && seasonHistory.length > 0) {
         const prev = seasonHistory[seasonHistory.length - 1];
         const prevSorted = [...prev.standings].sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
@@ -4691,7 +4695,7 @@
           ? `<span class="ovr-badge" style="margin-left:6px; padding:2px 6px; font-size:11px;">${live.ovr}</span>`
           : getStarBadge(live.ovr);
         titleHtml += badge;
-        info = `${live.age}岁 · ${live.positions.join(" / ")} · ${live.team}`;
+        info = `${live.age}岁 · ${live.positions.join(" / ")}`;
       } else {
         const last = seasons[seasons.length - 1];
         const ovr = last ? (last.s.playerOvr !== undefined ? last.s.playerOvr : (last.s.player ? last.s.player.ovr : null)) : null;
@@ -4742,6 +4746,7 @@
         return { label: seasonLabel(seasonNum), apps: st.apps, g: st.g, a: st.a, cs: st.cs, isCsPos };
       }).filter(r => r.apps > 0);
       const totals = rows.reduce((t, r) => { t.apps += r.apps; t.g += r.g; t.a += r.a; t.cs += r.cs; return t; }, { apps: 0, g: 0, a: 0, cs: 0 });
+      const anyCs = rows.some(r => r.isCsPos);
       pcmTable.innerHTML = `
         <table style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead><tr style="color:#94a3b8; border-bottom:2px solid #475569;">
@@ -4764,7 +4769,7 @@
               <td style="text-align:center; padding:6px 4px;">${totals.apps}</td>
               <td style="text-align:center; padding:6px 4px;">${totals.g}</td>
               <td style="text-align:center; padding:6px 4px;">${totals.a}</td>
-              <td style="text-align:center; padding:6px 4px;">${totals.cs}</td>
+              <td style="text-align:center; padding:6px 4px;">${anyCs ? totals.cs : "-"}</td>
             </tr>
           </tbody>
         </table>`;
