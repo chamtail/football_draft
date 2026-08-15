@@ -4343,6 +4343,20 @@
       return { goals, assists, cleanSheets, apps };
     }
 
+    // 零封率：按三条线能力加权总和计算（门将4/后卫3/中场2/锋线1），防守人员越多越强零封率越高
+    function teamCsRate(roster) {
+      let sum = 0;
+      for (const p of roster) {
+        const pos = p.positions[0];
+        let w = 2;
+        if (pos === "GK") w = 4;
+        else if (["CB", "RB", "LB", "RWB", "LWB"].includes(pos)) w = 3;
+        else if (["ST", "CF", "SS"].includes(pos)) w = 1;
+        sum += p.ovr * w;
+      }
+      return Math.min(0.40, Math.max(0.15, (sum - 250) / 15000));
+    }
+
     // 按能力排序的门将顺位（0=一门，1=二门...），用于让主力门将获得绝大多数零封
     function buildGkRankFn(roster) {
       const gks = roster.filter(p => playerCategory(p.positions[0]) === "GK").sort((a, b) => b.ovr - a.ovr);
@@ -4454,7 +4468,7 @@
       for (let i = 1; i < Math.min(20, leagueTeams.length); i++) {
         const t = leagueTeams[i];
         if (!t.roster) continue;
-        const csRate = 0.18 + t.strength / 380;
+        const csRate = teamCsRate(t.roster);
         const gkRankOf = buildGkRankFn(t.roster);
         for (const p of t.roster) {
           addComp(p, t.name, false, "league", synthCompStats(p, 38, csRate, gkRankOf(p)));
@@ -4467,7 +4481,7 @@
         if (!t.roster) continue;
         const matches = countCupMatches(i);
         if (matches === 0) continue;
-        const csRate = 0.18 + t.strength / 380;
+        const csRate = teamCsRate(t.roster);
         const gkRankOf = buildGkRankFn(t.roster);
         for (const p of t.roster) {
           addComp(p, t.name, i === 0, "cup", synthCompStats(p, matches, csRate, gkRankOf(p)));
@@ -4481,7 +4495,7 @@
           if (!t.roster) continue;
           const matches = countUclMatches(i);
           if (matches === 0) continue;
-          const csRate = 0.18 + t.strength / 380;
+          const csRate = teamCsRate(t.roster);
           const gkRankOf = buildGkRankFn(t.roster);
           for (const p of t.roster) {
             addComp(p, t.name, !!t.isUser, "ucl", synthCompStats(p, matches, csRate, gkRankOf(p)));
