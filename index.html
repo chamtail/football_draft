@@ -2549,7 +2549,8 @@
         ucl: ucl && ucl.active ? {
           leagueStandings: JSON.parse(JSON.stringify(ucl.leagueStandings)),
           knockout: JSON.parse(JSON.stringify(ucl.knockout)),
-          champion: ucl.champion
+          champion: ucl.champion,
+          userParticipates: ucl.userParticipates !== false
         } : null,
         awards: seasonAwards ? JSON.parse(JSON.stringify(seasonAwards)) : null
       });
@@ -2782,11 +2783,6 @@
       uclFinalPending = false;
       lastUclResults = null;
 
-      if (currentSeason < 2) {
-        ucl = { active: false };
-        return;
-      }
-
       // 判断用户是否有资格：上赛季前4、上赛季欧冠冠军（保送）或本身是争冠队
       const sorted_all = [...allTeams].sort((a, b) => b.strength - a.strength);
       const n = sorted_all.length;
@@ -2806,7 +2802,9 @@
           if (prevSorted[i].isUser) { userQualified = true; break; }
         }
       }
-      if (!userQualified) {
+      const userParticipates = userQualified;
+      // 第1赛季：用户未参赛也模拟欧冠（争冠队+欧战队参加，纯电脑比赛，用于奖项数据与冠军）
+      if (!userParticipates && currentSeason >= 2) {
         ucl = { active: false };
         return;
       }
@@ -2835,8 +2833,8 @@
         }
       };
 
-      // 1. 用户球队
-      addTeam("我的球队", true);
+      // 1. 用户球队（若参赛）
+      if (userParticipates) addTeam("我的球队", true);
 
       // 2. 上赛季前4
       if (seasonHistory.length > 0) {
@@ -2872,6 +2870,7 @@
 
       ucl = {
         active: true,
+        userParticipates,
         teams: teams36,
         pots,
         leagueFixtures: fixtures,
@@ -3189,6 +3188,7 @@
     // 检查用户球队是否在某一欧冠轮次中
     function isUserInUclRound(key) {
       if (!ucl || !ucl.active) return false;
+      if (!ucl.userParticipates) return false; // 用户未参加本届欧冠
       if (key.startsWith("md")) return true; // 联赛阶段用户始终参与
       let base = key;
       if (key.endsWith("Leg1")) base = key.replace("Leg1", "");
@@ -4614,6 +4614,7 @@
       };
       const uclResultOf = (uclData) => {
         if (!uclData || !uclData.active) return "未参赛";
+        if (uclData.userParticipates === false) return "未参赛";
         if (uclData.champion === "我的球队") return "冠军";
         const fm = uclData.knockout.final && uclData.knockout.final.match;
         if (fm && (fm.homeName === "我的球队" || fm.awayName === "我的球队")) return "亚军";
